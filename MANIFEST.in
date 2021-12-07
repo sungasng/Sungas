@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include sungas *.css
+recursive-include sungas *.csv
+recursive-include sungas *.html
+recursive-include sungas *.ico
+recursive-include sungas *.js
+recursive-include sungas *.json
+recursive-include sungas *.md
+recursive-include sungas *.png
+recursive-include sungas *.py
+recursive-include sungas *.svg
+recursive-include sungas *.txt
+recursive-exclude sungas *.pyc
