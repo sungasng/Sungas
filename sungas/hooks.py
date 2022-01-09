@@ -173,3 +173,12 @@ user_data_fields = [
 # 	"sungas.auth.validate"
 # ]
 
+
+fixtures = [
+	{"dt":"Custom Field", "filters": [
+			["dt", "in", [
+				'POS Profile'
+			]]
+		]
+	}
+]
