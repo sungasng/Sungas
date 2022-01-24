@@ -89,13 +89,16 @@ app_license = "Proprietary"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Customer": {
+		"validate": "sungas.utils.utils.validate_customer",
+		# "on_cancel": "method",
+		# "on_trash": "method"
+	},
+	"Sales Invoice":{
+		'autoname':'sungas.utils.utils.validate_sales_invoice'
+	}
+}
 
 # Scheduled Tasks
 # ---------------
