@@ -180,7 +180,7 @@ user_data_fields = [
 fixtures = [
 	{"dt":"Custom Field", "filters": [
 			["dt", "in", [
-				'POS Profile'
+				'POS Profile',
 			]]
 		]
 	}

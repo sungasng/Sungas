@@ -344,7 +344,7 @@
   "in_list_view": 0,
   "in_preview": 0,
   "in_standard_filter": 0,
-  "insert_after": "posa_use_percentage_discount",
+  "insert_after": "company_address",
   "label": "Sales Invoice Naming Series",
   "length": 0,
   "mandatory_depends_on": null,
