@@ -20,8 +20,8 @@ def validate_sales_invoice(doc,ev):
     if isinstance(doc,string_types):
         doc=json.loads(doc)
     new_doc = doc
-    if doc.is_new() and doc.pos_profile and bool(frappe.get_value("Pos Profile",doc.pos_profile,'sales_invoice_naming_series')):
-        doc.naming_series = frappe.get_value("Pos Profile",doc.pos_profile,'sales_invoice_naming_series')
+    if doc.is_new() and doc.pos_profile and bool(frappe.get_value("Pos Profile",doc.pos_profile,'sales_invoice_series')):
+        doc.naming_series = frappe.get_value("Pos Profile",doc.pos_profile,'sales_invoice_series')
         
         frappe.db.commit()
         return
