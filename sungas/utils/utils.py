@@ -19,11 +19,12 @@ def validate_sales_invoice(doc,ev):
     #Validate that a Sales invoice fetches the naming series from the pos profile
     if isinstance(doc,string_types):
         doc=json.loads(doc)
-    new_doc = doc
-    if doc.is_new() and doc.pos_profile and bool(frappe.get_value("Pos Profile",doc.pos_profile,'sales_invoice_series')):
-        doc.naming_series = frappe.get_value("Pos Profile",doc.pos_profile,'sales_invoice_series')
-        
-        frappe.db.commit()
-        return
+    if doc.pos_profile:
+        prof_doc = frappe.get_doc("POS Profile",doc.pos_profile)
+        req_doc = prof_doc.sales_invoice_series or None
+        if doc.is_new() and doc.pos_profile :
+            doc.naming_series = req_doc
+            frappe.db.commit()
+            return
 
     
