@@ -172,13 +172,18 @@ def fetch_tax_amount(row):
 	return total_tax
 
 
-def invoice_details(inv):
+def invoice_details(inv,filters):
 	#fetch invoice details from line item of sales invoice.
 	data = []
 	alL_bundle_items = frappe.get_all("Product Bundle",['new_item_code','name'])
 	all_b_items = [i['name'] for i in alL_bundle_items]
 	cust = frappe.get_value("Sales Invoice",inv,'customer')
-	item_deets = frappe.get_all("Sales Invoice Item",{'parent':inv},['item_code',\
+	filter_dict = {'parent':inv}
+	if filters.get('warehouse'):
+		filter_dict['warehouse']=filters.get('warehouse')
+	elif filters.get('item_group'):
+		filter_dict['item_group'] = filters.get('item_group')
+	item_deets = frappe.get_all("Sales Invoice Item",filter_dict,['item_code',\
 		'item_name','item_group','cost_center','stock_uom','rate','amount','item_tax_template',\
 		'base_rate','base_amount','stock_qty'])
 	sales_inv_deets = frappe.get_all("Sales Invoice",{'name':inv},['territory','customer_name','owner','posting_date','currency'])
@@ -217,10 +222,15 @@ def invoice_details(inv):
 def fetch_data(filters):
 	data =[]
 	#Fetch all pos invoices in date range
-	all_inv = frappe.get_all("Sales Invoice",{'docstatus':1,\
-		'is_pos':1,'posting_date':['<=',filters.get('to_date')],'posting_date':['>=',filters.get('from_date')]})
+	filter_dict={'docstatus':1,\
+		'posting_date':['<=',filters.get('to_date')],'posting_date':['>=',filters.get('from_date')]}
+	if filters.get('customer'):
+		filter_dict['customer']=filters.get('customer')
+	elif filters.get('pos_profile'):
+		filter_dict['pos_profile'] = filters.get('pos_profile')
+	all_inv = frappe.get_all("Sales Invoice",filter_dict)
 	for i in all_inv:
-		data+=invoice_details(i['name'])
+		data+=invoice_details(i['name'],filters)
 	return data
 	
 
