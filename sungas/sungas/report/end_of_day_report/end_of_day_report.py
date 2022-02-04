@@ -161,9 +161,15 @@ def update_product_bundle(one,pack,sales_inv_deets,c_group,inv,tax):
 			
 	return data
 
-def fetch_tax_amount(row):
+def fetch_tax_amount(row,inv):
 	#Fetch the item tax amount for the item row.
 	total_tax = 0
+	if frappe.get_value("Sales Invoice",inv,'taxes_and_charges'):
+		tax_details = frappe.get_all("Sales Taxes and Charges",\
+			{"parent":frappe.get_value("Sales Invoice",inv,'taxes_and_charges'),'charge_type':"On Net Total"},['rate'])
+		if tax_details:
+			for one in tax_details:
+				total_tax+=((one['rate']/100)*row['base_amount'])
 	if row.get('item_tax_template'):
 		rates = frappe.get_all('Item Tax Template Detail',{'parent':row.get('item_tax_template')},['tax_rate'])
 		if rates:
@@ -189,7 +195,7 @@ def invoice_details(inv,filters):
 	sales_inv_deets = frappe.get_all("Sales Invoice",{'name':inv},['territory','customer_name','owner','posting_date','currency'])
 	c_group = frappe.get_value("Customer",cust,'customer_group')
 	for one in item_deets:
-		tax_amount = fetch_tax_amount(one)
+		tax_amount = fetch_tax_amount(one,inv)
 		if one['item_code'] not in all_b_items:
 		# one = update_product_bundle(one,data)
 			data.append({
