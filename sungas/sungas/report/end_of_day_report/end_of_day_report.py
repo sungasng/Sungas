@@ -155,7 +155,7 @@ def update_product_bundle(one,pack,sales_inv_deets,c_group,inv,tax):
 				'i_rate':one['base_rate'],
 				'i_amount':one['base_amount'],
 				'i_t_tax':tax,
-				'i_total':one['base_rate']+one['base_amount'],
+				'i_total':tax+one['base_amount'],
 				'currency':sales_inv_deets[0]['currency']
 			}
 			
@@ -204,7 +204,7 @@ def invoice_details(inv):
 				'i_rate':one['base_rate'],
 				'i_amount':one['base_amount'],
 				'i_t_tax':tax_amount,
-				'i_total':one['base_rate']+one['base_amount'],
+				'i_total':tax_amount+one['base_amount'],
 				'currency':sales_inv_deets[0]['currency']
 			})
 		else:
