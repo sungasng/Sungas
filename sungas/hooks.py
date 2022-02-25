@@ -96,7 +96,10 @@ doc_events = {
 		# "on_trash": "method"
 	},
 	"Sales Invoice":{
-		'autoname':'sungas.utils.utils.validate_sales_invoice'
+		'autoname':'sungas.utils.utils.validate_sales_invoice',
+	},
+	'Journal Entry':{
+		'on_submit':"sungas.utils.utils.submit_je"
 	}
 }
 
@@ -175,5 +178,15 @@ user_data_fields = [
 # auth_hooks = [
 # 	"sungas.auth.validate"
 # ]
+
+fixtures = [
+	{"dt":"Custom Field", "filters": [
+			["dt", "in", [
+				"Journal Entry",
+			]]
+		]
+	}
+]
+
 
 

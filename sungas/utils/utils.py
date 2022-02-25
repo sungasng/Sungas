@@ -4,6 +4,12 @@ import json
 
 
 @frappe.whitelist()
+def submit_je(doc,ev):
+    doc.approving_user = frappe.session.user
+    # doc.save()
+    
+
+@frappe.whitelist()
 def validate_customer(doc,ev):
     #Validate that a customer cannot be created twice within the same territory
     if isinstance(doc,string_types):
