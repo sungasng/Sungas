@@ -95,6 +95,9 @@ doc_events = {
 		# "on_cancel": "method",
 		# "on_trash": "method"
 	},
+	"Item":{
+		'autoname':'sungas.utils.utils.item_name',
+	},
 	"Sales Invoice":{
 		'autoname':'sungas.utils.utils.validate_sales_invoice',
 	},
