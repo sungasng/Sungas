@@ -99,7 +99,8 @@ doc_events = {
 		'autoname':'sungas.utils.utils.item_name',
 	},
 	"Sales Invoice":{
-		'autoname':'sungas.utils.utils.validate_sales_invoice',
+		'autoname':'sungas.utils.utils.autoname_sales_invoice',
+		'on_submit':'sungas.utils.utils.validate_sales_invoice'
 	},
 	'Journal Entry':{
 		'on_submit':"sungas.utils.utils.submit_je"

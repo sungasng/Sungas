@@ -31,7 +31,7 @@ def validate_customer(doc,ev):
 
 
 @frappe.whitelist()
-def validate_sales_invoice(doc,ev):
+def autoname_sales_invoice(doc,ev):
     #Validate that a Sales invoice fetches the naming series from the pos profile
     if isinstance(doc,string_types):
         doc=json.loads(doc)
@@ -44,3 +44,7 @@ def validate_sales_invoice(doc,ev):
             return
 
     
+def validate_sales_invoice(doc,ev):
+    if doc.pos_profile or doc.is_pos:
+        if doc.outstanding_amount > 0.0:
+            frappe.throw("Please complete payment for this POS invoice")
