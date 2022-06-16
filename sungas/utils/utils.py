@@ -12,7 +12,6 @@ def item_name(doc,ev):
         doc.item_code = doc.name
 
 
-
 @frappe.whitelist()
 def submit_je(doc,ev):
     doc.approving_user = frappe.session.user
@@ -43,8 +42,7 @@ def autoname_sales_invoice(doc,ev):
             frappe.db.commit()
             return
 
-    
 def validate_sales_invoice(doc,ev):
-    if doc.pos_profile or doc.is_pos:
+    if doc.posa_pos_opening_shift:
         if doc.outstanding_amount > 0.0:
             frappe.throw("Please complete payment for this POS invoice")
