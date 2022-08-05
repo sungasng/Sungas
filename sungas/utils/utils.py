@@ -2,6 +2,19 @@ import frappe
 from six import string_types
 import json
 from frappe.utils import strip
+from erpnext.stock.doctype.repost_item_valuation.repost_item_valuation import repost
+
+
+# frappe.enqueue(repost, timeout=12000, queue='long',
+# 			job_name='repost_sle', now=frappe.flags.in_test, doc=self)
+
+
+@frappe.whitelist()
+def repost_entry(doc):
+    doc = frappe.get_doc("Repost Item Valuation",doc)
+    frappe.enqueue(repost, timeout=12000, queue='long',job_name='repost_sle', now=frappe.flags.in_test, doc=doc)
+    return True
+
 
 def item_name(doc,ev):
     if frappe.db.get_default("item_naming_by") == "Naming Series":
