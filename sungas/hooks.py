@@ -31,7 +31,9 @@ app_license = "Proprietary"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Repost Item Valuation" : "public/js/repost.js"}
+doctype_js = {"Repost Item Valuation" : "public/js/repost.js",
+			  "Delivery Note":	"public/js/stock.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -191,6 +193,3 @@ fixtures = [
 		]
 	}
 ]
-
-
-
