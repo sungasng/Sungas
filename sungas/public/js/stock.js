@@ -15,6 +15,11 @@ frappe.ui.form.on('Delivery Note', {
             frm.add_custom_button(__('Delivery Trip'), function() {
                 mapper(frm) }, __('Create'));
         }
+
+        if (frm.doc.delivery_type === "Pick Up") {
+            frm.set_df_property('items', 'read_only', 1)
+
+        }
     },
 
     validate: frm => {
@@ -24,14 +29,9 @@ frappe.ui.form.on('Delivery Note', {
     },
 
     delivery_type: frm => {
-        frm.refresh_field("items")
         if (frm.doc.delivery_type === "Pick Up") {
             frm.doc.items = []
-            let item_code = frappe.meta.get_docfield("Delivery Note Item", "item_code", frm.doc.name)
-            item_code.read_only = 1
-            let item_name = frappe.meta.get_docfield("Delivery Note Item", "item_name", frm.doc.name)
-            item_name.read_only = 1
-            frm.refresh_field("items")
+            frm.set_df_property('items', 'read_only', 1)
 
             frappe.db.get_doc('Sungas Settings').then(settings => {
                 let item = frm.add_child('items')
@@ -39,16 +39,13 @@ frappe.ui.form.on('Delivery Note', {
                 item.item_name = settings.default_pick_up_item_name
                 item.uom = 'Nos'
                 item.qty = flt(1)
+                item.description = 'Pick up services for customer ' + String(frm.doc.customer_name)
                 frm.refresh_field("items")
             })
         }
         if (frm.doc.delivery_type === "Delivery" || frm.doc.delivery_type === "") {
             frm.doc.items = []
-            let item_code = frappe.meta.get_docfield("Delivery Note Item", "item_code", frm.doc.name)
-            item_code.read_only = 0
-            let item_name = frappe.meta.get_docfield("Delivery Note Item", "item_name", frm.doc.name)
-            item_name.read_only = 0
-            frm.refresh_field("items")
+            frm.set_df_property('items', 'read_only', 0)
             frm.add_child('items')
             frm.refresh_field("items")
         }
