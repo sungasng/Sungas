@@ -110,13 +110,13 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
 # 	"all": [
 # 		"sungas.tasks.all"
 # 	],
-# 	"daily": [
-# 		"sungas.tasks.daily"
-# 	],
+	"daily": [
+		"sungas.utils.utils.send_event_digest",
+	],
 # 	"hourly": [
 # 		"sungas.tasks.hourly"
 # 	],
@@ -126,7 +126,7 @@ doc_events = {
 # 	"monthly": [
 # 		"sungas.tasks.monthly"
 # 	]
-# }
+}
 
 # Testing
 # -------
