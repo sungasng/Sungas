@@ -19,6 +19,8 @@ from frappe.utils import (
 from erpnext.stock.doctype.repost_item_valuation.repost_item_valuation import repost
 from frappe.utils.user import get_enabled_system_users
 
+from frappe.model.mapper import get_mapped_doc
+
 
 # frappe.enqueue(repost, timeout=12000, queue='long',
 # 			job_name='repost_sle', now=frappe.flags.in_test, doc=self)
@@ -306,7 +308,7 @@ def item_name(doc,ev):
 def submit_je(doc,ev):
     doc.approving_user = frappe.session.user
     # doc.save()
-    
+
 
 @frappe.whitelist()
 def validate_customer(doc,ev):
@@ -336,3 +338,36 @@ def validate_sales_invoice(doc,ev):
     if doc.posa_pos_opening_shift:
         if doc.outstanding_amount > 0.0:
             frappe.throw("Please complete payment for this POS invoice")
+
+
+@frappe.whitelist()
+def make_delivery_trip_(source_name, target_doc=None):
+    def update_stop_details(source_doc, target_doc, source_parent):
+        target_doc.customer = source_parent.customer
+        target_doc.address = source_parent.shipping_address_name
+        target_doc.customer_address = source_parent.shipping_address
+        target_doc.contact = source_parent.contact_person
+        target_doc.customer_contact = source_parent.contact_display
+        target_doc.grand_total = source_parent.grand_total
+        target_doc.delivery_type = source_parent.delivery_type
+
+        # Append unique Delivery Notes in Delivery Trip
+        delivery_notes.append(target_doc.delivery_note)
+    delivery_notes = []
+
+    doclist = get_mapped_doc(
+		"Delivery Note",
+		source_name,
+		{
+			"Delivery Note": {"doctype": "Delivery Trip", "validation": {"docstatus": ["=", 1]}},
+			"Delivery Note Item": {
+				"doctype": "Delivery Stop",
+				"field_map": {"parent": "delivery_note"},
+				"condition": lambda item: item.parent not in delivery_notes,
+				"postprocess": update_stop_details,
+			},
+		},
+		target_doc,
+	)
+
+    return doclist
