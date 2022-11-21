@@ -1,6 +1,5 @@
 
 const mapper = (frm) => {
-    console.log('here')
     frappe.model.open_mapped_doc({
         method: "sungas.utils.utils.make_delivery_trip_",
         frm: frm,
@@ -17,8 +16,14 @@ frappe.ui.form.on('Delivery Note', {
         }
 
         if (frm.doc.delivery_type === "Pick Up") {
-            frm.set_df_property('items', 'read_only', 1)
+            frm.set_df_property('items', 'read_only', true)
 
+        }
+
+        if (frm.doc.customer && !frm.doc.delivery_type && frm.is_new()) {
+            frm.doc.delivery_type = 'Delivery'
+            frm.refresh_field("delivery_type")
+            frm.set_df_property('delivery_type', 'read_only', true)
         }
     },
 
@@ -31,7 +36,7 @@ frappe.ui.form.on('Delivery Note', {
     delivery_type: frm => {
         if (frm.doc.delivery_type === "Pick Up") {
             frm.doc.items = []
-            frm.set_df_property('items', 'read_only', 1)
+            frm.set_df_property('items', 'read_only', true)
 
             frappe.db.get_doc('Sungas Settings').then(settings => {
                 let item = frm.add_child('items')
@@ -45,7 +50,7 @@ frappe.ui.form.on('Delivery Note', {
         }
         if (frm.doc.delivery_type === "Delivery" || frm.doc.delivery_type === "") {
             frm.doc.items = []
-            frm.set_df_property('items', 'read_only', 0)
+            frm.set_df_property('items', 'read_only', false)
             frm.add_child('items')
             frm.refresh_field("items")
         }
