@@ -4,7 +4,6 @@
 
 frappe.query_reports["End of Day Report (Creation Date)"] = {
 	"filters": [
-		"filters": [
 			{
 				fieldname:"from_date",
 				label: __("From Date"),
@@ -48,7 +47,6 @@ frappe.query_reports["End of Day Report (Creation Date)"] = {
 				reqd:0
 			},
 		]
-	]
 };
 
 
