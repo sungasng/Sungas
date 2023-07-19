@@ -85,7 +85,7 @@ doctype_js = {"Repost Item Valuation" : "public/js/repost.js",
 
 override_doctype_class = {
 	# "ToDo": "custom_app.overrides.CustomToDo"
-	"Customer": "sungas.sungas.api.doctype_override.CustomerOverride"
+	"Customer": "sungas.api.doctype_override.CustomerOverride"
 }
 
 # Document Events
@@ -139,9 +139,10 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
+override_whitelisted_methods = {
 # 	"frappe.desk.doctype.event.event.get_events": "sungas.event.get_events"
-# }
+	"erpnext.accounts.doctype.pos_invoice.pos_invoice.get_stock_availability": "sungas.api.whitelisted_methods_override.get_stock_availability"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
