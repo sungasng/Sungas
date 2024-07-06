@@ -85,7 +85,9 @@ doctype_js = {"Repost Item Valuation" : "public/js/repost.js",
 
 override_doctype_class = {
 	# "ToDo": "custom_app.overrides.CustomToDo"
-	"Customer": "sungas.api.doctype_override.CustomerOverride"
+	"Customer": "sungas.api.doctype_override.CustomerOverride",
+	"POS Invoice": "sungas.api.overrides.pos_invoice.POSInvoiceOverride"
+
 }
 
 # Document Events
