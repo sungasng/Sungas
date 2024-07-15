@@ -31,8 +31,9 @@ app_license = "Proprietary"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Repost Item Valuation" : "public/js/repost.js",
-			  "Delivery Note":	"public/js/stock.js",
+doctype_js = {
+    "Repost Item Valuation": "public/js/repost_item_valuation.js",
+    "Delivery Note": "public/js/delivery_note.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -46,7 +47,7 @@ doctype_js = {"Repost Item Valuation" : "public/js/repost.js",
 
 # website user home page (by Role)
 # role_home_page = {
-#	"Role": "home_page"
+# 	"Role": "home_page"
 # }
 
 # Generators
@@ -84,10 +85,8 @@ doctype_js = {"Repost Item Valuation" : "public/js/repost.js",
 # Override standard doctype classes
 
 override_doctype_class = {
-	# "ToDo": "custom_app.overrides.CustomToDo"
-	"Customer": "sungas.api.doctype_override.CustomerOverride",
-	"POS Invoice": "sungas.api.overrides.pos_invoice.POSInvoiceOverride"
-
+    "Customer": "sungas.overrides.customer.CustomerOverride",
+    "POS Invoice": "sungas.overrides.pos_invoice.POSInvoiceOverride"
 }
 
 # Document Events
@@ -95,42 +94,28 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
-	"Customer": {
-		"validate": "sungas.utils.utils.validate_customer",
-		# "on_cancel": "method",
-		# "on_trash": "method"
-	},
-	"Item":{
-		'autoname':'sungas.utils.utils.item_name',
-	},
-	"Sales Invoice":{
-		'autoname':'sungas.utils.utils.autoname_sales_invoice',
-		'on_submit':'sungas.utils.utils.validate_sales_invoice'
-	},
-	'Journal Entry':{
-		'on_submit':"sungas.utils.utils.submit_je"
-	}
+    "Customer": {
+        'validate': 'sungas.controllers.customer.validate_customer'
+    },
+    "Item": {
+        'autoname': 'sungas.controllers.item.item_name',
+    },
+    "Sales Invoice": {
+        'autoname': 'sungas.controllers.sales_invoice.autoname_sales_invoice',
+        'on_submit': 'sungas.controllers.sales_invoice.validate_sales_invoice'
+    },
+    "Journal Entry": {
+        'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry'
+    }
 }
 
 # Scheduled Tasks
 # ---------------
 
 scheduler_events = {
-# 	"all": [
-# 		"sungas.tasks.all"
-# 	],
-	"daily": [
-		"sungas.utils.utils.send_event_digest",
-	],
-# 	"hourly": [
-# 		"sungas.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"sungas.tasks.weekly"
-# 	]
-# 	"monthly": [
-# 		"sungas.tasks.monthly"
-# 	]
+    "daily": [
+        "sungas.scheduled_jobs.event_digest.send_event_digest",
+    ],
 }
 
 # Testing
@@ -142,8 +127,7 @@ scheduler_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "sungas.event.get_events"
-	"erpnext.accounts.doctype.pos_invoice.pos_invoice.get_stock_availability": "sungas.api.whitelisted_methods_override.get_stock_availability"
+    "erpnext.accounts.doctype.pos_invoice.pos_invoice.get_stock_availability": "sungas.overrides.pos_invoice.get_stock_availability"
 }
 #
 # each overriding function accepts a `data` argument;
@@ -162,25 +146,26 @@ override_whitelisted_methods = {
 # --------------------
 
 user_data_fields = [
-	{
-		"doctype": "{doctype_1}",
-		"filter_by": "{filter_by}",
-		"redact_fields": ["{field_1}", "{field_2}"],
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_2}",
-		"filter_by": "{filter_by}",
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_3}",
-		"strict": False,
-	},
-	{
-		"doctype": "{doctype_4}"
-	}
+    {
+        "doctype": "{doctype_1}",
+        "filter_by": "{filter_by}",
+        "redact_fields": ["{field_1}", "{field_2}"],
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_2}",
+        "filter_by": "{filter_by}",
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_3}",
+        "strict": False,
+    },
+    {
+        "doctype": "{doctype_4}"
+    }
 ]
+
 
 # Authentication and authorization
 # --------------------------------
@@ -190,10 +175,12 @@ user_data_fields = [
 # ]
 
 fixtures = [
-	{"dt":"Custom Field", "filters": [
-			["dt", "in", [
-				"Journal Entry",
-			]]
-		]
-	}
+    {
+        "dt": "Custom Field",
+        "filters": [
+            ["dt", "in", [
+                "Journal Entry"
+            ]]
+        ]
+    }
 ]

@@ -1,7 +1,7 @@
 
 const mapper = (frm) => {
     frappe.model.open_mapped_doc({
-        method: "sungas.utils.utils.make_delivery_trip_",
+        method: "sungas.api.delivery_note.make_delivery_trip_",
         frm: frm,
     })
 }
@@ -56,4 +56,4 @@ frappe.ui.form.on('Delivery Note', {
         }
     },
 
-    })
+})
