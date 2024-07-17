@@ -6,16 +6,13 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "default_value_section_section",
+  "delivery_and_pickup_settings_tab",
   "default_pick_up_item",
-  "default_pick_up_item_name"
+  "default_pick_up_item_name",
+  "column_break_vkisv",
+  "delivery_stop_type"
  ],
  "fields": [
-  {
-   "fieldname": "default_value_section_section",
-   "fieldtype": "Section Break",
-   "label": "Default Values Section"
-  },
   {
    "fieldname": "default_pick_up_item",
    "fieldtype": "Link",
@@ -28,12 +25,27 @@
    "fieldtype": "Data",
    "label": "Default Pick Up Item Name",
    "read_only": 1
+  },
+  {
+   "fieldname": "delivery_and_pickup_settings_tab",
+   "fieldtype": "Tab Break",
+   "label": "Delivery And Pickup Settings"
+  },
+  {
+   "fieldname": "column_break_vkisv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "delivery_stop_type",
+   "fieldtype": "Table",
+   "label": "Delivery Stop Type",
+   "options": "Delivery Stop Type"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2022-11-09 21:10:13.077850",
+ "modified": "2024-07-17 16:00:12.932204",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Sungas Settings",
@@ -52,5 +64,6 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
+ "states": [],
  "track_seen": 1
 }

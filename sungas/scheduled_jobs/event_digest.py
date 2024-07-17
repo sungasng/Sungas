@@ -69,7 +69,6 @@ def get_events(start, end, user=None, for_reminder=False, filters=None):
 
     tables = ["`tabEvent`", "`tabEvent Participants`"]
 
-
     events = frappe.db.sql(
         """
         SELECT `tabEvent`.name,
@@ -279,4 +278,5 @@ def filter_event(user, event):
                         if each['name'] not in events_added:
                             events.append(each)
                             events_added.append(each['name'])
+
     return events

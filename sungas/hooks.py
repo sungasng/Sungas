@@ -34,6 +34,7 @@ app_license = "Proprietary"
 doctype_js = {
     "Repost Item Valuation": "public/js/repost_item_valuation.js",
     "Delivery Note": "public/js/delivery_note.js",
+    "Delivery Trip": "public/js/delivery_trip.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}

@@ -1,5 +1,4 @@
 import frappe
-from frappe import _
 from frappe.query_builder.functions import IfNull, Sum
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import POSInvoice
 from frappe.utils import flt
@@ -41,17 +40,17 @@ class POSInvoiceOverride(POSInvoice):
                 )
                 if is_stock_item and flt(available_stock) <= 0:
                     frappe.throw(
-                        _("Row #{}: Item Code: {} is not available under warehouse {}.").format(
+                        "Row #{}: Item Code: {} is not available under warehouse {}."
+                        .format(
                             d.idx, item_code, warehouse
                         ),
-                        title=_("Item Unavailable"),
+                        title="Item Unavailable",
                     )
                 elif is_stock_item and flt(available_stock) < flt(d.stock_qty):
                     frappe.throw(
-                        _(
-                            "Row #{}: Stock quantity not enough for Item Code: {} under warehouse {}. Available quantity {}."
-                        ).format(d.idx, item_code, warehouse, available_stock),
-                        title=_("Item Unavailable"),
+                        "Row #{}: Stock quantity not enough for Item Code: {} under warehouse {}. Available quantity {}."
+                        .format(d.idx, item_code, warehouse, available_stock),
+                        title="Item Unavailable",
                     )
 
 
@@ -84,6 +83,7 @@ def get_bundle_availability(bundle_item_code, warehouse):
     return bundle_bin_qty - pos_sales_qty
 
 
+@frappe.whitelist()
 def get_stock_availability(item_code, warehouse):
     if frappe.db.get_value("Item", item_code, "is_stock_item"):
         is_stock_item = True
