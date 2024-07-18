@@ -1,32 +1,61 @@
-import frappe
 from six import string_types
 import json
-from frappe.desk.reportview import get_filters_cond
+
+import frappe
 from frappe.utils import (
     add_days,
     add_months,
     cint,
-    strip,
     cstr,
     date_diff,
     format_datetime,
-    get_datetime,
     get_datetime_str,
     getdate,
-    now_datetime,
     nowdate,
 )
-from erpnext.stock.doctype.repost_item_valuation.repost_item_valuation import repost
 from frappe.utils.user import get_enabled_system_users
-
-from frappe.model.mapper import get_mapped_doc
-
-
-# frappe.enqueue(repost, timeout=12000, queue='long',
-# 			job_name='repost_sle', now=frappe.flags.in_test, doc=self)
+from frappe.desk.reportview import get_filters_cond
 
 
-weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+weekdays = [
+    "monday", "tuesday", "wednesday", "thursday",
+    "friday", "saturday", "sunday"
+]
+
+
+def send_event_digest():
+    today = nowdate()
+    for user in get_enabled_system_users():
+        events = get_events(today, today, user.name, for_reminder=True)
+
+        if events:
+            frappe.set_user_lang(user.name, user.language)
+
+            for e in events:
+                e.starts_on = format_datetime(e.starts_on, "hh:mm a")
+                if e.all_day:
+                    e.starts_on = "All Day"
+            print("PRE EV")
+            print(events)
+            events = filter_event(user, events)
+            print("\n\n\n\n")
+            print("USER")
+            print(user.name)
+            print("EVENTS")
+            print(events)
+
+            if events:
+
+                frappe.sendmail(
+                    recipients=user.email,
+                    subject=frappe._("Upcoming Events for Today"),
+                    template="upcoming_events",
+                    args={
+                        "events": events,
+                    },
+                    header=[frappe._("Events in Today's Calendar"), "blue"],
+                )
+
 
 @frappe.whitelist()
 def get_events(start, end, user=None, for_reminder=False, filters=None):
@@ -38,9 +67,8 @@ def get_events(start, end, user=None, for_reminder=False, filters=None):
 
     filter_condition = get_filters_cond("Event", filters, [])
 
-    tables = ["`tabEvent`","`tabEvent Participants`"]
-    
-   
+    tables = ["`tabEvent`", "`tabEvent Participants`"]
+
     events = frappe.db.sql(
         """
         SELECT `tabEvent`.name,
@@ -91,7 +119,7 @@ def get_events(start, end, user=None, for_reminder=False, filters=None):
                         AND `tabDocShare`.user=%(user)s
                 )
             )
-        
+
         AND `tabEvent`.status='Open'
         ORDER BY `tabEvent`.starts_on""".format(
             tables=", ".join(tables),
@@ -218,18 +246,29 @@ def get_events(start, end, user=None, for_reminder=False, filters=None):
 
     return events
 
-def filter_event(user,ev):
-    #Ensure that for private events that include Employees and Users mails are sent to only  Users and Employees defined.
-    
+
+def filter_event(user, event):
+    """
+    Ensure that for private events that include Employees
+    and Users mails are sent to only  Users and Employees defined.
+    """
+
     events = []
     events_added = []
-    for each in ev:
-        participants = frappe.get_all("Event Participants",{'parent':each['name']},['reference_docname','reference_doctype'])
+    for each in event:
+        participants = frappe.get_all(
+            "Event Participants",
+            {'parent': each['name']},
+            ['reference_docname', 'reference_doctype']
+        )
         if participants:
-            found = False
             for one in participants:
                 if one.reference_doctype == 'Employee':
-                    email = frappe.get_value("Employee",one.reference_docname,'prefered_email')
+                    email = frappe.get_value(
+                        "Employee",
+                        one.reference_docname,
+                        'prefered_email'
+                    )
                     if email == user.name:
                         if each['name'] not in events_added:
                             events.append(each)
@@ -239,135 +278,5 @@ def filter_event(user,ev):
                         if each['name'] not in events_added:
                             events.append(each)
                             events_added.append(each['name'])
+
     return events
-        
-
-
-
-
-def send_event_digest():
-    today = nowdate()
-    for user in get_enabled_system_users():
-        events = get_events(today, today, user.name, for_reminder=True)
-        
-        if events:
-            frappe.set_user_lang(user.name, user.language)
-
-            for e in events:
-                e.starts_on = format_datetime(e.starts_on, "hh:mm a")
-                if e.all_day:
-                    e.starts_on = "All Day"
-            print("PRE EV")
-            print(events)
-            events=filter_event(user,events)
-            print("\n\n\n\n")
-            print("USER")
-            print(user.name)
-            print("EVENTS")
-            print(events)
-                
-            if events:
-
-                frappe.sendmail(
-                    recipients=user.email,
-                    subject=frappe._("Upcoming Events for Today"),
-                    template="upcoming_events",
-                    args={
-                        "events": events,
-                    },
-                    header=[frappe._("Events in Today's Calendar"), "blue"],
-                )
-
-
-
-
-
-
-
-
-
-@frappe.whitelist()
-def repost_entry(doc):
-    
-    doc = frappe.get_doc("Repost Item Valuation",doc)
-    frappe.enqueue(repost, timeout=99000, queue='long',job_name='repost_sle', now=frappe.flags.in_test, doc=doc)
-    
-    return True
-
-
-def item_name(doc,ev):
-    if frappe.db.get_default("item_naming_by") == "Naming Series":
-        if doc.variant_of:
-            doc.naming_series = frappe.db.get_value("Item",doc.variant_of,'naming_series')
-        from frappe.model.naming import set_name_by_naming_series
-        set_name_by_naming_series(doc)
-        doc.item_code = doc.name
-
-
-@frappe.whitelist()
-def submit_je(doc,ev):
-    doc.approving_user = frappe.session.user
-    # doc.save()
-
-
-@frappe.whitelist()
-def validate_customer(doc,ev):
-    #Validate that a customer cannot be created twice within the same territory
-    if isinstance(doc,string_types):
-        doc=json.loads(doc)
-    if doc.is_new():
-        exists = frappe.get_all("Customer",{'Territory':doc.territory,'mobile_no':doc.mobile_no})
-        if exists:
-            frappe.throw(f"Please not that a customer with mobile no {doc.mobile_no} in territory {doc.territory} already exists")
-
-
-@frappe.whitelist()
-def autoname_sales_invoice(doc,ev):
-    #Validate that a Sales invoice fetches the naming series from the pos profile
-    if isinstance(doc,string_types):
-        doc=json.loads(doc)
-    if doc.pos_profile:
-        prof_doc = frappe.get_doc("POS Profile",doc.pos_profile)
-        req_doc = prof_doc.sales_invoice_series or None
-        if doc.is_new() and doc.pos_profile :
-            doc.naming_series = req_doc
-            frappe.db.commit()
-            return
-
-def validate_sales_invoice(doc,ev):
-    if doc.posa_pos_opening_shift:
-        if doc.outstanding_amount > 0.0:
-            frappe.throw("Please complete payment for this POS invoice")
-
-
-@frappe.whitelist()
-def make_delivery_trip_(source_name, target_doc=None):
-    def update_stop_details(source_doc, target_doc, source_parent):
-        target_doc.customer = source_parent.customer
-        target_doc.address = source_parent.shipping_address_name
-        target_doc.customer_address = source_parent.shipping_address
-        target_doc.contact = source_parent.contact_person
-        target_doc.customer_contact = source_parent.contact_display
-        target_doc.grand_total = source_parent.grand_total
-        target_doc.delivery_type = source_parent.delivery_type
-
-        # Append unique Delivery Notes in Delivery Trip
-        delivery_notes.append(target_doc.delivery_note)
-    delivery_notes = []
-
-    doclist = get_mapped_doc(
-		"Delivery Note",
-		source_name,
-		{
-			"Delivery Note": {"doctype": "Delivery Trip", "validation": {"docstatus": ["=", 1]}},
-			"Delivery Note Item": {
-				"doctype": "Delivery Stop",
-				"field_map": {"parent": "delivery_note"},
-				"condition": lambda item: item.parent not in delivery_notes,
-				"postprocess": update_stop_details,
-			},
-		},
-		target_doc,
-	)
-
-    return doclist
