@@ -6,7 +6,6 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "delivery_and_pickup_settings_tab",
   "default_pick_up_item",
   "default_pick_up_item_name",
   "column_break_vkisv",
@@ -27,11 +26,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "delivery_and_pickup_settings_tab",
-   "fieldtype": "Tab Break",
-   "label": "Delivery And Pickup Settings"
-  },
-  {
    "fieldname": "column_break_vkisv",
    "fieldtype": "Column Break"
   },
@@ -45,7 +39,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-07-17 16:00:12.932204",
+ "modified": "2024-07-18 15:35:26.338785",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Sungas Settings",
@@ -64,6 +58,5 @@
  ],
  "sort_field": "modified",
  "sort_order": "DESC",
- "states": [],
  "track_seen": 1
 }
