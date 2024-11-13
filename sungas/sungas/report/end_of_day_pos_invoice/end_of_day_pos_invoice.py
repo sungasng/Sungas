@@ -230,7 +230,7 @@ def fetch_data(filters):
 	#Fetch all pos invoices in date range
 	filter_dict={'docstatus':1,\
 		'creation':['between',[filters.get('from_date'),\
-		filters.get('to_date')]],'status':['IN',['Submitted','Paid','Unpaid']]}
+		filters.get('to_date')]],'status':['IN',['Submitted','Consolidated','Paid','Unpaid']]}
 	if filters.get('customer'):
 		filter_dict['customer']=filters.get('customer')
 	elif filters.get('pos_profile'):
