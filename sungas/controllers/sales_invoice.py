@@ -1,4 +1,3 @@
-from six import string_types
 import json
 
 import frappe
@@ -10,7 +9,7 @@ def autoname_sales_invoice(doc, event):
     Validate that a Sales invoice fetches the
     naming series from the pos profile
     """
-    if isinstance(doc, string_types):
+    if isinstance(doc, str):
         doc = json.loads(doc)
     if doc.pos_profile:
         prof_doc = frappe.get_doc("POS Profile", doc.pos_profile)

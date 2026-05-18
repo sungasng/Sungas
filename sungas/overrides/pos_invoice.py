@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from frappe.query_builder.functions import IfNull, Sum
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import POSInvoice
 from frappe.utils import flt

@@ -5,7 +5,6 @@ app_title = "Sungas"
 app_publisher = "Manqala"
 app_description = "Bundled functionality for the Sungas Brand"
 app_icon = "octicon octicon-file-directory"
-app_color = "grey"
 app_email = "dev@manqala.com"
 app_license = "Proprietary"
 

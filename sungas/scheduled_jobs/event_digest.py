@@ -1,4 +1,3 @@
-from six import string_types
 import json
 
 import frappe
@@ -13,6 +12,7 @@ from frappe.utils import (
     getdate,
     nowdate,
 )
+from frappe.translate import set_user_lang
 from frappe.utils.user import get_enabled_system_users
 from frappe.desk.reportview import get_filters_cond
 
@@ -29,20 +29,13 @@ def send_event_digest():
         events = get_events(today, today, user.name, for_reminder=True)
 
         if events:
-            frappe.set_user_lang(user.name, user.language)
+            set_user_lang(user.name, user.language)
 
             for e in events:
                 e.starts_on = format_datetime(e.starts_on, "hh:mm a")
                 if e.all_day:
                     e.starts_on = "All Day"
-            print("PRE EV")
-            print(events)
             events = filter_event(user, events)
-            print("\n\n\n\n")
-            print("USER")
-            print(user.name)
-            print("EVENTS")
-            print(events)
 
             if events:
 
@@ -62,7 +55,7 @@ def get_events(start, end, user=None, for_reminder=False, filters=None):
     if not user:
         user = frappe.session.user
 
-    if isinstance(filters, string_types):
+    if isinstance(filters, str):
         filters = json.loads(filters)
 
     filter_condition = get_filters_cond("Event", filters, [])
