@@ -131,8 +131,7 @@
    "fieldtype": "Link",
    "label": "Secondary Approver Role",
    "options": "Role",
-   "default": "LPG Head of Operations",
-   "description": "Optional second role that can also approve."
+   "description": "Optional second role that can also approve. Set this to 'LPG Head of Operations' after install."
   },
   {
    "fieldname": "column_break_app",
