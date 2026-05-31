@@ -106,7 +106,11 @@ doc_events = {
     },
     "Journal Entry": {
         'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry'
-    }
+    },
+    "POS Closing Shift": {
+        'before_submit': 'sungas.overrides.pos_closing_shift.validate_variance',
+        'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
+    },
 }
 
 # Scheduled Tasks
@@ -179,7 +183,16 @@ fixtures = [
         "dt": "Custom Field",
         "filters": [
             ["dt", "in", [
-                "Journal Entry"
+                "Journal Entry",
+                "POS Closing Shift"
+            ]]
+        ]
+    },
+    {
+        "dt": "Role",
+        "filters": [
+            ["name", "in", [
+                "LPG Head of Operations"
             ]]
         ]
     }

@@ -51,5 +51,48 @@
   "translatable": 1,
   "unique": 0,
   "width": null
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_section_break",
+  "fieldtype": "Section Break",
+  "label": "Variance Workflow",
+  "insert_after": "grand_total",
+  "name": "POS Closing Shift-variance_section_break",
+  "collapsible": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_remarks",
+  "fieldtype": "Long Text",
+  "label": "Variance Remarks",
+  "insert_after": "variance_section_break",
+  "name": "POS Closing Shift-variance_remarks",
+  "description": "Required when variance exceeds the Warn threshold (default NGN 5,000 or 0.5%). Explain cause + actions taken."
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_approved_by",
+  "fieldtype": "Link",
+  "options": "User",
+  "label": "Variance Approved By",
+  "insert_after": "variance_remarks",
+  "name": "POS Closing Shift-variance_approved_by",
+  "description": "Required when variance exceeds the Block threshold (default NGN 50,000 or 2%). Must hold the configured approver role."
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_je",
+  "fieldtype": "Link",
+  "options": "Journal Entry",
+  "label": "Variance Journal Entry",
+  "insert_after": "variance_approved_by",
+  "name": "POS Closing Shift-variance_je",
+  "read_only": 1,
+  "description": "Auto-populated by Sungas Close Policy hook after shift submit."
  }
 ]

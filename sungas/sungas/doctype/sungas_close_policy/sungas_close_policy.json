@@ -1,0 +1,182 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-05-31 06:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "variance_section",
+  "variance_warn_abs",
+  "variance_warn_pct",
+  "column_break_var",
+  "variance_block_abs",
+  "variance_block_pct",
+  "require_remarks_on_variance",
+  "accounts_section",
+  "cashier_recovery_account",
+  "overage_suspense_account",
+  "column_break_acc",
+  "shortage_writeoff_account",
+  "overage_income_account",
+  "stale_overage_days",
+  "approval_section",
+  "approver_role_primary",
+  "approver_role_secondary",
+  "column_break_app",
+  "max_shift_age_hours"
+ ],
+ "fields": [
+  {
+   "fieldname": "variance_section",
+   "fieldtype": "Section Break",
+   "label": "Variance Thresholds"
+  },
+  {
+   "fieldname": "variance_warn_abs",
+   "fieldtype": "Currency",
+   "label": "Warn Threshold (Absolute, NGN)",
+   "default": "5000",
+   "description": "Above this absolute variance, remarks become mandatory."
+  },
+  {
+   "fieldname": "variance_warn_pct",
+   "fieldtype": "Percent",
+   "label": "Warn Threshold (Percent of Expected)",
+   "default": "0.5",
+   "description": "Above this percent of expected total, remarks become mandatory."
+  },
+  {
+   "fieldname": "column_break_var",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "variance_block_abs",
+   "fieldtype": "Currency",
+   "label": "Block Threshold (Absolute, NGN)",
+   "default": "50000",
+   "description": "Above this absolute variance, requires approver role sign-off."
+  },
+  {
+   "fieldname": "variance_block_pct",
+   "fieldtype": "Percent",
+   "label": "Block Threshold (Percent of Expected)",
+   "default": "2",
+   "description": "Above this percent, requires approver role sign-off."
+  },
+  {
+   "fieldname": "require_remarks_on_variance",
+   "fieldtype": "Check",
+   "label": "Require Remarks When Variance Exceeds Warn Threshold",
+   "default": "1"
+  },
+  {
+   "fieldname": "accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Variance Accounts"
+  },
+  {
+   "fieldname": "cashier_recovery_account",
+   "fieldtype": "Link",
+   "label": "Cashier Recovery Account (Shortage)",
+   "options": "Account",
+   "description": "Receivable from cashier when shift is short. Default 2608."
+  },
+  {
+   "fieldname": "overage_suspense_account",
+   "fieldtype": "Link",
+   "label": "Overage Suspense Account",
+   "options": "Account",
+   "description": "Liability held when shift has overage. Default 6224."
+  },
+  {
+   "fieldname": "column_break_acc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "shortage_writeoff_account",
+   "fieldtype": "Link",
+   "label": "Shortage Write-Off Account",
+   "options": "Account",
+   "description": "Expense account when shortage is approved for write-off. Default 9246."
+  },
+  {
+   "fieldname": "overage_income_account",
+   "fieldtype": "Link",
+   "label": "Overage Time-Barred Income Account",
+   "options": "Account",
+   "description": "Income account when stale overage is recognised. Default 7205."
+  },
+  {
+   "fieldname": "stale_overage_days",
+   "fieldtype": "Int",
+   "label": "Days Before Overage is Time-Barred",
+   "default": "30"
+  },
+  {
+   "fieldname": "approval_section",
+   "fieldtype": "Section Break",
+   "label": "Approval Workflow"
+  },
+  {
+   "fieldname": "approver_role_primary",
+   "fieldtype": "Link",
+   "label": "Primary Approver Role",
+   "options": "Role",
+   "default": "Accounts Manager",
+   "description": "Users holding this role can approve block-threshold variances."
+  },
+  {
+   "fieldname": "approver_role_secondary",
+   "fieldtype": "Link",
+   "label": "Secondary Approver Role",
+   "options": "Role",
+   "default": "LPG Head of Operations",
+   "description": "Optional second role that can also approve."
+  },
+  {
+   "fieldname": "column_break_app",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "max_shift_age_hours",
+   "fieldtype": "Int",
+   "label": "Max Open Shift Age (Hours) Before Stale",
+   "default": "24",
+   "description": "POS shifts open longer than this are flagged by the stale-shift watchdog."
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-05-31 06:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Close Policy",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Accounts User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
