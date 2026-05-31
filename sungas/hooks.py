@@ -189,6 +189,15 @@ fixtures = [
         ]
     },
     {
+        "dt": "Custom DocPerm",
+        "filters": [
+            ["parent", "in", [
+                "POS Closing Shift"
+            ]],
+            ["permlevel", ">", 0]
+        ]
+    },
+    {
         "dt": "Role",
         "filters": [
             ["name", "in", [
