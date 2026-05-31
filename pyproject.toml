@@ -1,0 +1,19 @@
+[project]
+name = "sungas"
+authors = [
+    { name = "Manqala", email = "dev@manqala.com"}
+]
+description = "Bundled functionality for the Sungas Brand"
+requires-python = ">=3.10"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = [
+    # "frappe~=15.0.0" # Installed and managed by bench.
+]
+
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "sungas"
