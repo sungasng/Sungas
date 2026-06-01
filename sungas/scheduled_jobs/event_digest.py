@@ -12,9 +12,14 @@ from frappe.utils import (
     getdate,
     nowdate,
 )
-from frappe.translate import set_user_lang
 from frappe.utils.user import get_enabled_system_users
 from frappe.desk.reportview import get_filters_cond
+
+
+def _set_user_lang(language):
+    """v15-safe replacement for the removed frappe.translate.set_user_lang."""
+    if language:
+        frappe.local.lang = language
 
 
 weekdays = [
@@ -29,7 +34,7 @@ def send_event_digest():
         events = get_events(today, today, user.name, for_reminder=True)
 
         if events:
-            set_user_lang(user.name, user.language)
+            _set_user_lang(user.language)
 
             for e in events:
                 e.starts_on = format_datetime(e.starts_on, "hh:mm a")

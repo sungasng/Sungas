@@ -1,5 +1,6 @@
 [
  {
+  "name": "POS Closing Shift-Accounts Manager-1",
   "doctype": "Custom DocPerm",
   "parent": "POS Closing Shift",
   "parenttype": "DocType",
@@ -25,6 +26,7 @@
   "delete": 0
  },
  {
+  "name": "POS Closing Shift-LPG Head of Operations-1",
   "doctype": "Custom DocPerm",
   "parent": "POS Closing Shift",
   "parenttype": "DocType",
@@ -50,6 +52,7 @@
   "delete": 0
  },
  {
+  "name": "POS Closing Shift-System Manager-1",
   "doctype": "Custom DocPerm",
   "parent": "POS Closing Shift",
   "parenttype": "DocType",
