@@ -74,6 +74,20 @@ doctype_js = {
 
 # permission_query_conditions = {
 # 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
+permission_query_conditions = {
+    "POS Opening Shift": "sungas.overrides.outlet_scope.pos_opening_shift_query",
+    "POS Closing Shift": "sungas.overrides.outlet_scope.pos_closing_shift_query",
+    "POS Invoice": "sungas.overrides.outlet_scope.pos_invoice_query",
+}
+
+has_permission = {
+    "POS Opening Shift": "sungas.overrides.outlet_scope.pos_opening_shift_has_perm",
+    "POS Closing Shift": "sungas.overrides.outlet_scope.pos_closing_shift_has_perm",
+    "POS Invoice": "sungas.overrides.outlet_scope.pos_invoice_has_perm",
+}
+
+# (commented stub below kept intentionally for reference)
+# _permission_query_conditions = {
 # }
 #
 # has_permission = {
