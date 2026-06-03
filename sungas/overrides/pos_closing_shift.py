@@ -39,14 +39,27 @@ def _compute_variance(doc):
 
 
 def _variance_severity(total_var, total_expected, policy):
-    """Classify variance as 'none' | 'warn' | 'block'."""
+    """Classify variance as 'none' | 'warn' | 'block'.
+
+    Percent rules are gated by `block_pct_min_expected`: on small shifts
+    (e.g. test shifts or low-traffic days) the absolute rule is the only
+    one that fires, preventing false-positive blocks on a NGN 15k variance
+    against a NGN 340k expected total (which is 4.4% but immaterial in
+    absolute terms).
+    """
     thr = policy.get_thresholds()
     abs_var = abs(total_var)
     pct = (abs_var / total_expected * 100) if total_expected > 0 else 0
-    if abs_var >= thr["block_abs"] or pct >= thr["block_pct"]:
+    pct_rules_active = total_expected >= thr["block_pct_min_expected"]
+
+    block_by_pct = pct_rules_active and pct >= thr["block_pct"]
+    if abs_var >= thr["block_abs"] or block_by_pct:
         return "block", abs_var, pct
-    if abs_var >= thr["warn_abs"] or pct >= thr["warn_pct"]:
+
+    warn_by_pct = pct_rules_active and pct >= thr["warn_pct"]
+    if abs_var >= thr["warn_abs"] or warn_by_pct:
         return "warn", abs_var, pct
+
     return "none", abs_var, pct
 
 

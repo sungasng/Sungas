@@ -12,6 +12,7 @@
   "column_break_var",
   "variance_block_abs",
   "variance_block_pct",
+  "block_pct_min_expected",
   "require_remarks_on_variance",
   "accounts_section",
   "cashier_recovery_account",
@@ -62,7 +63,14 @@
    "fieldtype": "Percent",
    "label": "Block Threshold (Percent of Expected)",
    "default": "2",
-   "description": "Above this percent, requires approver role sign-off."
+   "description": "Above this percent, requires approver role sign-off (only applied when expected total exceeds the minimum below)."
+  },
+  {
+   "fieldname": "block_pct_min_expected",
+   "fieldtype": "Currency",
+   "label": "Percent-Block Minimum Expected (NGN)",
+   "default": "500000",
+   "description": "The percent-based block threshold only triggers when the shift's total expected amount exceeds this floor. Prevents small-shift false positives (e.g., a NGN 15k variance on a NGN 340k shift = 4.4% but is below 500k floor, so only the absolute rule applies)."
   },
   {
    "fieldname": "require_remarks_on_variance",
