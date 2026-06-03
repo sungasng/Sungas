@@ -13,6 +13,10 @@
   "variance_block_abs",
   "variance_block_pct",
   "block_pct_min_expected",
+  "overage_section",
+  "variance_warn_abs_overage",
+  "column_break_ovr",
+  "variance_block_abs_overage",
   "require_remarks_on_variance",
   "accounts_section",
   "cashier_recovery_account",
@@ -71,6 +75,29 @@
    "label": "Percent-Block Minimum Expected (NGN)",
    "default": "500000",
    "description": "The percent-based block threshold only triggers when the shift's total expected amount exceeds this floor. Prevents small-shift false positives (e.g., a NGN 15k variance on a NGN 340k shift = 4.4% but is below 500k floor, so only the absolute rule applies)."
+  },
+  {
+   "fieldname": "overage_section",
+   "fieldtype": "Section Break",
+   "label": "Overage Thresholds (Cashier Closed With More Cash Than Expected)"
+  },
+  {
+   "fieldname": "variance_warn_abs_overage",
+   "fieldtype": "Currency",
+   "label": "Overage Warn Threshold (Absolute, NGN)",
+   "default": "10000",
+   "description": "Above this overage, remarks become mandatory. Defaults to 2x the shortage warn threshold because overages are typically less serious than shortages (no immediate cash loss to the company)."
+  },
+  {
+   "fieldname": "column_break_ovr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "variance_block_abs_overage",
+   "fieldtype": "Currency",
+   "label": "Overage Block Threshold (Absolute, NGN)",
+   "default": "100000",
+   "description": "Above this overage, manager approval is required. Defaults to 2x the shortage block threshold. Percent-rule and minimum-expected floor are shared with the shortage rules above."
   },
   {
    "fieldname": "require_remarks_on_variance",

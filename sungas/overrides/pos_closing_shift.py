@@ -41,23 +41,33 @@ def _compute_variance(doc):
 def _variance_severity(total_var, total_expected, policy):
     """Classify variance as 'none' | 'warn' | 'block'.
 
-    Percent rules are gated by `block_pct_min_expected`: on small shifts
-    (e.g. test shifts or low-traffic days) the absolute rule is the only
-    one that fires, preventing false-positive blocks on a NGN 15k variance
-    against a NGN 340k expected total (which is 4.4% but immaterial in
-    absolute terms).
+    Asymmetric absolute thresholds:
+      - Shortage (total_var < 0): warn_abs / block_abs (default 5k / 50k).
+      - Overage  (total_var > 0): warn_abs_overage / block_abs_overage
+        (default 10k / 100k -- 2x looser because overages don't represent
+        an immediate cash loss to the company).
+
+    Percent rules are symmetric and gated by `block_pct_min_expected`:
+    on small shifts (e.g. test shifts or low-traffic days) the absolute
+    rule is the only one that fires, preventing false-positive blocks on
+    a NGN 15k variance against a NGN 340k expected total (4.4% but
+    immaterial in absolute terms).
     """
     thr = policy.get_thresholds()
     abs_var = abs(total_var)
     pct = (abs_var / total_expected * 100) if total_expected > 0 else 0
     pct_rules_active = total_expected >= thr["block_pct_min_expected"]
 
+    is_overage = total_var > 0
+    warn_abs = thr["warn_abs_overage"] if is_overage else thr["warn_abs"]
+    block_abs = thr["block_abs_overage"] if is_overage else thr["block_abs"]
+
     block_by_pct = pct_rules_active and pct >= thr["block_pct"]
-    if abs_var >= thr["block_abs"] or block_by_pct:
+    if abs_var >= block_abs or block_by_pct:
         return "block", abs_var, pct
 
     warn_by_pct = pct_rules_active and pct >= thr["warn_pct"]
-    if abs_var >= thr["warn_abs"] or warn_by_pct:
+    if abs_var >= warn_abs or warn_by_pct:
         return "warn", abs_var, pct
 
     return "none", abs_var, pct
