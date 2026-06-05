@@ -208,7 +208,13 @@ fixtures = [
             ["parent", "in", [
                 "POS Closing Shift"
             ]],
-            ["permlevel", ">", 0]
+            ["role", "in", [
+                "LPG Head of Operations",
+                "LPG Head of Finance",
+                "LPG Head of Sales",
+                "Accounts Manager",
+                "System Manager"
+            ]]
         ]
     },
     {
