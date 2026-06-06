@@ -34,6 +34,7 @@ doctype_js = {
     "Repost Item Valuation": "public/js/repost_item_valuation.js",
     "Delivery Note": "public/js/delivery_note.js",
     "Delivery Trip": "public/js/delivery_trip.js",
+    "POS Closing Shift": "public/js/pos_closing_shift.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -145,7 +146,8 @@ scheduler_events = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-    "erpnext.accounts.doctype.pos_invoice.pos_invoice.get_stock_availability": "sungas.overrides.pos_invoice.get_stock_availability"
+    "erpnext.accounts.doctype.pos_invoice.pos_invoice.get_stock_availability": "sungas.overrides.pos_invoice.get_stock_availability",
+    "posawesome.posawesome.doctype.pos_closing_shift.pos_closing_shift.submit_closing_shift": "sungas.overrides.pos_closing_shift_api.submit_closing_shift",
 }
 #
 # each overriding function accepts a `data` argument;
