@@ -38,13 +38,34 @@ def _is_exempt(user: str) -> bool:
 
 
 def _allowed_profiles(user: str) -> list[str]:
-    """Return list of POS Profile names this user is allowed via User Permission."""
+    """Return list of POS Profile names this user is allowed.
+
+    Resolution order:
+      1. Explicit User Permission rows (allow=POS Profile).
+      2. Implicit assignment via the POS Profile User child table -- if the
+         user is listed on any POS Profile's `applicable_for_users` table,
+         treat that as their scope. This avoids a fail-closed denial for
+         cashiers who were assigned to an outlet but never seeded with
+         User Permission rows.
+
+    Implicit assignment is a safety net only -- explicit User Permission
+    rows still take precedence and are the recommended scoping mechanism.
+    """
     rows = frappe.get_all(
         "User Permission",
         filters={"user": user, "allow": "POS Profile"},
         fields=["for_value"],
     )
-    return [r.for_value for r in rows if r.get("for_value")]
+    profiles = [r.for_value for r in rows if r.get("for_value")]
+    if profiles:
+        return profiles
+    # Fallback: derive from POS Profile User child table.
+    child_rows = frappe.get_all(
+        "POS Profile User",
+        filters={"user": user},
+        fields=["parent"],
+    )
+    return [r.parent for r in child_rows if r.get("parent")]
 
 
 def _sql_in_clause(values: list[str]) -> str:
@@ -71,6 +92,10 @@ def _query_by_profile_field(user: str, table: str, field: str) -> str:
 
 def _has_perm_by_profile(doc, user: str, profile_field: str = "pos_profile") -> bool:
     if _is_exempt(user):
+        return True
+    # Owners always retain access to their own docs (covers a cashier
+    # editing the shift they themselves opened).
+    if getattr(doc, "owner", None) == user:
         return True
     profiles = set(_allowed_profiles(user))
     if not profiles:
