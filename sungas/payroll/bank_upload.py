@@ -57,6 +57,39 @@ SUPPORTED_BANKS = {
 # Salary slip row resolver
 # ---------------------------------------------------------------------------
 
+def _resolve_bank_code_field() -> str:
+    """Return the field on Bank doctype that holds the NIBSS / clearing code.
+
+    Different Frappe versions + custom-field setups use different field
+    names. Probe known candidates in priority order and cache the result.
+    """
+    cached = frappe.local.cache.get("sungas_bank_code_field") if hasattr(frappe.local, "cache") else None
+    if cached:
+        return cached
+
+    meta = frappe.get_meta("Bank")
+    candidates = (
+        "bank_code",
+        "nibss_code",
+        "custom_nibss_code",
+        "clearing_code",
+        "swift_number",
+        "branch_code",
+    )
+    for candidate in candidates:
+        if meta.has_field(candidate):
+            try:
+                frappe.local.cache["sungas_bank_code_field"] = candidate
+            except Exception:
+                pass
+            return candidate
+
+    frappe.throw(frappe._(
+        "Could not find a NIBSS-code field on the Bank doctype. "
+        "Looked for: {0}. Add a custom field named 'nibss_code' (Data) on "
+        "the Bank doctype and populate it for each bank.").format(", ".join(candidates)))
+
+
 def _get_payroll_rows(payroll_entry_name: str, include_draft: bool = False) -> list[dict]:
     """Return one row per submitted Salary Slip linked to the Payroll Entry.
 
@@ -86,6 +119,8 @@ def _get_payroll_rows(payroll_entry_name: str, include_draft: bool = False) -> l
         order_by="employee_name asc",
     )
 
+    bank_code_field = _resolve_bank_code_field()
+
     rows = []
     skipped = []
     for s in slips:
@@ -108,7 +143,7 @@ def _get_payroll_rows(payroll_entry_name: str, include_draft: bool = False) -> l
             continue
 
         # Look up the 6-digit NIBSS code on the Bank doctype.
-        nibss_code = frappe.db.get_value("Bank", bank_name, "bank_code") or ""
+        nibss_code = frappe.db.get_value("Bank", bank_name, bank_code_field) or ""
         if not nibss_code:
             skipped.append((s.employee_name, f"no NIBSS code for bank {bank_name}"))
             continue
