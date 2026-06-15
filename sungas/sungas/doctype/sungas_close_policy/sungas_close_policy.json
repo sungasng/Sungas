@@ -13,6 +13,9 @@
   "variance_block_abs",
   "variance_block_pct",
   "block_pct_min_expected",
+  "variance_critical_abs",
+  "variance_critical_pct",
+  "variance_critical_abs_overage",
   "overage_section",
   "variance_warn_abs_overage",
   "column_break_ovr",
@@ -75,6 +78,27 @@
    "label": "Percent-Block Minimum Expected (NGN)",
    "default": "500000",
    "description": "The percent-based block threshold only triggers when the shift's total expected amount exceeds this floor. Prevents small-shift false positives (e.g., a NGN 15k variance on a NGN 340k shift = 4.4% but is below 500k floor, so only the absolute rule applies)."
+  },
+  {
+   "fieldname": "variance_critical_abs",
+   "fieldtype": "Currency",
+   "label": "Critical Threshold (Shortage Absolute, NGN)",
+   "default": "100000",
+   "description": "Above this shortage, routing escalates to HOD Finance + (optional) COO sign-off. Used by Wave D-1 Sequential Workflow."
+  },
+  {
+   "fieldname": "variance_critical_pct",
+   "fieldtype": "Percent",
+   "label": "Critical Threshold (Percent of Expected)",
+   "default": "3",
+   "description": "Above this percent, escalates to HOD Finance. Subject to the same min-expected floor as block_pct_min_expected."
+  },
+  {
+   "fieldname": "variance_critical_abs_overage",
+   "fieldtype": "Currency",
+   "label": "Critical Threshold (Overage Absolute, NGN)",
+   "default": "200000",
+   "description": "Above this overage, escalates to HOD Finance. Defaults to 2x the shortage critical threshold."
   },
   {
    "fieldname": "overage_section",

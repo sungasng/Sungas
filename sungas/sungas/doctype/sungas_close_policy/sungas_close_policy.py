@@ -16,6 +16,9 @@ class SungasClosePolicy(Document):
             "block_pct_min_expected": float(self.block_pct_min_expected or 500000),
             "warn_abs_overage": float(self.variance_warn_abs_overage or 10000),
             "block_abs_overage": float(self.variance_block_abs_overage or 100000),
+            "critical_abs": float(self.get("variance_critical_abs") or 100000),
+            "critical_pct": float(self.get("variance_critical_pct") or 3.0),
+            "critical_abs_overage": float(self.get("variance_critical_abs_overage") or 200000),
         }
 
     def get_approver_roles(self):

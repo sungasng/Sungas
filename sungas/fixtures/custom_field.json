@@ -96,5 +96,16 @@
   "read_only": 1,
   "description": "Auto-populated by Sungas Close Policy hook after shift submit.",
   "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Profile",
+  "fieldname": "outlet_manager",
+  "fieldtype": "Link",
+  "options": "User",
+  "label": "Outlet Manager",
+  "insert_after": "company",
+  "name": "POS Profile-outlet_manager",
+  "description": "Receives 24h Open Shift Age escalation emails for shifts on this profile. Set by Plant Manager / HOD Ops."
  }
 ]

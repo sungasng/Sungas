@@ -253,9 +253,12 @@ The recommended path is (2) — keeps the audit chain intact.
 |---|---|---|---|
 | **None** | < ₦5,000 | < ₦10,000 | Shift submits, no remarks required |
 | **Warn (soft)** | ₦5,000 – ₦49,999 | ₦10,000 – ₦99,999 | Shift submits with **mandatory remarks**. Variance JE auto-posted |
-| **Block (hard)** | ≥ ₦50,000 OR ≥ 2 % when shift ≥ ₦500,000 | ≥ ₦100,000 OR ≥ 2 % when shift ≥ ₦500,000 | Submit is **blocked**. Draft is saved, awaiting approver. See §3 |
+| **Block (hard)** | ₦50,000 – ₦99,999 OR ≥ 2 % when shift ≥ ₦500,000 | ₦100,000 – ₦199,999 OR ≥ 2 % when shift ≥ ₦500,000 | Submit is **blocked**. Draft is saved, awaiting approver. See §5 |
+| **Critical** | ≥ ₦100,000 OR ≥ 3 % when shift ≥ ₦500,000 | ≥ ₦200,000 OR ≥ 3 % when shift ≥ ₦500,000 | Same as Block today; Wave D-1 will route this through HOD Finance + optional COO sign-off |
 
 > The percentage rules only kick in for shifts whose expected total is ≥ ₦500,000 (the `block_pct_min_expected` floor). This prevents tiny shifts from getting blocked over a 4 % variance that is immaterial in absolute terms.
+>
+> **All four threshold sets are editable** in `/app/sungas-close-policy` — including the new `variance_critical_abs`, `variance_critical_pct`, and `variance_critical_abs_overage` fields.
 
 ### 4.4 Continuing to Sell After a Blocked Close
 
@@ -509,10 +512,13 @@ The following roles see ALL outlets:
 |---|---|---|
 | `warn_abs` | 5,000 | Shortage warn threshold (NGN) |
 | `block_abs` | 50,000 | Shortage block threshold (NGN) |
+| `critical_abs` | 100,000 | Shortage critical threshold (NGN) — escalates to HOD Finance + optional COO |
 | `warn_abs_overage` | 10,000 | Overage warn threshold (NGN) |
 | `block_abs_overage` | 100,000 | Overage block threshold (NGN) |
+| `critical_abs_overage` | 200,000 | Overage critical threshold (NGN) |
 | `warn_pct` | 0.5 % | Soft variance pct |
 | `block_pct` | 2 % | Hard variance pct |
+| `critical_pct` | 3 % | Critical variance pct |
 | `block_pct_min_expected` | 500,000 | Min shift size before pct rules apply |
 | `require_remarks_on_variance` | ON | Force remarks at warn band+ |
 | `approver_roles` | LPG Head of Operations, Accounts Manager, LPG Head of Finance, System Manager | Who can unblock |

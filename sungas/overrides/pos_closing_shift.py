@@ -39,19 +39,24 @@ def _compute_variance(doc):
 
 
 def _variance_severity(total_var, total_expected, policy):
-    """Classify variance as 'none' | 'warn' | 'block'.
+    """Classify variance as 'none' | 'warn' | 'block' | 'critical'.
 
     Asymmetric absolute thresholds:
-      - Shortage (total_var < 0): warn_abs / block_abs (default 5k / 50k).
-      - Overage  (total_var > 0): warn_abs_overage / block_abs_overage
-        (default 10k / 100k -- 2x looser because overages don't represent
-        an immediate cash loss to the company).
+      - Shortage (total_var < 0): warn_abs / block_abs / critical_abs
+        (defaults 5k / 50k / 100k).
+      - Overage  (total_var > 0): warn_abs_overage / block_abs_overage /
+        critical_abs_overage (defaults 10k / 100k / 200k -- ~2x looser
+        because overages don't represent an immediate cash loss).
 
     Percent rules are symmetric and gated by `block_pct_min_expected`:
-    on small shifts (e.g. test shifts or low-traffic days) the absolute
-    rule is the only one that fires, preventing false-positive blocks on
-    a NGN 15k variance against a NGN 340k expected total (4.4% but
-    immaterial in absolute terms).
+    on small shifts the absolute rule is the only one that fires.
+
+    Tier semantics:
+      - 'none'     : no enforcement; submit allowed.
+      - 'warn'     : remarks required; otherwise submit allowed.
+      - 'block'    : submit requires approver (LPG Head of Operations etc.).
+      - 'critical' : submit requires HOD Finance + (optional) COO sign-off.
+                     Used by Wave D-1 Sequential Workflow routing.
     """
     thr = policy.get_thresholds()
     abs_var = abs(total_var)
@@ -61,6 +66,11 @@ def _variance_severity(total_var, total_expected, policy):
     is_overage = total_var > 0
     warn_abs = thr["warn_abs_overage"] if is_overage else thr["warn_abs"]
     block_abs = thr["block_abs_overage"] if is_overage else thr["block_abs"]
+    critical_abs = thr["critical_abs_overage"] if is_overage else thr["critical_abs"]
+
+    critical_by_pct = pct_rules_active and pct >= thr["critical_pct"]
+    if abs_var >= critical_abs or critical_by_pct:
+        return "critical", abs_var, pct
 
     block_by_pct = pct_rules_active and pct >= thr["block_pct"]
     if abs_var >= block_abs or block_by_pct:
@@ -95,8 +105,8 @@ def validate_variance(doc, method=None):
             title=_("Variance Remarks Required")
         )
 
-    # Block-threshold approver check
-    if severity == "block":
+    # Block-/Critical-threshold approver check
+    if severity in ("block", "critical"):
         approver_roles = policy.get_approver_roles()
         current_user_roles = set(frappe.get_roles(frappe.session.user))
         if current_user_roles.intersection(approver_roles):
@@ -104,11 +114,12 @@ def validate_variance(doc, method=None):
             return
         approver = doc.get("variance_approved_by")
         if not approver:
+            tier_label = "critical" if severity == "critical" else "block"
             frappe.throw(
-                _("Variance of NGN {0:,.2f} ({1:.2f}%) exceeds the block threshold and requires "
-                  "approval from one of: {2}. Either ask a holder of these roles to close the shift, "
+                _("Variance of NGN {0:,.2f} ({1:.2f}%) exceeds the {2} threshold and requires "
+                  "approval from one of: {3}. Either ask a holder of these roles to close the shift, "
                   "OR enter the approver's User ID in the 'Variance Approved By' field.").format(
-                    abs_var, pct, ", ".join(approver_roles)
+                    abs_var, pct, tier_label, ", ".join(approver_roles)
                 ),
                 title=_("Variance Approval Required")
             )
