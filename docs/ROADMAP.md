@@ -239,6 +239,7 @@
 | **9-1** | Month Close Pack workflow doctype (Draft → HOD Finance → Head Internal Control → COO → Locked) | 🟢 P3 |
 | **9-2** | Opening Balances import | 🟢 P3 |
 | **9-3** | UAT + cutover | 🟢 P3 |
+| **9-4** | **POS Invoice archival / partitioning strategy** — at 22k invoices/day (8M/year), plan MySQL year-partition on `tabPOS Invoice` and a cold-archive doctype for closed periods (>13 months). Needed by mid-Year-2 to keep list-view + report performance constant. | 🟡 P2 |
 
 ---
 
