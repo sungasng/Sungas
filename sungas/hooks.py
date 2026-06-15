@@ -35,6 +35,7 @@ doctype_js = {
     "Delivery Note": "public/js/delivery_note.js",
     "Delivery Trip": "public/js/delivery_trip.js",
     "POS Closing Shift": "public/js/pos_closing_shift.js",
+    "Payroll Entry": "public/js/payroll_entry.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
