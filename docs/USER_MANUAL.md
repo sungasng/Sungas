@@ -1,8 +1,8 @@
 # Sungas ERPNext Operations Manual
 
-> **Version:** v1.1 — June 2026
+> **Version:** v1.3 — June 2026
 > **Audience:** Cashiers, Outlet Managers, Sales Managers, Approvers (Plant Manager / Head of Sales / Head of Operations / Head of Finance), Accountants, Inventory Officers, System Administrators.
-> **Scope:** Daily operations, POS Awesome, pricing tier engine + price change request workflow, variance handling, FIRS receipt compliance, role-based access. Covers everything live in production as of the date above. Roadmap items are explicitly flagged in §13.
+> **Scope:** Daily operations, POS Awesome, pricing tier engine + price change request workflow, sequential variance approval workflow (Wave D-1), variance JE handling, FIRS receipt compliance, role-based access. Covers everything live in production as of the date above. Roadmap items are explicitly flagged in §13.
 
 ---
 
@@ -266,38 +266,55 @@ If the close was blocked at the hard band, **the opening shift remains open**. Y
 
 ---
 
-## 5. Hard-Variance Approval Workflow (Path B)
+## 5. Hard-Variance Approval Workflow (Path B — Sequential)
 
-This is the workflow you saw in the spec — it kicks in whenever variance crosses the block threshold.
+When variance crosses the block or critical threshold, the shift enters the **Variance Approval Workflow** — a sequential, role-based pipeline visible at the top of every draft shift.
 
-### 5.1 What the cashier sees
+### 5.1 Workflow states
+
+```
+Draft → Pending Plant Manager → Pending HOD Operations → [Pending HOD Finance] → [Pending COO] → Approved → Submitted
+                                                                              ↓
+                                                                          Rejected (back to cashier)
+```
+
+- **Block (Hard)** variance routes: Plant Manager → HOD Operations → Approved
+- **Critical** variance routes: Plant Manager → HOD Operations → HOD Finance → Approved
+- **Critical + `require_coo_on_critical` flag ON**: Plant Manager → HOD Operations → HOD Finance → COO → Approved
+
+Every state stamps a signature audit row (`plant_manager_signed_by`/`signed_on`, `hod_ops_signed_by`/`signed_on`, etc.) — visible in the **Variance Approval Workflow** section of the form (collapsible, permlevel 1 — read-only for cashiers).
+
+### 5.2 What the cashier sees
 
 When submit is blocked, two messages appear in sequence:
 
-1. **Block message:** *"Variance of NGN X,XXX.XX exceeds the block threshold and requires approval from one of: LPG Head of Operations, Accounts Manager, LPG Head of Finance, System Manager."*
-2. **Draft confirmation:** *"Draft POSA-CS-26-XXXXXX has been saved and is awaiting approval. Once an approver fills the 'Variance Approved By' field via Desk, you (or a manager) can submit it from /app/pos-closing-shift/POSA-CS-26-XXXXXX."*
+1. **Block message:** *"Variance of NGN X,XXX.XX exceeds the block/critical threshold and requires approval via the sequential workflow (Plant Manager → HOD Operations → …). Save the draft and have the approvers act on it from /app/pos-closing-shift/POSA-CS-26-XXXXXX before re-submitting."*
+2. **Draft confirmation** from POS Awesome.
 
 The opening shift stays open; the cashier resumes sales.
 
-### 5.2 What the approver does
+### 5.3 What each approver does
 
-> **Approver = anyone holding `LPG Head of Operations`, `LPG Head of Finance`, `Accounts Manager`, or `System Manager`.** (Wave D will tighten this to sequential routing.)
+Each approver gets the draft in their **Pending Workflow** inbox.
 
-1. Open the Desk URL: `https://sungasmis.v.frappe.cloud/app/pos-closing-shift?docstatus=0`. You will see all pending drafts.
-2. Click the relevant draft.
-3. Review the variance + cashier's remarks at the top (orange banner shows the variance amount and direction).
-4. In the **Variance Approved By** field, pick a user — the dropdown is **filtered to approver-role users only**. Pick yourself (or the user delegated to approve).
-5. Optionally add a follow-up note in **Variance Remarks**.
-6. Press **Ctrl+S** to save. **Do NOT click Submit.**
+1. Open the draft from `/app/pos-closing-shift?workflow_state=Pending%20Plant%20Manager` (or filter by your role's state).
+2. Review variance + cashier's remarks at the top.
+3. Click the workflow button at the top of the form:
+   - **Plant Manager:** Approve → advances to *Pending HOD Operations*
+   - **HOD Operations:** Approve (block) → advances to *Approved* ; or Escalate to Finance (critical) → advances to *Pending HOD Finance*
+   - **HOD Finance:** Approve → advances to *Approved* ; or Escalate to COO (if policy flag set) → advances to *Pending COO*
+   - **COO (System Manager):** Approve → advances to *Approved*
+4. **Or click Reject** at any stage — fills `rejection_reason`, returns the doc to *Rejected* state. The cashier can **Reopen** it from *Rejected* → *Draft* to edit and resubmit.
 
-### 5.3 Closing the shift after approval
+When the workflow reaches **Approved**, the doc auto-submits (Frappe Workflow's `doc_status=1` mapping). `on_submit` then fires `post_variance_journal`, which auto-creates the variance Journal Entry (see §6).
 
-Either the cashier or any user with submit rights:
+### 5.4 Override path (legacy single-approver)
 
-- **Path A (cashier re-submits via POS Awesome):** Click Close Shift again. The dialog is fresh, but our override detects the existing draft for the same opening shift and updates it with the new totals before re-attempting submit. Because the approver is now set, the block lifts and the close proceeds.
-- **Path B (admin submits via Desk):** Open `/app/pos-closing-shift/POSA-CS-26-XXXXXX` and click **Submit** at the top right.
+For backwards compatibility / admin override, the legacy single-approver path still works: if a user holding any of the configured `approver_roles` populates `variance_approved_by` directly on the draft and submits, the workflow is bypassed. **Use this only for emergencies** — the audit trail is weaker.
 
-When the submit succeeds, `on_submit` fires `post_variance_journal`, which auto-creates a Journal Entry (see §6).
+### 5.5 Warn-band (Path A — soft variance)
+
+Warn-band shifts do NOT enter the workflow. They submit directly **with mandatory remarks**. The Outlet Manager signature (`outlet_manager_signed_by`) can be captured but is not enforced today (Wave D-4 will tighten this).
 
 ---
 

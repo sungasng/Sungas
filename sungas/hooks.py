@@ -124,6 +124,7 @@ doc_events = {
         'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry'
     },
     "POS Closing Shift": {
+        'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
         'before_submit': 'sungas.overrides.pos_closing_shift.validate_variance',
         'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
     },
@@ -201,7 +202,9 @@ fixtures = [
         "filters": [
             ["dt", "in", [
                 "Journal Entry",
-                "POS Closing Shift"
+                "POS Closing Shift",
+                "POS Profile",
+                "Sungas Close Policy"
             ]]
         ]
     },

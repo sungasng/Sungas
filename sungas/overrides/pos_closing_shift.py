@@ -83,8 +83,95 @@ def _variance_severity(total_var, total_expected, policy):
     return "none", abs_var, pct
 
 
+def compute_variance_severity(doc, method=None):
+    """validate hook: compute + persist `variance_severity` and auto-route
+    block/critical variances into the workflow if not already in one.
+
+    Runs on every save. Idempotent.
+    """
+    if not frappe.db.exists("DocType", "Sungas Close Policy"):
+        return
+    policy = frappe.get_single("Sungas Close Policy")
+    total_var, total_expected = _compute_variance(doc)
+    severity, _abs_var, _pct = _variance_severity(total_var, total_expected, policy)
+    doc.set("variance_severity", severity)
+
+    # Auto-route into the workflow when block/critical and not yet in one.
+    if severity in ("block", "critical"):
+        current_state = doc.get("workflow_state")
+        if not current_state or current_state in ("", "Draft"):
+            doc.set("workflow_state", "Pending Plant Manager")
+    else:
+        # Warn / none: keep workflow_state in Draft (Path A).
+        if not doc.get("workflow_state"):
+            doc.set("workflow_state", "Draft")
+
+    # Stamp signer fields on workflow transitions.
+    _stamp_workflow_signers(doc)
+
+
+def _stamp_workflow_signers(doc) -> None:
+    """When workflow_state has just changed, stamp the signer + timestamp on
+    the corresponding approval field.
+
+    Detection: compare new workflow_state with the previously saved value.
+    Idempotent -- never overwrites an already-stamped field.
+    """
+    from frappe.utils import now_datetime
+
+    new_state = doc.get("workflow_state")
+    if not new_state:
+        return
+
+    if doc.is_new():
+        old_state = None
+    else:
+        prev = doc.get_doc_before_save()
+        old_state = prev.get("workflow_state") if prev else None
+
+    if old_state == new_state:
+        return  # no transition
+
+    # Map: the transition that produces `new_state` was performed by the
+    # role that approved the OLD state -- so we stamp the signer that
+    # "owns" the OLD state.
+    user = frappe.session.user
+    ts = now_datetime()
+    stamp_map = {
+        # When moving from X to Y, stamp X's signer.
+        ("Pending Plant Manager", "Pending HOD Operations"):
+            ("plant_manager_signed_by", "plant_manager_signed_on"),
+        ("Pending HOD Operations", "Approved"):
+            ("hod_ops_signed_by", "hod_ops_signed_on"),
+        ("Pending HOD Operations", "Pending HOD Finance"):
+            ("hod_ops_signed_by", "hod_ops_signed_on"),
+        ("Pending HOD Finance", "Approved"):
+            ("hod_finance_signed_by", "hod_finance_signed_on"),
+        ("Pending HOD Finance", "Pending COO"):
+            ("hod_finance_signed_by", "hod_finance_signed_on"),
+        ("Pending COO", "Approved"):
+            ("coo_signed_by", "coo_signed_on"),
+    }
+    key = (old_state, new_state)
+    if key in stamp_map:
+        by_field, on_field = stamp_map[key]
+        if not doc.get(by_field):
+            doc.set(by_field, user)
+            doc.set(on_field, ts)
+        # Mirror the latest approver into variance_approved_by so the JE
+        # auto-post in on_submit keeps working.
+        if new_state == "Approved":
+            doc.set("variance_approved_by", user)
+
+
 def validate_variance(doc, method=None):
-    """before_submit hook: enforce variance thresholds."""
+    """before_submit hook: enforce variance thresholds.
+
+    For warn-band: just require remarks (Path A).
+    For block/critical-band: require the workflow to have reached 'Approved'
+    state OR the legacy `variance_approved_by` field to be populated by an
+    approver-role user.
+    """
     if not frappe.db.exists("DocType", "Sungas Close Policy"):
         return  # policy doctype not installed yet, skip
     policy = frappe.get_single("Sungas Close Policy")
@@ -107,19 +194,28 @@ def validate_variance(doc, method=None):
 
     # Block-/Critical-threshold approver check
     if severity in ("block", "critical"):
+        # Path 1: workflow has reached Approved -> allow.
+        if doc.get("workflow_state") == "Approved":
+            return
+        # Path 2: legacy single-approver path (for backwards compatibility
+        # and admin override) -- variance_approved_by populated AND user
+        # holds an approver role.
         approver_roles = policy.get_approver_roles()
         current_user_roles = set(frappe.get_roles(frappe.session.user))
         if current_user_roles.intersection(approver_roles):
-            # The current user IS an approver, proceed.
             return
         approver = doc.get("variance_approved_by")
         if not approver:
             tier_label = "critical" if severity == "critical" else "block"
             frappe.throw(
                 _("Variance of NGN {0:,.2f} ({1:.2f}%) exceeds the {2} threshold and requires "
-                  "approval from one of: {3}. Either ask a holder of these roles to close the shift, "
-                  "OR enter the approver's User ID in the 'Variance Approved By' field.").format(
-                    abs_var, pct, tier_label, ", ".join(approver_roles)
+                  "approval via the sequential workflow (Plant Manager -> HOD Operations"
+                  "{3}). Save the draft and have the approvers act on it from "
+                  "/app/pos-closing-shift/{4} before re-submitting.").format(
+                    abs_var, pct, tier_label,
+                    " -> HOD Finance" + (" -> COO" if policy.get("require_coo_on_critical") else "")
+                    if severity == "critical" else "",
+                    doc.name or "<new>"
                 ),
                 title=_("Variance Approval Required")
             )
