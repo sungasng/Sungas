@@ -109,6 +109,7 @@
   "read_only": 1,
   "in_list_view": 1,
   "in_standard_filter": 1,
+  "search_index": 1,
   "description": "Computed in validate() from Sungas Close Policy thresholds. Drives the variance approval workflow routing.",
   "permlevel": 1
  },

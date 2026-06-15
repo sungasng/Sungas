@@ -42,30 +42,36 @@ def _allowed_profiles(user: str) -> list[str]:
 
     Resolution order:
       1. Explicit User Permission rows (allow=POS Profile).
-      2. Implicit assignment via the POS Profile User child table -- if the
-         user is listed on any POS Profile's `applicable_for_users` table,
-         treat that as their scope. This avoids a fail-closed denial for
-         cashiers who were assigned to an outlet but never seeded with
-         User Permission rows.
+      2. Implicit assignment via the POS Profile User child table.
 
     Implicit assignment is a safety net only -- explicit User Permission
     rows still take precedence and are the recommended scoping mechanism.
+
+    Result is cached per request on frappe.local to avoid repeated lookups
+    when permission_query_conditions fires across multiple list queries in
+    the same session (e.g. paginating POS Closing Shift list view).
     """
+    cache_key = f"sungas_allowed_profiles::{user}"
+    cached = getattr(frappe.local, cache_key, None)
+    if cached is not None:
+        return cached
+
     rows = frappe.get_all(
         "User Permission",
         filters={"user": user, "allow": "POS Profile"},
         fields=["for_value"],
     )
     profiles = [r.for_value for r in rows if r.get("for_value")]
-    if profiles:
-        return profiles
-    # Fallback: derive from POS Profile User child table.
-    child_rows = frappe.get_all(
-        "POS Profile User",
-        filters={"user": user},
-        fields=["parent"],
-    )
-    return [r.parent for r in child_rows if r.get("parent")]
+    if not profiles:
+        child_rows = frappe.get_all(
+            "POS Profile User",
+            filters={"user": user},
+            fields=["parent"],
+        )
+        profiles = [r.parent for r in child_rows if r.get("parent")]
+
+    setattr(frappe.local, cache_key, profiles)
+    return profiles
 
 
 def _sql_in_clause(values: list[str]) -> str:

@@ -100,11 +100,14 @@ def _get_payroll_rows(payroll_entry_name: str, include_draft: bool = False) -> l
       - nibss_code            (6-digit NIBSS code, e.g. "000221")
       - net_pay               (Currency, NGN)
 
-    Validation:
-      - Skips slips with missing bank_name / bank_ac_no / NIBSS code; logs a
-        warning so finance can fix Employee records before re-running.
+    Implementation notes:
+      - Resolves Employee + Bank fields via two batch queries to avoid an
+        N+1 (relevant when the run has 200+ slips).
+      - Validates each row; skipped rows are aggregated and logged once.
       - Skips slips with net_pay <= 0.
     """
+    if not frappe.db.exists("DocType", "Payroll Entry"):
+        frappe.throw(_("Payroll Entry doctype not found."))
     if not frappe.db.exists("Payroll Entry", payroll_entry_name):
         frappe.throw(_("Payroll Entry {0} does not exist").format(payroll_entry_name))
 
@@ -119,21 +122,62 @@ def _get_payroll_rows(payroll_entry_name: str, include_draft: bool = False) -> l
         order_by="employee_name asc",
     )
 
+    if not slips:
+        return []
+
     bank_code_field = _resolve_bank_code_field()
 
+    # ------------------------------------------------------------------
+    # Batch lookup 1: Employee bank details (only for slips missing them).
+    # ------------------------------------------------------------------
+    emp_ids_needed = [s.employee for s in slips
+                      if not (s.bank_name and s.bank_account_no)]
+    emp_lookup: dict[str, dict] = {}
+    if emp_ids_needed:
+        emp_rows = frappe.get_all(
+            "Employee",
+            filters=[["name", "in", emp_ids_needed]],
+            fields=["name", "bank_name", "bank_ac_no"],
+        )
+        emp_lookup = {r.name: r for r in emp_rows}
+
+    # ------------------------------------------------------------------
+    # Batch lookup 2: NIBSS code per Bank.
+    # ------------------------------------------------------------------
+    # Gather every distinct bank_name referenced by slips OR employees.
+    bank_names: set[str] = set()
+    for s in slips:
+        if s.bank_name:
+            bank_names.add(s.bank_name)
+    for emp in emp_lookup.values():
+        if emp.bank_name:
+            bank_names.add(emp.bank_name)
+
+    bank_code_lookup: dict[str, str] = {}
+    if bank_names:
+        bank_rows = frappe.get_all(
+            "Bank",
+            filters=[["name", "in", list(bank_names)]],
+            fields=["name", bank_code_field],
+        )
+        for r in bank_rows:
+            code = r.get(bank_code_field) or ""
+            bank_code_lookup[r.name] = str(code).strip().zfill(6) if code else ""
+
+    # ------------------------------------------------------------------
+    # Compose rows with skipped-aggregate.
+    # ------------------------------------------------------------------
     rows = []
-    skipped = []
+    skipped: list[tuple[str, str]] = []
+
     for s in slips:
         if flt(s.net_pay) <= 0:
             continue
 
-        # Resolve bank fields directly from Employee if the slip didn't snapshot them.
         bank_name = s.bank_name
         bank_ac_no = s.bank_account_no
         if not bank_name or not bank_ac_no:
-            emp = frappe.db.get_value(
-                "Employee", s.employee, ["bank_name", "bank_ac_no"], as_dict=True
-            )
+            emp = emp_lookup.get(s.employee)
             if emp:
                 bank_name = bank_name or emp.bank_name
                 bank_ac_no = bank_ac_no or emp.bank_ac_no
@@ -142,30 +186,27 @@ def _get_payroll_rows(payroll_entry_name: str, include_draft: bool = False) -> l
             skipped.append((s.employee_name, "missing bank details"))
             continue
 
-        # Look up the 6-digit NIBSS code on the Bank doctype.
-        nibss_code = frappe.db.get_value("Bank", bank_name, bank_code_field) or ""
+        nibss_code = bank_code_lookup.get(bank_name, "")
         if not nibss_code:
-            skipped.append((s.employee_name, f"no NIBSS code for bank {bank_name}"))
+            skipped.append((s.employee_name, f"no NIBSS code for bank '{bank_name}'"))
             continue
-
-        # Normalise: bank code 6-char, account number string preserve leading zeros.
-        nibss_code = str(nibss_code).strip().zfill(6)
-        bank_ac_no = str(bank_ac_no).strip()
 
         rows.append({
             "employee_name": (s.employee_name or "").upper(),
             "bank_name": bank_name,
-            "bank_ac_no": bank_ac_no,
+            "bank_ac_no": str(bank_ac_no).strip(),
             "nibss_code": nibss_code,
             "net_pay": flt(s.net_pay),
         })
 
+    # Aggregate skipped into one log entry (instead of N entries).
     if skipped:
-        for name, reason in skipped:
-            frappe.log_error(
-                title="Bank Upload — skipped employee",
-                message=f"Payroll Entry: {payroll_entry_name}\n{name}: {reason}",
-            )
+        lines = [f"{name}: {reason}" for name, reason in skipped]
+        frappe.log_error(
+            title="Bank Upload — skipped employees",
+            message=f"Payroll Entry: {payroll_entry_name}\n"
+                    f"Total skipped: {len(skipped)}\n\n" + "\n".join(lines),
+        )
 
     return rows
 

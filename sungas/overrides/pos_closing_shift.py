@@ -87,8 +87,15 @@ def compute_variance_severity(doc, method=None):
     """validate hook: compute + persist `variance_severity` and auto-route
     block/critical variances into the workflow if not already in one.
 
-    Runs on every save. Idempotent.
+    Runs on every save. Idempotent. Short-circuits early when the document
+    doesn't have payment_reconciliation populated yet (e.g. autosave with
+    bare metadata) -- avoids loading the Sungas Close Policy single doc on
+    a no-op save.
     """
+    # Fast-fail: nothing to score yet.
+    pr_rows = doc.get("payment_reconciliation") or []
+    if not pr_rows:
+        return
     if not frappe.db.exists("DocType", "Sungas Close Policy"):
         return
     policy = frappe.get_single("Sungas Close Policy")
