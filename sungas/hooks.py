@@ -128,6 +128,10 @@ doc_events = {
         'before_submit': 'sungas.overrides.pos_closing_shift.validate_variance',
         'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
     },
+    "POS Invoice": {
+        'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
+        'validate': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
+    },
 }
 
 # Scheduled Tasks

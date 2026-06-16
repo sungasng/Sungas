@@ -162,17 +162,19 @@ def _build_workflow_doc() -> dict:
         }
         for name, doc_status, _style in STATES
     ]
-    transitions = [
-        {
-            "state": s,
-            "action": a,
-            "next_state": ns,
-            "allowed": roles,
-            "condition": cond,
-            "allow_self_approval": 1,
-        }
-        for a, s, ns, roles, cond in TRANSITIONS
-    ]
+    # Frappe v15: Workflow Transition.allowed is a single Role link, not a
+    # CSV. We expand each transition into N rows (one per allowed role).
+    transitions = []
+    for action, src_state, next_state, roles_csv, cond in TRANSITIONS:
+        for role in [r.strip() for r in roles_csv.split(",") if r.strip()]:
+            transitions.append({
+                "state": src_state,
+                "action": action,
+                "next_state": next_state,
+                "allowed": role,
+                "condition": cond,
+                "allow_self_approval": 1,
+            })
     return {
         "doctype": "Workflow",
         "workflow_name": WORKFLOW_NAME,

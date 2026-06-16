@@ -260,9 +260,27 @@ The recommended path is (2) — keeps the audit chain intact.
 >
 > **All four threshold sets are editable** in `/app/sungas-close-policy` — including the new `variance_critical_abs`, `variance_critical_pct`, and `variance_critical_abs_overage` fields.
 
-### 4.4 Continuing to Sell After a Blocked Close
+### 4.4 Shift Sealing After a Blocked Close (Path B)
 
-If the close was blocked at the hard band, **the opening shift remains open**. You can keep selling on it; the dispute sits in the background as a draft. Once an approver signs off, you (or anyone with submit rights) can re-submit the draft to close the shift.
+When the close hits the block or critical tier, the variance approval workflow starts AND **the opening shift is sealed**. The cashier on that shift **cannot ring up any more sales** until the variance is approved (or rejected). The Path B protocol from the operations spec requires:
+
+> *"The shift is sealed pending investigation. Outlet remains operational through one of three mechanisms..."*
+
+When the sealed cashier tries to make a sale, they get a hard error:
+
+> *"This opening shift is SEALED pending variance approval (closing shift POSA-CS-26-XXXXXX is currently in workflow state 'Pending Plant Manager', severity 'block'). No further sales can be rung up on this till until the variance is approved (or rejected) by the relevant manager."*
+
+The till stays sealed until the workflow reaches **Approved** (auto-submits the closing shift) or **Rejected** (cashier can Reopen and revise).
+
+### 4.5 Outlet Continuity Options (Path B fallbacks)
+
+When a till is sealed, the outlet keeps trading via one of:
+
+- **B.1 Different cashier login (preferred, available today):** another cashier on the same outlet opens a fresh shift under their OWN login. POS Awesome supports multiple opening shifts per POS Profile from different users.
+- **B.2 Regional Backup POS Profile (Phase 5.8 — not yet built):** a shared `POS - Backup - <Region>` profile that points to the same warehouse but ledgers separately. Used when the dedicated cashier is unavailable.
+- **B.3 Manual Sales Book (Phase 5.9 — not yet built):** pre-numbered triplicate receipts, batch-keyed within 24 hours.
+
+Until B.2 and B.3 ship, the only operational fallback is B.1.
 
 ---
 
