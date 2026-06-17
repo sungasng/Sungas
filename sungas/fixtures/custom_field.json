@@ -257,5 +257,96 @@
   "insert_after": "company",
   "name": "POS Profile-outlet_manager",
   "description": "Receives 24h Open Shift Age escalation emails for shifts on this profile. Set by Plant Manager / HOD Ops."
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Opening Shift",
+  "fieldname": "escalation_section",
+  "fieldtype": "Section Break",
+  "label": "Stale Shift Escalation",
+  "insert_after": "balance_details",
+  "name": "POS Opening Shift-escalation_section",
+  "collapsible": 1,
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Opening Shift",
+  "fieldname": "escalation_level_sent",
+  "fieldtype": "Int",
+  "label": "Last Escalation Level Sent (hours)",
+  "insert_after": "escalation_section",
+  "name": "POS Opening Shift-escalation_level_sent",
+  "default": "0",
+  "read_only": 1,
+  "search_index": 1,
+  "in_standard_filter": 1,
+  "description": "Highest escalation tier already notified (0/24/48/168). Updated by sungas.scheduled_jobs.shift_age_escalation.run.",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Opening Shift",
+  "fieldname": "last_escalation_sent_at",
+  "fieldtype": "Datetime",
+  "label": "Last Escalation Sent At",
+  "insert_after": "escalation_level_sent",
+  "name": "POS Opening Shift-last_escalation_sent_at",
+  "read_only": 1,
+  "description": "Audit timestamp set when the last escalation email was dispatched.",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "escalation_section",
+  "fieldtype": "Section Break",
+  "label": "Open Shift Age Escalation",
+  "insert_after": "max_shift_age_hours",
+  "name": "Sungas Close Policy-escalation_section"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "escalation_enabled",
+  "fieldtype": "Check",
+  "label": "Enable Stale Open Shift Escalation",
+  "insert_after": "escalation_section",
+  "name": "Sungas Close Policy-escalation_enabled",
+  "default": "1",
+  "description": "Daily 07:00 UTC cron sends Brevo emails at L1/L2/L3 thresholds. Disable to pause all escalations."
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "escalation_l1_hours",
+  "fieldtype": "Int",
+  "label": "L1 — Outlet Manager Threshold (hours)",
+  "insert_after": "escalation_enabled",
+  "name": "Sungas Close Policy-escalation_l1_hours",
+  "default": "24",
+  "non_negative": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "escalation_l2_hours",
+  "fieldtype": "Int",
+  "label": "L2 — HOD Operations Threshold (hours)",
+  "insert_after": "escalation_l1_hours",
+  "name": "Sungas Close Policy-escalation_l2_hours",
+  "default": "48",
+  "non_negative": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "escalation_l3_hours",
+  "fieldtype": "Int",
+  "label": "L3 — HOD Finance Threshold (hours)",
+  "insert_after": "escalation_l2_hours",
+  "name": "Sungas Close Policy-escalation_l3_hours",
+  "default": "168",
+  "non_negative": 1
  }
 ]

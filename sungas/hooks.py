@@ -141,6 +141,14 @@ scheduler_events = {
     "daily": [
         "sungas.scheduled_jobs.event_digest.send_event_digest",
     ],
+    # Wave D-2: Open Shift Age escalation. Runs 07:00 UTC = 08:00 WAT (before
+    # shop open) so it never overlaps with POS load. Single indexed query per
+    # day, idempotent via escalation_level_sent on POS Opening Shift.
+    "cron": {
+        "0 7 * * *": [
+            "sungas.scheduled_jobs.shift_age_escalation.run",
+        ],
+    },
 }
 
 # Testing
@@ -207,6 +215,7 @@ fixtures = [
             ["dt", "in", [
                 "Journal Entry",
                 "POS Closing Shift",
+                "POS Opening Shift",
                 "POS Profile",
                 "Sungas Close Policy"
             ]]

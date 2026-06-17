@@ -146,8 +146,8 @@
 
 | # | Item | Priority | Dependencies |
 |---|---|---|---|
-| **D-1** | Sequential Workflow doctype for POS Closing Shift (Draft → Plant Mgr → HOD Ops → HOD Finance → Submitted [+ optional COO]) with severity tiers Soft/Hard/Critical | 🔴 P0 | C done |
-| **D-2** | Open Shift Age escalation scheduler (24h cashier+PM, 48h HOD Ops+Finance + comment, 7d MD+Audit + suspend profile) | 🔴 P0 | Brevo integration |
+| **D-1** | Sequential Workflow doctype for POS Closing Shift (Draft → Plant Mgr → HOD Ops → HOD Finance → Submitted [+ optional COO]) with severity tiers Soft/Hard/Critical | ✅ DONE | C done |
+| **D-2** | Open Shift Age escalation scheduler (24h Outlet Mgr, 48h HOD Ops, 7d HOD Finance) | ✅ DONE | Brevo integration |
 | **D-3** | 48h SLA timer (variance approval) — auto-escalate to Path C | 🟠 P1 | D-2 |
 | **D-4** | Outlet Manager signature field (Path A) + COO sign-off field (Path B) | 🟠 P1 | D-1 |
 | **D-5** | Annex T-07 worksheet doctype (count-by-denom, cause taxonomy, photo evidence) | 🟠 P1 | — |
@@ -294,6 +294,7 @@
 | **B-8** | UpdateCustomer.vue z-index nit (toast hidden behind modal) | 🟢 P3 |
 | **B-9** | Test bench / staging site provisioning | 🟡 P2 |
 | **B-10** | PAT rotation policy (7-day rotation, "Save to GitHub" guidance) | 🟡 P2 |
+| **B-11** | Monthly Escalation Digest — HOD Ops summary of every L1/L2/L3 escalation fired in prior month (count by outlet, avg age-to-close, top offenders). Reuses Brevo helper from D-2. | 🟢 P3 |
 
 ---
 
