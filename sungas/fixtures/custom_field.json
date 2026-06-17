@@ -348,5 +348,87 @@
   "name": "Sungas Close Policy-escalation_l3_hours",
   "default": "168",
   "non_negative": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "variance_sla_section",
+  "fieldtype": "Section Break",
+  "label": "Variance Approval SLA",
+  "insert_after": "escalation_l3_hours",
+  "name": "Sungas Close Policy-variance_sla_section"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "variance_sla_enabled",
+  "fieldtype": "Check",
+  "label": "Enable Variance Approval SLA Escalation",
+  "insert_after": "variance_sla_section",
+  "name": "Sungas Close Policy-variance_sla_enabled",
+  "default": "1",
+  "description": "Daily 08:30 UTC cron alerts when a POS Closing Shift sits in a Pending workflow state past the SLA. Disable to pause."
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "variance_sla_hours",
+  "fieldtype": "Int",
+  "label": "L1 — SLA Warning (hours)",
+  "insert_after": "variance_sla_enabled",
+  "name": "Sungas Close Policy-variance_sla_hours",
+  "default": "48",
+  "non_negative": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "variance_sla_breach_hours",
+  "fieldtype": "Int",
+  "label": "L2 — SLA Breach (hours)",
+  "insert_after": "variance_sla_hours",
+  "name": "Sungas Close Policy-variance_sla_breach_hours",
+  "default": "72",
+  "non_negative": 1,
+  "description": "When breached we add HOD Ops + HOD Finance to the recipient list and stamp the doc as eligible for Wave E (Path C)."
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_state_entered_at",
+  "fieldtype": "Datetime",
+  "label": "Variance State Entered At",
+  "insert_after": "variance_je",
+  "name": "POS Closing Shift-variance_state_entered_at",
+  "read_only": 1,
+  "hidden": 1,
+  "search_index": 1,
+  "description": "Set by sungas.overrides.variance_sla.track_state_entry whenever the workflow_state transitions into a Pending state. Read by the variance_sla_breach cron.",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_sla_escalation_level",
+  "fieldtype": "Int",
+  "label": "Variance SLA Escalation Level",
+  "insert_after": "variance_state_entered_at",
+  "name": "POS Closing Shift-variance_sla_escalation_level",
+  "default": "0",
+  "read_only": 1,
+  "hidden": 1,
+  "description": "0 = none, 1 = SLA warning sent, 2 = SLA breach (Wave E candidate).",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_sla_escalated_at",
+  "fieldtype": "Datetime",
+  "label": "Variance SLA Last Escalated At",
+  "insert_after": "variance_sla_escalation_level",
+  "name": "POS Closing Shift-variance_sla_escalated_at",
+  "read_only": 1,
+  "permlevel": 1
  }
 ]

@@ -127,6 +127,7 @@ doc_events = {
         'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
         'before_submit': 'sungas.overrides.pos_closing_shift.validate_variance',
         'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
+        'on_update': 'sungas.overrides.variance_sla.track_state_entry',
     },
     "POS Invoice": {
         'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
@@ -147,6 +148,12 @@ scheduler_events = {
     "cron": {
         "0 7 * * *": [
             "sungas.scheduled_jobs.shift_age_escalation.run",
+        ],
+        # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
+        # 90 min after the open-shift cron. Single indexed query/day,
+        # idempotent via variance_sla_escalation_level.
+        "30 8 * * *": [
+            "sungas.scheduled_jobs.variance_sla_breach.run",
         ],
     },
 }
