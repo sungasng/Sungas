@@ -127,36 +127,14 @@
  {
   "doctype": "Custom Field",
   "dt": "POS Closing Shift",
-  "fieldname": "outlet_manager_signed_by",
-  "fieldtype": "Link",
-  "options": "User",
-  "label": "Outlet Manager Signed By",
-  "insert_after": "variance_workflow_section",
-  "name": "POS Closing Shift-outlet_manager_signed_by",
-  "description": "Path A (warn-band) only -- Outlet Manager acknowledges soft variance.",
-  "permlevel": 1
- },
- {
-  "doctype": "Custom Field",
-  "dt": "POS Closing Shift",
-  "fieldname": "outlet_manager_signed_on",
-  "fieldtype": "Datetime",
-  "label": "Outlet Manager Signed On",
-  "insert_after": "outlet_manager_signed_by",
-  "name": "POS Closing Shift-outlet_manager_signed_on",
-  "read_only": 1,
-  "permlevel": 1
- },
- {
-  "doctype": "Custom Field",
-  "dt": "POS Closing Shift",
   "fieldname": "plant_manager_signed_by",
   "fieldtype": "Link",
   "options": "User",
   "label": "Plant Manager Signed By",
-  "insert_after": "outlet_manager_signed_on",
+  "insert_after": "variance_workflow_section",
   "name": "POS Closing Shift-plant_manager_signed_by",
-  "description": "First-line approver in the sequential variance workflow.",
+  "description": "First-line approver in the sequential variance workflow. Plant Manager is the same person who manages the outlet.",
+  "depends_on": "eval:in_list(['warn','block','critical'], doc.variance_severity)",
   "permlevel": 1
  },
  {
@@ -168,6 +146,7 @@
   "insert_after": "plant_manager_signed_by",
   "name": "POS Closing Shift-plant_manager_signed_on",
   "read_only": 1,
+  "depends_on": "eval:in_list(['warn','block','critical'], doc.variance_severity)",
   "permlevel": 1
  },
  {
@@ -180,6 +159,7 @@
   "insert_after": "plant_manager_signed_on",
   "name": "POS Closing Shift-hod_ops_signed_by",
   "description": "Required for Hard (block) and Critical variance.",
+  "depends_on": "eval:in_list(['block','critical'], doc.variance_severity)",
   "permlevel": 1
  },
  {
@@ -191,6 +171,7 @@
   "insert_after": "hod_ops_signed_by",
   "name": "POS Closing Shift-hod_ops_signed_on",
   "read_only": 1,
+  "depends_on": "eval:in_list(['block','critical'], doc.variance_severity)",
   "permlevel": 1
  },
  {
@@ -202,7 +183,8 @@
   "label": "HOD Finance Signed By",
   "insert_after": "hod_ops_signed_on",
   "name": "POS Closing Shift-hod_finance_signed_by",
-  "description": "Required for Critical variance (Path B). Final sign-off unless COO is required.",
+  "description": "Required for Critical variance (Path B).",
+  "depends_on": "eval:doc.variance_severity=='critical'",
   "permlevel": 1
  },
  {
@@ -214,6 +196,7 @@
   "insert_after": "hod_finance_signed_by",
   "name": "POS Closing Shift-hod_finance_signed_on",
   "read_only": 1,
+  "depends_on": "eval:doc.variance_severity=='critical'",
   "permlevel": 1
  },
  {
@@ -225,7 +208,8 @@
   "label": "COO Signed By",
   "insert_after": "hod_finance_signed_on",
   "name": "POS Closing Shift-coo_signed_by",
-  "description": "Optional Critical-tier sign-off, gated by Sungas Close Policy `require_coo_on_critical` flag.",
+  "description": "Optional Critical-tier sign-off (Wave D-4 will wire this up).",
+  "depends_on": "eval:doc.coo_signed_by",
   "permlevel": 1
  },
  {
@@ -237,6 +221,7 @@
   "insert_after": "coo_signed_by",
   "name": "POS Closing Shift-coo_signed_on",
   "read_only": 1,
+  "depends_on": "eval:doc.coo_signed_by",
   "permlevel": 1
  },
  {
@@ -248,6 +233,7 @@
   "insert_after": "coo_signed_on",
   "name": "POS Closing Shift-rejection_reason",
   "description": "Set when an approver rejects the shift; cashier re-edits and resubmits.",
+  "depends_on": "eval:doc.workflow_state=='Rejected'",
   "permlevel": 1
  },
  {
