@@ -64,6 +64,11 @@ WORKFLOW_NAME = "POS Closing Shift Variance"
 DOCTYPE = "POS Closing Shift"
 
 # (state_name, doc_status, style)
+# Note: Rejected is doc_status=0 (still a draft), NOT 2 (cancelled).
+# A closing shift that gets rejected by an approver is NOT cancelled --
+# it bounces back to the cashier who reopens it (transition 12) and
+# revises. doc_status=2 would also fail Frappe's workflow validator,
+# which refuses 'cancel-before-submit' transitions.
 STATES = [
     ("Draft",                   "0", "Primary"),
     ("Pending Plant Manager",   "0", "Warning"),
@@ -71,7 +76,7 @@ STATES = [
     ("Pending HOD Finance",     "0", "Danger"),
     ("Pending COO",             "0", "Danger"),
     ("Approved",                "1", "Success"),
-    ("Rejected",                "2", "Inverse"),
+    ("Rejected",                "0", "Inverse"),
 ]
 
 # Action master names that appear on the workflow buttons
