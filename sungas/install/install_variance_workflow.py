@@ -114,16 +114,18 @@ TRANSITIONS = [
      "LPG Head of Operations,System Manager", ""),
 
     # 7 / 8 / 9. HOD Finance review (critical only)
+    # NOTE: COO escalation is deferred to Wave D-4. Frappe safe_eval does
+    # not expose frappe.get_single in workflow conditions, so the prior
+    # policy-driven branch raised TypeError. We now route HOD Finance
+    # directly to Approved. When COO support lands, the require_coo flag
+    # will be snapshotted onto the closing-shift doc at validate() time
+    # and the condition will read it via doc.require_coo_snapshot.
     ("Approve", "Pending HOD Finance", "Approved",
-     "LPG Head of Finance,System Manager",
-     "not frappe.get_single('Sungas Close Policy').get('require_coo_on_critical')"),
-    ("Escalate to COO", "Pending HOD Finance", "Pending COO",
-     "LPG Head of Finance,System Manager",
-     "frappe.get_single('Sungas Close Policy').get('require_coo_on_critical') == 1"),
+     "LPG Head of Finance,System Manager", ""),
     ("Reject", "Pending HOD Finance", "Rejected",
      "LPG Head of Finance,System Manager", ""),
 
-    # 10 / 11. COO review (only if require_coo_on_critical)
+    # 10 / 11. COO review (reserved for Wave D-4)
     ("Approve", "Pending COO", "Approved", "System Manager", ""),
     ("Reject", "Pending COO", "Rejected", "System Manager", ""),
 
