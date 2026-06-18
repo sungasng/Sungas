@@ -64,6 +64,14 @@ doctype_js = {
 # before_install = "sungas.install.before_install"
 # after_install = "sungas.install.after_install"
 
+# Wave D-4: ensure cash_variance_pending_account is wired after fixtures
+# sync (Custom Fields are installed AFTER patches.txt runs, so we drive the
+# seed via after_migrate to avoid a "field-doesn't-exist-yet" silent drop).
+# The seed function is idempotent, so it's safe to re-run on every migrate.
+after_migrate = [
+    "sungas.patches.v1.seed_cash_variance_pending_account.execute",
+]
+
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
