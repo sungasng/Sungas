@@ -149,7 +149,7 @@
 | **D-1** | Sequential Workflow doctype for POS Closing Shift (Draft → Plant Mgr → HOD Ops → HOD Finance → Submitted [+ optional COO]) with severity tiers Soft/Hard/Critical | ✅ DONE | C done |
 | **D-2** | Open Shift Age escalation scheduler (24h Outlet Mgr, 48h HOD Ops, 7d HOD Finance) | ✅ DONE | Brevo integration |
 | **D-3** | 48h SLA timer (variance approval) — auto-escalate to Path C | ✅ DONE | D-2 |
-| **D-4** | Outlet Manager signature field (Path A) + COO sign-off field (Path B) | 🟠 P1 (Outlet Mgr sig ≡ Plant Manager sig — already shipped in D-1; **D-4 reduces to COO sign-off only**) | D-1 |
+| **D-4** | Provisional Suspense JE on Draft (Option C) + COO informational notification + variance_amount backfill | ✅ DONE | D-1, D-2 (Brevo) |
 | **D-5** | Annex T-07 worksheet doctype (count-by-denom, cause taxonomy, photo evidence) | 🟠 P1 | — |
 | **D-6** | Returns / refund approval gate (Vue rebuild — manager PIN above threshold) | 🟠 P1 | Vue rebuild |
 | **D-7** | Inventory Purchase / Transfer / GIT routing + 48h GIT audit flag | 🟠 P1 | In-Transit warehouse setup |

@@ -127,7 +127,12 @@ doc_events = {
         'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
         'before_submit': 'sungas.overrides.pos_closing_shift.validate_variance',
         'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
-        'on_update': 'sungas.overrides.variance_sla.track_state_entry',
+        'on_update': [
+            'sungas.overrides.variance_sla.track_state_entry',
+            'sungas.overrides.pos_closing_shift.post_provisional_journal',
+            'sungas.overrides.pos_closing_shift.cancel_provisional_journal',
+            'sungas.overrides.coo_notification.notify_coo_on_critical_approval',
+        ],
     },
     "POS Invoice": {
         'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',

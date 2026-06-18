@@ -430,5 +430,42 @@
   "name": "POS Closing Shift-variance_sla_escalated_at",
   "read_only": 1,
   "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "variance_provisional_je",
+  "fieldtype": "Link",
+  "options": "Journal Entry",
+  "label": "Provisional Variance JE",
+  "insert_after": "variance_sla_escalated_at",
+  "name": "POS Closing Shift-variance_provisional_je",
+  "read_only": 1,
+  "description": "Wave D-4 / Option C: Suspense JE posted at workflow entry. Reclassified into variance_je on approval; cancelled on rejection.",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "coo_notified_at",
+  "fieldtype": "Datetime",
+  "label": "COO Notified At",
+  "insert_after": "variance_provisional_je",
+  "name": "POS Closing Shift-coo_notified_at",
+  "read_only": 1,
+  "hidden": 1,
+  "description": "Idempotency marker for sungas.overrides.coo_notification.notify_coo_on_critical_approval. Set once the informational Brevo email has been dispatched.",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Sungas Close Policy",
+  "fieldname": "cash_variance_pending_account",
+  "fieldtype": "Link",
+  "options": "Account",
+  "label": "Cash Variance Pending Account (provisional suspense)",
+  "insert_after": "variance_sla_breach_hours",
+  "name": "Sungas Close Policy-cash_variance_pending_account",
+  "description": "Suspense GL where block/critical variances are parked from Day 1 (provisional JE). Reclassified into cashier_recovery_account (shortage) or overage_suspense_account (overage) on workflow approval. Recommended: a Current Asset code such as 2607 Cash Variance Pending."
  }
 ]

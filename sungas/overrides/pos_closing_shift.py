@@ -102,6 +102,9 @@ def compute_variance_severity(doc, method=None):
     total_var, total_expected = _compute_variance(doc)
     severity, _abs_var, _pct = _variance_severity(total_var, total_expected, policy)
     doc.set("variance_severity", severity)
+    # Backfill the variance amount so dashboards / list views show real numbers
+    # (was previously left at 0). Signed: shortage = negative, overage = positive.
+    doc.set("variance_amount", total_var)
 
     # Auto-route into the workflow when block/critical and not yet in one.
     if severity in ("block", "critical"):
@@ -235,20 +238,8 @@ def validate_variance(doc, method=None):
             )
 
 
-def post_variance_journal(doc, method=None):
-    """on_submit hook: auto-post variance JE."""
-    if not frappe.db.exists("DocType", "Sungas Close Policy"):
-        return
-    if doc.get("variance_je"):
-        # Already posted (re-submit guard / idempotency)
-        return
-    policy = frappe.get_single("Sungas Close Policy")
-    total_var, _ = _compute_variance(doc)
-    if abs(total_var) < 0.01:
-        return  # zero variance, nothing to post
-
-    # Resolve Cash Sales account from the Cash MoP row used in this shift
-    cash_acct = None
+def _resolve_cash_account(doc):
+    """Return the Cash Mode-of-Payment GL account used in this shift, or None."""
     for row in (doc.payment_reconciliation or []):
         mop = row.mode_of_payment or ""
         if "Cash" not in mop:
@@ -258,39 +249,76 @@ def post_variance_journal(doc, method=None):
         mop_doc = frappe.get_doc("Mode of Payment", mop)
         for a in mop_doc.accounts:
             if a.company == doc.company:
-                cash_acct = a.default_account
-                break
-        if cash_acct:
-            break
+                return a.default_account
+    return None
+
+
+def _shift_posting_date(doc):
+    """Use the shift's own period_end_date so the JE lands in the correct
+    accounting period even if approval crosses a month boundary. Falls
+    back to today if the date is somehow missing."""
+    return doc.get("period_end_date") or frappe.utils.nowdate()
+
+
+def post_provisional_journal(doc, method=None):
+    """on_update hook (Wave D-4 / Option C): post a provisional Suspense JE
+    the moment a block/critical variance enters the workflow.
+
+    Effect during investigation window:
+        Shortage:  Dr  cash_variance_pending_account
+                   Cr  cash_acct                                (party=Employee on Dr)
+        Overage:   Dr  cash_acct
+                   Cr  cash_variance_pending_account
+
+    Cash GL is reconciled IMMEDIATELY (Day 1); the variance is parked in
+    `cash_variance_pending_account` until the workflow approves and the
+    reclassification JE moves it to the final suspense (cashier_recovery
+    or overage_suspense).
+
+    Idempotent via the `variance_provisional_je` field. Only fires while
+    the doc is still Draft (docstatus=0) and in a Pending workflow state.
+    """
+    if doc.docstatus != 0:
+        return  # submitted; provisional window closed
+    if doc.get("variance_provisional_je"):
+        return  # already posted
+    if doc.get("variance_severity") not in ("block", "critical"):
+        return  # warn / none don't use provisional path
+    state = doc.get("workflow_state") or ""
+    if not state.startswith("Pending"):
+        return  # not in active workflow yet
+
+    if not frappe.db.exists("DocType", "Sungas Close Policy"):
+        return
+    policy = frappe.get_single("Sungas Close Policy")
+    pending_acct = policy.get("cash_variance_pending_account")
+    if not pending_acct:
+        frappe.log_error(
+            "post_provisional_journal: cash_variance_pending_account not set on Sungas Close Policy",
+            "Sungas variance hook",
+        )
+        return
+
+    total_var, _ = _compute_variance(doc)
+    if abs(total_var) < 0.01:
+        return
+
+    cash_acct = _resolve_cash_account(doc)
     if not cash_acct:
         frappe.log_error(
-            f"post_variance_journal: no Cash MoP account resolved for "
+            f"post_provisional_journal: no Cash MoP account resolved for "
             f"POS Closing Shift {doc.name} (company={doc.company})",
-            "Sungas variance hook"
+            "Sungas variance hook",
         )
         return
 
     abs_var = abs(total_var)
     employee = frappe.db.get_value("Employee", {"user_id": doc.user}, "name")
-    recovery_acct = policy.cashier_recovery_account
-    overage_acct = policy.overage_suspense_account
-    if total_var < 0 and not recovery_acct:
-        frappe.log_error(
-            "post_variance_journal: cashier_recovery_account not set on Close Policy",
-            "Sungas variance hook"
-        )
-        return
-    if total_var > 0 and not overage_acct:
-        frappe.log_error(
-            "post_variance_journal: overage_suspense_account not set on Close Policy",
-            "Sungas variance hook"
-        )
-        return
 
     if total_var < 0:
         kind = "Shortage"
         row_first = {
-            "account": recovery_acct,
+            "account": pending_acct,
             "debit_in_account_currency": abs_var,
             "credit_in_account_currency": 0,
         }
@@ -311,11 +339,193 @@ def post_variance_journal(doc, method=None):
                 "credit_in_account_currency": 0,
             },
             {
-                "account": overage_acct,
+                "account": pending_acct,
                 "debit_in_account_currency": 0,
                 "credit_in_account_currency": abs_var,
             },
         ]
+
+    remark = "\n".join([
+        f"Provisional Cash {kind} JE auto-posted by Sungas Close Policy hook.",
+        f"POS Closing Shift: {doc.name}  (workflow_state={state})",
+        f"Outlet: {doc.pos_profile}    Cashier: {doc.user}",
+        f"Variance: NGN {total_var:+,.2f}",
+        "Reclassification will follow on workflow approval.",
+    ])
+
+    try:
+        je = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "company": doc.company,
+            "posting_date": _shift_posting_date(doc),
+            "title": f"Provisional Cash {kind} - {doc.name}",
+            "user_remark": remark,
+            "accounts": rows,
+        })
+        je.insert(ignore_permissions=True)
+        je.submit()
+        frappe.db.set_value(
+            "POS Closing Shift", doc.name,
+            "variance_provisional_je", je.name,
+            update_modified=False,
+        )
+        frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(
+            f"post_provisional_journal failed for {doc.name}: {e}",
+            "Sungas variance hook",
+        )
+
+
+def cancel_provisional_journal(doc, method=None):
+    """on_update hook: when the workflow rejects, cancel the provisional JE
+    so the books don't carry an orphaned pending entry.
+
+    Triggered on transition into 'Rejected' state. Idempotent: a JE that's
+    already cancelled (docstatus=2) is silently skipped.
+    """
+    if doc.get("workflow_state") != "Rejected":
+        return
+    je_name = doc.get("variance_provisional_je")
+    if not je_name:
+        return
+    try:
+        je = frappe.get_doc("Journal Entry", je_name)
+        if je.docstatus == 1:
+            je.cancel()
+            frappe.db.commit()
+    except Exception as e:
+        frappe.log_error(
+            f"cancel_provisional_journal failed for {doc.name} ({je_name}): {e}",
+            "Sungas variance hook",
+        )
+
+
+def post_variance_journal(doc, method=None):
+    """on_submit hook: auto-post the final variance JE.
+
+    Two paths:
+
+    1. **Reclassification** (Option C / Wave D-4): if a provisional JE was
+       posted during the workflow, post a reclassification JE that moves
+       the variance from `cash_variance_pending_account` to either
+       `cashier_recovery_account` (shortage) or `overage_suspense_account`
+       (overage). The cash account is NOT touched -- that already happened
+       on Day 1 via the provisional JE.
+
+    2. **Direct** (legacy / soft+warn paths): if no provisional JE exists,
+       behave exactly as the original implementation -- Dr cashier_recovery
+       / Cr cash_acct for shortages, Cr overage_suspense / Dr cash_acct for
+       overages.
+    """
+    if not frappe.db.exists("DocType", "Sungas Close Policy"):
+        return
+    if doc.get("variance_je"):
+        return  # already posted (re-submit guard)
+    policy = frappe.get_single("Sungas Close Policy")
+    total_var, _ = _compute_variance(doc)
+    if abs(total_var) < 0.01:
+        return
+
+    abs_var = abs(total_var)
+    employee = frappe.db.get_value("Employee", {"user_id": doc.user}, "name")
+    recovery_acct = policy.cashier_recovery_account
+    overage_acct = policy.overage_suspense_account
+    if total_var < 0 and not recovery_acct:
+        frappe.log_error(
+            "post_variance_journal: cashier_recovery_account not set on Close Policy",
+            "Sungas variance hook",
+        )
+        return
+    if total_var > 0 and not overage_acct:
+        frappe.log_error(
+            "post_variance_journal: overage_suspense_account not set on Close Policy",
+            "Sungas variance hook",
+        )
+        return
+
+    provisional_je = doc.get("variance_provisional_je")
+    is_reclassification = bool(provisional_je)
+
+    if is_reclassification:
+        # Reclassification mode: move from cash_variance_pending -> final suspense.
+        pending_acct = policy.get("cash_variance_pending_account")
+        if not pending_acct:
+            frappe.log_error(
+                f"post_variance_journal: variance_provisional_je={provisional_je} set "
+                f"but cash_variance_pending_account is empty; cannot reclassify.",
+                "Sungas variance hook",
+            )
+            return
+        if total_var < 0:
+            kind = "Shortage Reclassification"
+            row_first = {
+                "account": recovery_acct,
+                "debit_in_account_currency": abs_var,
+                "credit_in_account_currency": 0,
+            }
+            if employee:
+                row_first["party_type"] = "Employee"
+                row_first["party"] = employee
+            rows = [row_first, {
+                "account": pending_acct,
+                "debit_in_account_currency": 0,
+                "credit_in_account_currency": abs_var,
+            }]
+        else:
+            kind = "Overage Reclassification"
+            rows = [
+                {
+                    "account": pending_acct,
+                    "debit_in_account_currency": abs_var,
+                    "credit_in_account_currency": 0,
+                },
+                {
+                    "account": overage_acct,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": abs_var,
+                },
+            ]
+    else:
+        # Legacy direct mode (soft/warn or pre-D-4 docs without provisional).
+        cash_acct = _resolve_cash_account(doc)
+        if not cash_acct:
+            frappe.log_error(
+                f"post_variance_journal: no Cash MoP account resolved for "
+                f"POS Closing Shift {doc.name} (company={doc.company})",
+                "Sungas variance hook",
+            )
+            return
+        if total_var < 0:
+            kind = "Shortage"
+            row_first = {
+                "account": recovery_acct,
+                "debit_in_account_currency": abs_var,
+                "credit_in_account_currency": 0,
+            }
+            if employee:
+                row_first["party_type"] = "Employee"
+                row_first["party"] = employee
+            rows = [row_first, {
+                "account": cash_acct,
+                "debit_in_account_currency": 0,
+                "credit_in_account_currency": abs_var,
+            }]
+        else:
+            kind = "Overage"
+            rows = [
+                {
+                    "account": cash_acct,
+                    "debit_in_account_currency": abs_var,
+                    "credit_in_account_currency": 0,
+                },
+                {
+                    "account": overage_acct,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": abs_var,
+                },
+            ]
 
     remark_lines = [
         f"Cash {kind} JE auto-posted by Sungas Close Policy hook.",
@@ -323,6 +533,8 @@ def post_variance_journal(doc, method=None):
         f"Outlet: {doc.pos_profile}    Cashier: {doc.user}",
         f"Variance: NGN {total_var:+,.2f}",
     ]
+    if is_reclassification:
+        remark_lines.append(f"Reclassifies provisional JE: {provisional_je}")
     approver = doc.get("variance_approved_by")
     if approver and approver != doc.user:
         remark_lines.append(f"Approved by: {approver}")
@@ -336,7 +548,7 @@ def post_variance_journal(doc, method=None):
             "doctype": "Journal Entry",
             "voucher_type": "Journal Entry",
             "company": doc.company,
-            "posting_date": frappe.utils.nowdate(),
+            "posting_date": _shift_posting_date(doc),
             "title": f"Cash {kind} - {doc.name}",
             "user_remark": remark,
             "accounts": rows,
