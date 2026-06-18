@@ -72,12 +72,26 @@ Other  (mandatory detail field)
 Add or remove options by editing the `primary_cause` field options in
 `annex_t07_worksheet.json` and running `bench --site <site> migrate`.
 
-## Print Format (follow-on)
+## Print Format
 
-Not shipped in this wave. The doctype is ready for a Standard print
-format — wire one up from Desk → Print Format → New → Doctype =
-"Annex T-07 Worksheet". For audit archives consider a dedicated
-letterhead layout with one section per signature block.
+Shipped as a Standard print format: **"Annex T-07 Audit Archive"** in the
+`Sungas` module. Auto-installs on `bench migrate` (Frappe picks up
+`sungas/sungas/print_format/annex_t07_audit_archive/annex_t07_audit_archive.json`).
+
+To produce a PDF for filing:
+
+1. Open the submitted Annex T-07 worksheet in Desk.
+2. Click **Print** (right sidebar).
+3. **Select Print Format → "Annex T-07 Audit Archive"**.
+4. Optionally pick a Letter Head (the standard archive layout overlays
+   cleanly on any letterhead — leave margins ≥ 15mm top/bottom).
+5. Click **PDF** to download, or print directly.
+
+The template renders four sections — identification table, denomination
+table with totals row, cause taxonomy + corrective action + cashier
+statement narrative blocks, and a 2×2 sign-off grid showing the four
+required signatures with timestamps and role notes. Negative values
+show in red, positive in green.
 
 ## Migrate / verify on Frappe Cloud
 
