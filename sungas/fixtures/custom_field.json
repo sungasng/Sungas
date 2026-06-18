@@ -459,6 +459,19 @@
  },
  {
   "doctype": "Custom Field",
+  "dt": "POS Closing Shift",
+  "fieldname": "annex_t07",
+  "fieldtype": "Link",
+  "options": "Annex T-07 Worksheet",
+  "label": "Annex T-07 Worksheet",
+  "insert_after": "coo_notified_at",
+  "name": "POS Closing Shift-annex_t07",
+  "read_only": 1,
+  "description": "Wave D-5: Structured variance documentation. Auto-created when variance_severity becomes 'block' or 'critical'. Must be submitted before the shift can be approved.",
+  "permlevel": 1
+ },
+ {
+  "doctype": "Custom Field",
   "dt": "Sungas Close Policy",
   "fieldname": "cash_variance_pending_account",
   "fieldtype": "Link",

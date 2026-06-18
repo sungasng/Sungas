@@ -1,0 +1,360 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "format:AT07-{YY}-{#####}",
+ "creation": "2026-02-17 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "ident_section",
+  "shift",
+  "pos_profile",
+  "cashier",
+  "column_break_ident",
+  "period_end_date",
+  "variance_severity",
+  "variance_amount",
+  "denom_section",
+  "denominations",
+  "denom_totals_column_break",
+  "total_expected",
+  "total_actual",
+  "total_variance",
+  "cause_section",
+  "primary_cause",
+  "other_cause_detail",
+  "column_break_cause",
+  "contributing_factors",
+  "corrective_action",
+  "evidence_section",
+  "cashier_statement",
+  "evidence_help",
+  "signoff_section",
+  "cashier_signed_by",
+  "cashier_signed_on",
+  "column_break_signoff_1",
+  "plant_manager_notes",
+  "plant_manager_signed_by",
+  "plant_manager_signed_on",
+  "signoff_section_2",
+  "hod_ops_notes",
+  "hod_ops_signed_by",
+  "hod_ops_signed_on",
+  "column_break_signoff_2",
+  "hod_finance_notes",
+  "hod_finance_signed_by",
+  "hod_finance_signed_on",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "ident_section",
+   "fieldtype": "Section Break",
+   "label": "Shift Identification"
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "POS Closing Shift",
+   "options": "POS Closing Shift",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fetch_from": "shift.pos_profile",
+   "fieldname": "pos_profile",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Outlet (POS Profile)",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "shift.user",
+   "fieldname": "cashier",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Cashier",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ident",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "shift.period_end_date",
+   "fieldname": "period_end_date",
+   "fieldtype": "Date",
+   "label": "Shift End Date",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "shift.variance_severity",
+   "fieldname": "variance_severity",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Variance Severity",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "shift.variance_amount",
+   "fieldname": "variance_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Variance Amount (NGN)",
+   "options": "NGN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "denom_section",
+   "fieldtype": "Section Break",
+   "label": "Cash Count by Denomination"
+  },
+  {
+   "fieldname": "denominations",
+   "fieldtype": "Table",
+   "label": "Denominations",
+   "options": "Annex T-07 Denomination Row"
+  },
+  {
+   "fieldname": "denom_totals_column_break",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_expected",
+   "fieldtype": "Currency",
+   "label": "Total Expected",
+   "options": "NGN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_actual",
+   "fieldtype": "Currency",
+   "label": "Total Actual",
+   "options": "NGN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_variance",
+   "fieldtype": "Currency",
+   "label": "Total Variance (Actual − Expected)",
+   "options": "NGN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cause_section",
+   "fieldtype": "Section Break",
+   "label": "Cause Taxonomy"
+  },
+  {
+   "fieldname": "primary_cause",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Primary Cause",
+   "options": "\nWrong change given\nCustomer dispute (refund pending)\nTheft (suspected)\nCash drop missing / unaccounted\nCounterfeit notes accepted\nSystem error (POS / cash float misconfig)\nDeposit mis-counted at bank\nFloat handover error\nOther",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.primary_cause === 'Other'",
+   "fieldname": "other_cause_detail",
+   "fieldtype": "Small Text",
+   "label": "Other — please specify",
+   "mandatory_depends_on": "eval:doc.primary_cause === 'Other'"
+  },
+  {
+   "fieldname": "column_break_cause",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contributing_factors",
+   "fieldtype": "Small Text",
+   "label": "Contributing Factors"
+  },
+  {
+   "fieldname": "corrective_action",
+   "fieldtype": "Small Text",
+   "label": "Corrective Action Required",
+   "reqd": 1
+  },
+  {
+   "fieldname": "evidence_section",
+   "fieldtype": "Section Break",
+   "label": "Evidence & Cashier Statement"
+  },
+  {
+   "fieldname": "cashier_statement",
+   "fieldtype": "Long Text",
+   "label": "Cashier Statement",
+   "reqd": 1
+  },
+  {
+   "fieldname": "evidence_help",
+   "fieldtype": "HTML",
+   "options": "<div class=\"text-muted small\">Attach photo evidence (till photo, deposit slip, CCTV still) using the <strong>Attachments</strong> panel on the right sidebar. PNG / JPG / PDF supported.</div>"
+  },
+  {
+   "fieldname": "signoff_section",
+   "fieldtype": "Section Break",
+   "label": "Sign-offs"
+  },
+  {
+   "fieldname": "cashier_signed_by",
+   "fieldtype": "Link",
+   "label": "Cashier Signed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cashier_signed_on",
+   "fieldtype": "Datetime",
+   "label": "Cashier Signed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_signoff_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "plant_manager_notes",
+   "fieldtype": "Small Text",
+   "label": "Plant Manager Notes"
+  },
+  {
+   "fieldname": "plant_manager_signed_by",
+   "fieldtype": "Link",
+   "label": "Plant Manager Signed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "plant_manager_signed_on",
+   "fieldtype": "Datetime",
+   "label": "Plant Manager Signed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "signoff_section_2",
+   "fieldtype": "Section Break",
+   "label": "HOD Sign-offs"
+  },
+  {
+   "fieldname": "hod_ops_notes",
+   "fieldtype": "Small Text",
+   "label": "HOD Operations Notes"
+  },
+  {
+   "fieldname": "hod_ops_signed_by",
+   "fieldtype": "Link",
+   "label": "HOD Ops Signed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hod_ops_signed_on",
+   "fieldtype": "Datetime",
+   "label": "HOD Ops Signed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_signoff_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hod_finance_notes",
+   "fieldtype": "Small Text",
+   "label": "HOD Finance Notes"
+  },
+  {
+   "fieldname": "hod_finance_signed_by",
+   "fieldtype": "Link",
+   "label": "HOD Finance Signed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hod_finance_signed_on",
+   "fieldtype": "Datetime",
+   "label": "HOD Finance Signed On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Annex T-07 Worksheet",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-02-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Annex T-07 Worksheet",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1,
+   "cancel": 1,
+   "amend": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "LPG Plant Manager",
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "LPG Head of Operations",
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "LPG Head of Finance"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "track_seen": 1
+}

@@ -150,7 +150,7 @@
 | **D-2** | Open Shift Age escalation scheduler (24h Outlet Mgr, 48h HOD Ops, 7d HOD Finance) | ✅ DONE | Brevo integration |
 | **D-3** | 48h SLA timer (variance approval) — auto-escalate to Path C | ✅ DONE | D-2 |
 | **D-4** | Provisional Suspense JE on Draft (Option C) + COO informational notification + variance_amount backfill | ✅ DONE | D-1, D-2 (Brevo) |
-| **D-5** | Annex T-07 worksheet doctype (count-by-denom, cause taxonomy, photo evidence) | 🟠 P1 | — |
+| **D-5** | Annex T-07 worksheet doctype (count-by-denom, cause taxonomy, photo evidence) | ✅ DONE | D-4 |
 | **D-6** | Returns / refund approval gate (Vue rebuild — manager PIN above threshold) | 🟠 P1 | Vue rebuild |
 | **D-7** | Inventory Purchase / Transfer / GIT routing + 48h GIT audit flag | 🟠 P1 | In-Transit warehouse setup |
 | **D-8** | Stock Adjustment routing (Plant+OM / HOD Ops+Finance / COO tiers) | 🟠 P1 | — |
@@ -178,7 +178,7 @@
 | # | Item | Priority |
 |---|---|---|
 | **K-1** | `Stakeholder SLA Event` doctype (KPI logging for HR appraisal) | 🟠 P1 |
-| **K-2** | Cashier Variance Ledger report (per-cashier ageing of 2608 balances) | 🟠 P1 |
+| **K-2** | Cashier Variance Ledger — Script Report on `2608 Cash Suspense - Cashier Recovery` grouped by party=Employee. Columns: open balance, days since first variance, # variances in trailing 30d, average shortage/overage, last shift ref. Surfaces chronic non-compliance and feeds payroll deduction conversations. Reuses D-4 GL postings (no new data sources). | 🟠 P1 |
 | **K-3** | Stakeholder Performance L1-L5 dashboards | 🟠 P1 |
 | **K-4** | Month Close Health dashboard | 🟠 P1 |
 

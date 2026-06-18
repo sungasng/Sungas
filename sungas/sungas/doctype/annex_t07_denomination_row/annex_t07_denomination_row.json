@@ -1,0 +1,78 @@
+{
+ "actions": [],
+ "creation": "2026-02-17 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "denomination",
+  "expected_count",
+  "actual_count",
+  "column_break_1",
+  "expected_value",
+  "actual_value",
+  "variance_value"
+ ],
+ "fields": [
+  {
+   "fieldname": "denomination",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Denomination (NGN)",
+   "options": "1000\n500\n200\n100\n50\n20\n10\n5\n2\n1\n0.50\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expected_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Expected Count",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "actual_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Actual Count",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expected_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Expected Value",
+   "options": "NGN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actual_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Actual Value",
+   "options": "NGN",
+   "read_only": 1
+  },
+  {
+   "fieldname": "variance_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Variance",
+   "options": "NGN",
+   "read_only": 1
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-17 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Annex T-07 Denomination Row",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+}
