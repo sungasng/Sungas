@@ -123,6 +123,7 @@ doc_events = {
     },
     "Item": {
         'autoname': 'sungas.controllers.item.item_name',
+        'validate': 'sungas.overrides.item_pricing_gate.require_tier_before_enable',
     },
     "Sales Invoice": {
         'autoname': 'sungas.controllers.sales_invoice.autoname_sales_invoice',
