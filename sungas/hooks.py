@@ -172,6 +172,12 @@ scheduler_events = {
         "30 8 * * *": [
             "sungas.scheduled_jobs.variance_sla_breach.run",
         ],
+        # Wave B-11: Monthly Escalation Digest. Runs 09:00 UTC on the 1st of
+        # every month — emails HOD Ops + HOD Finance a summary of the prior
+        # month's D-2/D-3 escalations + current backlog snapshot.
+        "0 9 1 * *": [
+            "sungas.scheduled_jobs.monthly_escalation_digest.run",
+        ],
     },
 }
 

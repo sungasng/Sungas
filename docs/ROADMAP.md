@@ -152,9 +152,9 @@
 | **D-4** | Provisional Suspense JE on Draft (Option C) + COO informational notification + variance_amount backfill | ✅ DONE | D-1, D-2 (Brevo) |
 | **D-5** | Annex T-07 worksheet doctype (count-by-denom, cause taxonomy, photo evidence) | ✅ DONE | D-4 |
 | **D-6** | Returns / refund approval gate (Vue rebuild — manager PIN above threshold) | 🟠 P1 | Vue rebuild |
-| **D-7** | Inventory Purchase / Transfer / GIT routing + 48h GIT audit flag | 🟠 P1 | In-Transit warehouse setup |
-| **D-8** | Stock Adjustment routing (Plant+OM / HOD Ops+Finance / COO tiers) | 🟠 P1 | — |
-| **D-9** | Sales Register report filtered by `tax_id` (Rev360 export prep) | 🟡 P2 | — |
+| **D-7** | Inventory Purchase / Transfer / GIT routing + 48h GIT audit flag | 🅿️ PARKED — needs (a) PO variance threshold (default 5%? configurable?), (b) Material Transfer qty/value threshold, (c) confirmation that GIT warehouses exist or that we should auto-detect via `is_in_transit` flag. Resume by providing those three inputs. | In-Transit warehouse setup |
+| **D-8** | Stock Adjustment routing (Plant+OM / HOD Ops+Finance / COO tiers) | 🅿️ PARKED — needs the 3 variance tier thresholds (e.g. 2 cylinders, 10 cylinders, NGN 30k) and a Sungas Stock Policy doctype design. Resume by providing the tier numbers. | — |
+| **D-9** | Sales Register report filtered by `tax_id` (Rev360 export prep) | 🅿️ PARKED — needs canonical Rev360 column schema from FIRS / NRS before build can start. Resume by providing the upload template header row, then ~45 min build per PRD note. | — |
 
 **Cross-cutting infra needed:**
 - Brevo email integration (gates D-2, D-3, D-7, Wave E-3)
@@ -178,7 +178,7 @@
 | # | Item | Priority |
 |---|---|---|
 | **K-1** | `Stakeholder SLA Event` doctype (KPI logging for HR appraisal) | 🟠 P1 |
-| **K-2** | Cashier Variance Ledger — Script Report on `2608 Cash Suspense - Cashier Recovery` grouped by party=Employee. Columns: open balance, days since first variance, # variances in trailing 30d, average shortage/overage, last shift ref. Surfaces chronic non-compliance and feeds payroll deduction conversations. Reuses D-4 GL postings (no new data sources). | 🟠 P1 |
+| **K-2** | Cashier Variance Ledger — Script Report on `2608 Cash Suspense - Cashier Recovery` grouped by party=Employee. Columns: open balance, days since first variance, # variances in trailing 30d, average shortage/overage, last shift ref. Surfaces chronic non-compliance and feeds payroll deduction conversations. Reuses D-4 GL postings (no new data sources). | ✅ DONE |
 | **K-3** | Stakeholder Performance L1-L5 dashboards | 🟠 P1 |
 | **K-4** | Month Close Health dashboard | 🟠 P1 |
 
@@ -294,7 +294,7 @@
 | **B-8** | UpdateCustomer.vue z-index nit (toast hidden behind modal) | 🟢 P3 |
 | **B-9** | Test bench / staging site provisioning | 🟡 P2 |
 | **B-10** | PAT rotation policy (7-day rotation, "Save to GitHub" guidance) | 🟡 P2 |
-| **B-11** | Monthly Escalation Digest — HOD Ops summary of every L1/L2/L3 escalation fired in prior month (count by outlet, avg age-to-close, top offenders). Reuses Brevo helper from D-2. | 🟢 P3 |
+| **B-11** | Monthly Escalation Digest — HOD Ops summary of every L1/L2/L3 escalation fired in prior month (count by outlet, avg age-to-close, top offenders). Reuses Brevo helper from D-2. | ✅ DONE |
 
 ---
 
