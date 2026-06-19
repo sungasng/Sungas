@@ -295,6 +295,7 @@
 | **B-9** | Test bench / staging site provisioning | 🟡 P2 |
 | **B-10** | PAT rotation policy (7-day rotation, "Save to GitHub" guidance) | 🟡 P2 |
 | **B-11** | Monthly Escalation Digest — HOD Ops summary of every L1/L2/L3 escalation fired in prior month (count by outlet, avg age-to-close, top offenders). Reuses Brevo helper from D-2. | ✅ DONE |
+| **B-12** | Cashier Recovery → Payroll Deduction Loop (installment-aware). Monthly job reads K-2 "Open Balance" rows above a configurable threshold (e.g. NGN 5,000 outstanding > 30 days) and proposes a **draft Additional Salary** entry per cashier for HR review. Critical: deductions usually span multiple payroll cycles per local labour rules — entry must support an installment plan (deduction_amount × n_periods) stored on a new `Sungas Cashier Recovery Plan` doctype, with idempotent reconciliation so the cashier's `2608` balance reduces only as each installment is actually posted via the payroll run. Reuses K-2 data + D-4 GL postings (no new accounting surface). | 🟢 P3 |
 
 ---
 
