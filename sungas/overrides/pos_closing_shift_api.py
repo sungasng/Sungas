@@ -7,12 +7,15 @@ Two behavioural branches, keyed on `variance_severity` computed by the
 `compute_variance_severity` validate hook (see `pos_closing_shift.py`):
 
   * severity == 'block' | 'critical'
-      Save as Draft in `Pending Plant Manager` state and RETURN. Do NOT
-      call `doc.submit()`. Reason: the POS Closing Shift Variance workflow
-      does not permit a direct `Draft -> Approved` transition, so any
-      submit attempt from Draft throws WorkflowStateError which rolls back
-      the entire request even after `frappe.db.commit()`. The draft is
-      instead driven forward through the sequential workflow
+      Save the doc as a plain Draft (docstatus=0, workflow_state='Draft'),
+      commit, then call `frappe.model.workflow.apply_workflow(doc,
+      "Submit for Approval")` to transition Draft -> Pending Plant
+      Manager via the workflow engine. Direct field assignment to
+      `workflow_state` is NOT safe -- Frappe's `validate_workflow_states`
+      rejects untriggered state changes with "Workflow State transition
+      not allowed". Using apply_workflow satisfies the validator because
+      it marks the change as a legitimate workflow action. The workflow
+      then drives the doc through the approval chain
       (Plant Manager -> HOD Ops -> HOD Finance -> COO -> Approved) via
       the Desk workflow bar. Cashier sees a friendly routing message.
 
@@ -85,18 +88,52 @@ def submit_closing_shift(closing_shift):
         doc.save()
 
     # Persist the draft regardless of what happens next. The validate hook
-    # (compute_variance_severity) has already populated
-    # `variance_severity` + `workflow_state` at this point.
+    # (compute_variance_severity) has populated `variance_severity` +
+    # `variance_amount` at this point. Workflow state stays Draft --
+    # direct field assignment trips Frappe's workflow validator.
     frappe.db.commit()
 
     severity = (doc.get("variance_severity") or "").lower()
 
-    # Block/Critical branch: do NOT attempt submit. The workflow forbids
-    # Draft -> Approved directly, and any throw here would rollback even
-    # after commit in some Frappe versions. The draft is now sitting in
-    # `Pending Plant Manager` for the approval chain to pick up.
+    # Block/Critical branch: do NOT attempt submit. Instead, transition
+    # the Draft to `Pending Plant Manager` via the workflow API. This is
+    # equivalent to a Plant Manager clicking "Submit for Approval" on the
+    # Desk workflow bar, and it is the ONLY safe way to move workflow
+    # state -- direct assignment throws "Workflow State transition not
+    # allowed". apply_workflow persists the new state (also docstatus=0)
+    # and the workflow then drives the doc through the approval chain
+    # (Plant Manager -> HOD Ops -> HOD Finance -> COO -> Approved).
     if severity in ("block", "critical"):
+        from frappe.model.workflow import apply_workflow
         tier = "critical" if severity == "critical" else "block"
+        # Reload to get the freshly-persisted state before applying the
+        # workflow action.
+        doc = frappe.get_doc("POS Closing Shift", doc.name)
+        doc.flags.ignore_permissions = True
+        try:
+            apply_workflow(doc, "Submit for Approval")
+        except Exception:
+            # If the transition fails (e.g. cashier lacks LPG POS User
+            # role, or workflow condition rejected), the Draft is still
+            # persisted from the commit above -- Plant Manager can open
+            # it in Desk and drive it manually.
+            frappe.log_error(
+                frappe.get_traceback(),
+                "sungas.submit_closing_shift apply_workflow failed",
+            )
+            frappe.msgprint(
+                frappe._(
+                    "Variance on this shift exceeds the {0} threshold. "
+                    "Draft <b>{1}</b> has been saved but the automatic "
+                    "workflow submission failed. Please ask your Plant "
+                    "Manager to open "
+                    "<a href='/app/pos-closing-shift/{1}'>{1}</a> and "
+                    "click 'Submit for Approval'."
+                ).format(tier, doc.name),
+                title=frappe._("Shift Saved -- Manual Routing Required"),
+                indicator="orange",
+            )
+            return doc.name
         frappe.msgprint(
             frappe._(
                 "Variance on this shift exceeds the {0} threshold and cannot "
@@ -128,3 +165,5 @@ def submit_closing_shift(closing_shift):
             indicator="orange",
         )
         raise
+
+    return doc.name
