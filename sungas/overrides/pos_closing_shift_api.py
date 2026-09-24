@@ -1,25 +1,27 @@
 """sungas.overrides.pos_closing_shift_api
 ==========================================
 
-Overrides POS Awesome's `submit_closing_shift` whitelist endpoint so that
-the closing-shift DRAFT is committed BEFORE submit is attempted.
+Overrides POS Awesome's `submit_closing_shift` whitelist endpoint.
 
-Why:
-  Upstream POS Awesome does `save(); submit()` in a single transaction.
-  When our Sungas Close Policy `before_submit` hook throws a
-  ValidationError (e.g. variance > block threshold and no approver set),
-  Frappe rolls back the ENTIRE transaction -- including the `save()`.
-  Result: the cashier sees the variance error, but no draft is left
-  behind for the approver to act on.
+Two behavioural branches, keyed on `variance_severity` computed by the
+`compute_variance_severity` validate hook (see `pos_closing_shift.py`):
 
-Fix:
-  We commit after save so the draft persists. If submit then throws,
-  the throw is re-raised to the frontend AS-IS (cashier sees the same
-  variance message), but the draft is now visible in:
-    /app/pos-closing-shift?docstatus=0
-  for the approver to open, set `variance_approved_by` + `variance_remarks`,
-  and save. Cashier (or anyone with submit perm) then submits the draft
-  from Desk to fire on_submit and post the variance JE.
+  * severity == 'block' | 'critical'
+      Save as Draft in `Pending Plant Manager` state and RETURN. Do NOT
+      call `doc.submit()`. Reason: the POS Closing Shift Variance workflow
+      does not permit a direct `Draft -> Approved` transition, so any
+      submit attempt from Draft throws WorkflowStateError which rolls back
+      the entire request even after `frappe.db.commit()`. The draft is
+      instead driven forward through the sequential workflow
+      (Plant Manager -> HOD Ops -> HOD Finance -> COO -> Approved) via
+      the Desk workflow bar. Cashier sees a friendly routing message.
+
+  * severity in ('none', 'warn', 'notice') or unset
+      Standard save + submit. `before_submit` (validate_variance) still
+      enforces remarks/approver on warn tier; anything harder cannot land
+      here because we've already forked above.
+
+Regression: `test_sungas_pos_close_block_tier_autoroute.py`.
 """
 from __future__ import annotations
 
@@ -32,13 +34,8 @@ import frappe
 def submit_closing_shift(closing_shift):
     """Drop-in replacement for posawesome's submit_closing_shift.
 
-    Behaviour:
-      1. Parse + insert (or update if a name is provided) the doc.
-      2. Commit so the draft survives any later throw.
-      3. Attempt submit. Any exception (incl. before_submit variance block)
-         is re-raised; draft remains intact for the approver.
-
-    Returns: the doc name when submit succeeds.
+    Returns: the doc name (either the persisted Draft awaiting approval,
+    or the freshly-submitted Approved doc).
     """
     payload = json.loads(closing_shift) if isinstance(closing_shift, str) else closing_shift
 
@@ -87,26 +84,47 @@ def submit_closing_shift(closing_shift):
         doc.flags.ignore_permissions = True
         doc.save()
 
-    # Persist the draft regardless of what submit does next.
+    # Persist the draft regardless of what happens next. The validate hook
+    # (compute_variance_severity) has already populated
+    # `variance_severity` + `workflow_state` at this point.
     frappe.db.commit()
 
-    # Attempt to submit; any throw (variance block, etc.) bubbles up to
-    # the frontend, but the draft above is now permanent.
+    severity = (doc.get("variance_severity") or "").lower()
+
+    # Block/Critical branch: do NOT attempt submit. The workflow forbids
+    # Draft -> Approved directly, and any throw here would rollback even
+    # after commit in some Frappe versions. The draft is now sitting in
+    # `Pending Plant Manager` for the approval chain to pick up.
+    if severity in ("block", "critical"):
+        tier = "critical" if severity == "critical" else "block"
+        frappe.msgprint(
+            frappe._(
+                "Variance on this shift exceeds the {0} threshold and cannot "
+                "be closed directly. Draft <b>{1}</b> has been saved and "
+                "routed to your Plant Manager for approval. "
+                "Track progress at "
+                "<a href='/app/pos-closing-shift/{1}'>{1}</a>."
+            ).format(tier, doc.name),
+            title=frappe._("Shift Routed to Plant Manager"),
+            indicator="orange",
+        )
+        return doc.name
+
+    # Warn / notice / none: standard submit path. `before_submit`
+    # (validate_variance) still enforces remarks etc. on warn tier.
     try:
         doc.submit()
     except frappe.exceptions.ValidationError:
         # Surface a friendlier follow-up note so the cashier knows where
-        # the draft went.
+        # the draft went. (Warn-tier: remarks missing -> cashier retries
+        # with remarks; draft above is durable via the commit.)
         frappe.msgprint(
             frappe._(
-                "Draft <b>{0}</b> has been saved and is awaiting approval. "
-                "Once an approver fills the 'Variance Approved By' field "
-                "via Desk, you (or a manager) can submit it from "
+                "Draft <b>{0}</b> has been saved. Please address the "
+                "validation issue above and re-submit from "
                 "<a href='/app/pos-closing-shift/{0}'>{0}</a>."
             ).format(doc.name),
-            title=frappe._("Variance Block — Draft Saved"),
+            title=frappe._("Shift Draft Saved"),
             indicator="orange",
         )
         raise
-
-    return doc.name
