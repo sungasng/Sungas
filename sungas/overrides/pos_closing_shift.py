@@ -1,566 +1,169 @@
-"""POS Closing Shift hooks -- variance enforcement + auto-JE posting.
+"""sungas.overrides.pos_closing_shift_api
+==========================================
 
-Architecture:
-  before_submit: validate variance against Sungas Close Policy thresholds.
-                  - If |variance| >= warn threshold AND require_remarks_on_variance:
-                    require non-empty variance_remarks custom field.
-                  - If |variance| >= block threshold: require approver.
-                    Either current user holds an approver role, OR
-                    variance_approved_by custom field is set AND that user
-                    holds an approver role.
-  on_submit:      after consolidation succeeds, auto-post variance JE:
-                    Shortage: Dr 2608 (party=Employee) / Cr Cash Sales account
-                    Overage:  Dr Cash Sales account / Cr 6224
-                  Backfills variance_je link on the Closing Shift.
+Overrides POS Awesome's `submit_closing_shift` whitelist endpoint.
 
-Custom fields required on POS Closing Shift (installed via fixture):
-  - variance_remarks         (Long Text)
-  - variance_approved_by     (Link User)
-  - variance_je              (Link Journal Entry, read-only)
+Two behavioural branches, keyed on `variance_severity` computed by the
+`compute_variance_severity` validate hook (see `pos_closing_shift.py`):
+
+  * severity == 'block' | 'critical'
+      Save the doc as a plain Draft (docstatus=0, workflow_state='Draft'),
+      commit, then call `frappe.model.workflow.apply_workflow(doc,
+      "Submit for Approval")` to transition Draft -> Pending Plant
+      Manager via the workflow engine. Direct field assignment to
+      `workflow_state` is NOT safe -- Frappe's `validate_workflow_states`
+      rejects untriggered state changes with "Workflow State transition
+      not allowed". Using apply_workflow satisfies the validator because
+      it marks the change as a legitimate workflow action. The workflow
+      then drives the doc through the approval chain
+      (Plant Manager -> HOD Ops -> HOD Finance -> COO -> Approved) via
+      the Desk workflow bar. Cashier sees a friendly routing message.
+
+  * severity in ('none', 'warn', 'notice') or unset
+      Standard save + submit. `before_submit` (validate_variance) still
+      enforces remarks/approver on warn tier; anything harder cannot land
+      here because we've already forked above.
+
+Regression: `test_sungas_pos_close_block_tier_autoroute.py`.
 """
 from __future__ import annotations
+
+import json
+
 import frappe
-from frappe import _
-from frappe.utils import flt
 
 
-def _compute_variance(doc):
-    """Return (total_variance, total_expected) summed across all MoP rows.
-    Variance > 0 = overage (closing > expected). Variance < 0 = shortage.
+@frappe.whitelist()
+def submit_closing_shift(closing_shift):
+    """Drop-in replacement for posawesome's submit_closing_shift.
+
+    Returns: the doc name (either the persisted Draft awaiting approval,
+    or the freshly-submitted Approved doc).
     """
-    total_var = 0.0
-    total_expected = 0.0
-    for row in (doc.payment_reconciliation or []):
-        expected = flt(row.expected_amount)
-        closing = flt(row.closing_amount)
-        total_var += (closing - expected)
-        total_expected += expected
-    return total_var, total_expected
+    payload = json.loads(closing_shift) if isinstance(closing_shift, str) else closing_shift
 
+    # If a doc with this opening shift already has a draft, reuse it
+    # instead of creating a duplicate. This makes the call idempotent if
+    # the cashier hits Submit twice.
+    existing_name = None
+    opening_shift = payload.get("pos_opening_shift")
+    if opening_shift and not payload.get("name"):
+        existing_name = frappe.db.get_value(
+            "POS Closing Shift",
+            {"pos_opening_shift": opening_shift, "docstatus": 0},
+            "name",
+        )
 
-def _variance_severity(total_var, total_expected, policy):
-    """Classify variance as 'none' | 'warn' | 'block' | 'critical'.
+    if existing_name:
+        # Re-hydrate the existing draft with the new dialog values.
+        doc = frappe.get_doc("POS Closing Shift", existing_name)
+        # Update simple top-level fields the dialog can change.
+        for f in (
+            "period_end_date",
+            "grand_total",
+            "net_total",
+            "total_quantity",
+            "variance_remarks",
+        ):
+            if f in payload:
+                doc.set(f, payload.get(f))
+        # Refresh the payment_reconciliation child table.
+        if "payment_reconciliation" in payload:
+            doc.set("payment_reconciliation", [])
+            for row in payload.get("payment_reconciliation") or []:
+                doc.append("payment_reconciliation", row)
+        if "pos_transactions" in payload:
+            doc.set("pos_transactions", [])
+            for row in payload.get("pos_transactions") or []:
+                doc.append("pos_transactions", row)
+        if "taxes" in payload:
+            doc.set("taxes", [])
+            for row in payload.get("taxes") or []:
+                doc.append("taxes", row)
+        doc.flags.ignore_permissions = True
+        doc.save()
+    else:
+        doc = frappe.get_doc(payload)
+        doc.flags.ignore_permissions = True
+        doc.save()
 
-    Asymmetric absolute thresholds:
-      - Shortage (total_var < 0): warn_abs / block_abs / critical_abs
-        (defaults 5k / 50k / 100k).
-      - Overage  (total_var > 0): warn_abs_overage / block_abs_overage /
-        critical_abs_overage (defaults 10k / 100k / 200k -- ~2x looser
-        because overages don't represent an immediate cash loss).
+    # Persist the draft regardless of what happens next. The validate hook
+    # (compute_variance_severity) has populated `variance_severity` +
+    # `variance_amount` at this point. Workflow state stays Draft --
+    # direct field assignment trips Frappe's workflow validator.
+    frappe.db.commit()
 
-    Percent rules are symmetric and gated by `block_pct_min_expected`:
-    on small shifts the absolute rule is the only one that fires.
+    severity = (doc.get("variance_severity") or "").lower()
 
-    Tier semantics:
-      - 'none'     : no enforcement; submit allowed.
-      - 'warn'     : remarks required; otherwise submit allowed.
-      - 'block'    : submit requires approver (LPG Head of Operations etc.).
-      - 'critical' : submit requires HOD Finance + (optional) COO sign-off.
-                     Used by Wave D-1 Sequential Workflow routing.
-    """
-    thr = policy.get_thresholds()
-    abs_var = abs(total_var)
-    pct = (abs_var / total_expected * 100) if total_expected > 0 else 0
-    pct_rules_active = total_expected >= thr["block_pct_min_expected"]
-
-    is_overage = total_var > 0
-    warn_abs = thr["warn_abs_overage"] if is_overage else thr["warn_abs"]
-    block_abs = thr["block_abs_overage"] if is_overage else thr["block_abs"]
-    critical_abs = thr["critical_abs_overage"] if is_overage else thr["critical_abs"]
-
-    critical_by_pct = pct_rules_active and pct >= thr["critical_pct"]
-    if abs_var >= critical_abs or critical_by_pct:
-        return "critical", abs_var, pct
-
-    block_by_pct = pct_rules_active and pct >= thr["block_pct"]
-    if abs_var >= block_abs or block_by_pct:
-        return "block", abs_var, pct
-
-    warn_by_pct = pct_rules_active and pct >= thr["warn_pct"]
-    if abs_var >= warn_abs or warn_by_pct:
-        return "warn", abs_var, pct
-
-    return "none", abs_var, pct
-
-
-def compute_variance_severity(doc, method=None):
-    """validate hook: compute + persist `variance_severity` and auto-route
-    block/critical variances into the workflow if not already in one.
-
-    Runs on every save. Idempotent. Short-circuits early when the document
-    doesn't have payment_reconciliation populated yet (e.g. autosave with
-    bare metadata) -- avoids loading the Sungas Close Policy single doc on
-    a no-op save.
-    """
-    # Fast-fail: nothing to score yet.
-    pr_rows = doc.get("payment_reconciliation") or []
-    if not pr_rows:
-        return
-    if not frappe.db.exists("DocType", "Sungas Close Policy"):
-        return
-    policy = frappe.get_single("Sungas Close Policy")
-    total_var, total_expected = _compute_variance(doc)
-    severity, _abs_var, _pct = _variance_severity(total_var, total_expected, policy)
-    doc.set("variance_severity", severity)
-    # Backfill the variance amount so dashboards / list views show real numbers
-    # (was previously left at 0). Signed: shortage = negative, overage = positive.
-    doc.set("variance_amount", total_var)
-
-    # Auto-route into the workflow when block/critical and not yet in one.
+    # Block/Critical branch: do NOT attempt submit. Instead, transition
+    # the Draft to `Pending Plant Manager` via the workflow API. This is
+    # equivalent to a Plant Manager clicking "Submit for Approval" on the
+    # Desk workflow bar, and it is the ONLY safe way to move workflow
+    # state -- direct assignment throws "Workflow State transition not
+    # allowed". apply_workflow persists the new state (also docstatus=0)
+    # and the workflow then drives the doc through the approval chain
+    # (Plant Manager -> HOD Ops -> HOD Finance -> COO -> Approved).
     if severity in ("block", "critical"):
-        current_state = doc.get("workflow_state")
-        if not current_state or current_state in ("", "Draft"):
-            doc.set("workflow_state", "Pending Plant Manager")
-    else:
-        # Warn / none: keep workflow_state in Draft (Path A).
-        if not doc.get("workflow_state"):
-            doc.set("workflow_state", "Draft")
-
-    # Stamp signer fields on workflow transitions.
-    _stamp_workflow_signers(doc)
-
-
-def _stamp_workflow_signers(doc) -> None:
-    """When workflow_state has just changed, stamp the signer + timestamp on
-    the corresponding approval field.
-
-    Detection: compare new workflow_state with the previously saved value.
-    Idempotent -- never overwrites an already-stamped field.
-    """
-    from frappe.utils import now_datetime
-
-    new_state = doc.get("workflow_state")
-    if not new_state:
-        return
-
-    if doc.is_new():
-        old_state = None
-    else:
-        prev = doc.get_doc_before_save()
-        old_state = prev.get("workflow_state") if prev else None
-
-    if old_state == new_state:
-        return  # no transition
-
-    # Map: the transition that produces `new_state` was performed by the
-    # role that approved the OLD state -- so we stamp the signer that
-    # "owns" the OLD state.
-    user = frappe.session.user
-    ts = now_datetime()
-    stamp_map = {
-        # When moving from X to Y, stamp X's signer.
-        ("Pending Plant Manager", "Pending HOD Operations"):
-            ("plant_manager_signed_by", "plant_manager_signed_on"),
-        ("Pending HOD Operations", "Approved"):
-            ("hod_ops_signed_by", "hod_ops_signed_on"),
-        ("Pending HOD Operations", "Pending HOD Finance"):
-            ("hod_ops_signed_by", "hod_ops_signed_on"),
-        ("Pending HOD Finance", "Approved"):
-            ("hod_finance_signed_by", "hod_finance_signed_on"),
-        ("Pending HOD Finance", "Pending COO"):
-            ("hod_finance_signed_by", "hod_finance_signed_on"),
-        ("Pending COO", "Approved"):
-            ("coo_signed_by", "coo_signed_on"),
-    }
-    key = (old_state, new_state)
-    if key in stamp_map:
-        by_field, on_field = stamp_map[key]
-        if not doc.get(by_field):
-            doc.set(by_field, user)
-            doc.set(on_field, ts)
-        # Mirror the latest approver into variance_approved_by so the JE
-        # auto-post in on_submit keeps working.
-        if new_state == "Approved":
-            doc.set("variance_approved_by", user)
-
-
-def validate_variance(doc, method=None):
-    """before_submit hook: enforce variance thresholds.
-
-    For warn-band: just require remarks (Path A).
-    For block/critical-band: require the workflow to have reached 'Approved'
-    state OR the legacy `variance_approved_by` field to be populated by an
-    approver-role user.
-    """
-    if not frappe.db.exists("DocType", "Sungas Close Policy"):
-        return  # policy doctype not installed yet, skip
-    policy = frappe.get_single("Sungas Close Policy")
-    total_var, total_expected = _compute_variance(doc)
-    severity, abs_var, pct = _variance_severity(total_var, total_expected, policy)
-
-    if severity == "none":
-        return
-
-    # Remarks check
-    remarks = (doc.get("variance_remarks") or "").strip()
-    if policy.require_remarks_on_variance and not remarks:
-        frappe.throw(
-            _("Variance of NGN {0:,.2f} ({1:.2f}%) requires remarks before closing the shift. "
-              "Please fill the 'Variance Remarks' field with the explanation and any approvals obtained.").format(
-                abs_var, pct
-            ),
-            title=_("Variance Remarks Required")
-        )
-
-    # Block-/Critical-threshold approver check
-    if severity in ("block", "critical"):
-        # Path 1: workflow has reached Approved -> allow.
-        if doc.get("workflow_state") == "Approved":
-            return
-        # Path 2: legacy single-approver path (for backwards compatibility
-        # and admin override) -- variance_approved_by populated AND user
-        # holds an approver role.
-        approver_roles = policy.get_approver_roles()
-        current_user_roles = set(frappe.get_roles(frappe.session.user))
-        if current_user_roles.intersection(approver_roles):
-            return
-        approver = doc.get("variance_approved_by")
-        if not approver:
-            tier_label = "critical" if severity == "critical" else "block"
-            frappe.throw(
-                _("Variance of NGN {0:,.2f} ({1:.2f}%) exceeds the {2} threshold and requires "
-                  "approval via the sequential workflow (Plant Manager -> HOD Operations"
-                  "{3}). Save the draft and have the approvers act on it from "
-                  "/app/pos-closing-shift/{4} before re-submitting.").format(
-                    abs_var, pct, tier_label,
-                    " -> HOD Finance" + (" -> COO" if policy.get("require_coo_on_critical") else "")
-                    if severity == "critical" else "",
-                    doc.name or "<new>"
-                ),
-                title=_("Variance Approval Required")
-            )
-        approver_user_roles = set(frappe.get_roles(approver))
-        if not approver_user_roles.intersection(approver_roles):
-            frappe.throw(
-                _("User {0} does not hold any of the approver roles ({1}). "
-                  "Variance cannot be approved.").format(approver, ", ".join(approver_roles)),
-                title=_("Invalid Approver")
-            )
-
-
-def _resolve_cash_account(doc):
-    """Return the Cash Mode-of-Payment GL account used in this shift, or None."""
-    for row in (doc.payment_reconciliation or []):
-        mop = row.mode_of_payment or ""
-        if "Cash" not in mop:
-            continue
-        if not flt(row.expected_amount):
-            continue
-        mop_doc = frappe.get_doc("Mode of Payment", mop)
-        for a in mop_doc.accounts:
-            if a.company == doc.company:
-                return a.default_account
-    return None
-
-
-def _shift_posting_date(doc):
-    """Use the shift's own period_end_date so the JE lands in the correct
-    accounting period even if approval crosses a month boundary. Falls
-    back to today if the date is somehow missing."""
-    return doc.get("period_end_date") or frappe.utils.nowdate()
-
-
-def post_provisional_journal(doc, method=None):
-    """on_update hook (Wave D-4 / Option C): post a provisional Suspense JE
-    the moment a block/critical variance enters the workflow.
-
-    Effect during investigation window:
-        Shortage:  Dr  cash_variance_pending_account
-                   Cr  cash_acct                                (party=Employee on Dr)
-        Overage:   Dr  cash_acct
-                   Cr  cash_variance_pending_account
-
-    Cash GL is reconciled IMMEDIATELY (Day 1); the variance is parked in
-    `cash_variance_pending_account` until the workflow approves and the
-    reclassification JE moves it to the final suspense (cashier_recovery
-    or overage_suspense).
-
-    Idempotent via the `variance_provisional_je` field. Only fires while
-    the doc is still Draft (docstatus=0) and in a Pending workflow state.
-    """
-    if doc.docstatus != 0:
-        return  # submitted; provisional window closed
-    if doc.get("variance_provisional_je"):
-        return  # already posted
-    if doc.get("variance_severity") not in ("block", "critical"):
-        return  # warn / none don't use provisional path
-    state = doc.get("workflow_state") or ""
-    if not state.startswith("Pending"):
-        return  # not in active workflow yet
-
-    if not frappe.db.exists("DocType", "Sungas Close Policy"):
-        return
-    policy = frappe.get_single("Sungas Close Policy")
-    pending_acct = policy.get("cash_variance_pending_account")
-    if not pending_acct:
-        frappe.log_error(
-            "post_provisional_journal: cash_variance_pending_account not set on Sungas Close Policy",
-            "Sungas variance hook",
-        )
-        return
-
-    total_var, _ = _compute_variance(doc)
-    if abs(total_var) < 0.01:
-        return
-
-    cash_acct = _resolve_cash_account(doc)
-    if not cash_acct:
-        frappe.log_error(
-            f"post_provisional_journal: no Cash MoP account resolved for "
-            f"POS Closing Shift {doc.name} (company={doc.company})",
-            "Sungas variance hook",
-        )
-        return
-
-    abs_var = abs(total_var)
-    employee = frappe.db.get_value("Employee", {"user_id": doc.user}, "name")
-
-    if total_var < 0:
-        kind = "Shortage"
-        row_first = {
-            "account": pending_acct,
-            "debit_in_account_currency": abs_var,
-            "credit_in_account_currency": 0,
-        }
-        if employee:
-            row_first["party_type"] = "Employee"
-            row_first["party"] = employee
-        rows = [row_first, {
-            "account": cash_acct,
-            "debit_in_account_currency": 0,
-            "credit_in_account_currency": abs_var,
-        }]
-    else:
-        kind = "Overage"
-        rows = [
-            {
-                "account": cash_acct,
-                "debit_in_account_currency": abs_var,
-                "credit_in_account_currency": 0,
-            },
-            {
-                "account": pending_acct,
-                "debit_in_account_currency": 0,
-                "credit_in_account_currency": abs_var,
-            },
-        ]
-
-    remark = "\n".join([
-        f"Provisional Cash {kind} JE auto-posted by Sungas Close Policy hook.",
-        f"POS Closing Shift: {doc.name}  (workflow_state={state})",
-        f"Outlet: {doc.pos_profile}    Cashier: {doc.user}",
-        f"Variance: NGN {total_var:+,.2f}",
-        "Reclassification will follow on workflow approval.",
-    ])
-
-    try:
-        je = frappe.get_doc({
-            "doctype": "Journal Entry",
-            "voucher_type": "Journal Entry",
-            "company": doc.company,
-            "posting_date": _shift_posting_date(doc),
-            "title": f"Provisional Cash {kind} - {doc.name}",
-            "user_remark": remark,
-            "accounts": rows,
-        })
-        je.insert(ignore_permissions=True)
-        je.submit()
-        frappe.db.set_value(
-            "POS Closing Shift", doc.name,
-            "variance_provisional_je", je.name,
-            update_modified=False,
-        )
-        frappe.db.commit()
-    except Exception as e:
-        frappe.log_error(
-            f"post_provisional_journal failed for {doc.name}: {e}",
-            "Sungas variance hook",
-        )
-
-
-def cancel_provisional_journal(doc, method=None):
-    """on_update hook: when the workflow rejects, cancel the provisional JE
-    so the books don't carry an orphaned pending entry.
-
-    Triggered on transition into 'Rejected' state. Idempotent: a JE that's
-    already cancelled (docstatus=2) is silently skipped.
-    """
-    if doc.get("workflow_state") != "Rejected":
-        return
-    je_name = doc.get("variance_provisional_je")
-    if not je_name:
-        return
-    try:
-        je = frappe.get_doc("Journal Entry", je_name)
-        if je.docstatus == 1:
-            je.cancel()
-            frappe.db.commit()
-    except Exception as e:
-        frappe.log_error(
-            f"cancel_provisional_journal failed for {doc.name} ({je_name}): {e}",
-            "Sungas variance hook",
-        )
-
-
-def post_variance_journal(doc, method=None):
-    """on_submit hook: auto-post the final variance JE.
-
-    Two paths:
-
-    1. **Reclassification** (Option C / Wave D-4): if a provisional JE was
-       posted during the workflow, post a reclassification JE that moves
-       the variance from `cash_variance_pending_account` to either
-       `cashier_recovery_account` (shortage) or `overage_suspense_account`
-       (overage). The cash account is NOT touched -- that already happened
-       on Day 1 via the provisional JE.
-
-    2. **Direct** (legacy / soft+warn paths): if no provisional JE exists,
-       behave exactly as the original implementation -- Dr cashier_recovery
-       / Cr cash_acct for shortages, Cr overage_suspense / Dr cash_acct for
-       overages.
-    """
-    if not frappe.db.exists("DocType", "Sungas Close Policy"):
-        return
-    if doc.get("variance_je"):
-        return  # already posted (re-submit guard)
-    policy = frappe.get_single("Sungas Close Policy")
-    total_var, _ = _compute_variance(doc)
-    if abs(total_var) < 0.01:
-        return
-
-    abs_var = abs(total_var)
-    employee = frappe.db.get_value("Employee", {"user_id": doc.user}, "name")
-    recovery_acct = policy.cashier_recovery_account
-    overage_acct = policy.overage_suspense_account
-    if total_var < 0 and not recovery_acct:
-        frappe.log_error(
-            "post_variance_journal: cashier_recovery_account not set on Close Policy",
-            "Sungas variance hook",
-        )
-        return
-    if total_var > 0 and not overage_acct:
-        frappe.log_error(
-            "post_variance_journal: overage_suspense_account not set on Close Policy",
-            "Sungas variance hook",
-        )
-        return
-
-    provisional_je = doc.get("variance_provisional_je")
-    is_reclassification = bool(provisional_je)
-
-    if is_reclassification:
-        # Reclassification mode: move from cash_variance_pending -> final suspense.
-        pending_acct = policy.get("cash_variance_pending_account")
-        if not pending_acct:
+        from frappe.model.workflow import apply_workflow
+        tier = "critical" if severity == "critical" else "block"
+        # Reload to get the freshly-persisted state before applying the
+        # workflow action.
+        doc = frappe.get_doc("POS Closing Shift", doc.name)
+        doc.flags.ignore_permissions = True
+        try:
+            apply_workflow(doc, "Submit for Approval")
+        except Exception:
+            # If the transition fails (e.g. cashier lacks LPG POS User
+            # role, or workflow condition rejected), the Draft is still
+            # persisted from the commit above -- Plant Manager can open
+            # it in Desk and drive it manually.
             frappe.log_error(
-                f"post_variance_journal: variance_provisional_je={provisional_je} set "
-                f"but cash_variance_pending_account is empty; cannot reclassify.",
-                "Sungas variance hook",
+                frappe.get_traceback(),
+                "sungas.submit_closing_shift apply_workflow failed",
             )
-            return
-        if total_var < 0:
-            kind = "Shortage Reclassification"
-            row_first = {
-                "account": recovery_acct,
-                "debit_in_account_currency": abs_var,
-                "credit_in_account_currency": 0,
-            }
-            if employee:
-                row_first["party_type"] = "Employee"
-                row_first["party"] = employee
-            rows = [row_first, {
-                "account": pending_acct,
-                "debit_in_account_currency": 0,
-                "credit_in_account_currency": abs_var,
-            }]
-        else:
-            kind = "Overage Reclassification"
-            rows = [
-                {
-                    "account": pending_acct,
-                    "debit_in_account_currency": abs_var,
-                    "credit_in_account_currency": 0,
-                },
-                {
-                    "account": overage_acct,
-                    "debit_in_account_currency": 0,
-                    "credit_in_account_currency": abs_var,
-                },
-            ]
-    else:
-        # Legacy direct mode (soft/warn or pre-D-4 docs without provisional).
-        cash_acct = _resolve_cash_account(doc)
-        if not cash_acct:
-            frappe.log_error(
-                f"post_variance_journal: no Cash MoP account resolved for "
-                f"POS Closing Shift {doc.name} (company={doc.company})",
-                "Sungas variance hook",
+            frappe.msgprint(
+                frappe._(
+                    "Variance on this shift exceeds the {0} threshold. "
+                    "Draft <b>{1}</b> has been saved but the automatic "
+                    "workflow submission failed. Please ask your Plant "
+                    "Manager to open "
+                    "<a href='/app/pos-closing-shift/{1}'>{1}</a> and "
+                    "click 'Submit for Approval'."
+                ).format(tier, doc.name),
+                title=frappe._("Shift Saved -- Manual Routing Required"),
+                indicator="orange",
             )
-            return
-        if total_var < 0:
-            kind = "Shortage"
-            row_first = {
-                "account": recovery_acct,
-                "debit_in_account_currency": abs_var,
-                "credit_in_account_currency": 0,
-            }
-            if employee:
-                row_first["party_type"] = "Employee"
-                row_first["party"] = employee
-            rows = [row_first, {
-                "account": cash_acct,
-                "debit_in_account_currency": 0,
-                "credit_in_account_currency": abs_var,
-            }]
-        else:
-            kind = "Overage"
-            rows = [
-                {
-                    "account": cash_acct,
-                    "debit_in_account_currency": abs_var,
-                    "credit_in_account_currency": 0,
-                },
-                {
-                    "account": overage_acct,
-                    "debit_in_account_currency": 0,
-                    "credit_in_account_currency": abs_var,
-                },
-            ]
+            return doc.name
+        frappe.msgprint(
+            frappe._(
+                "Variance on this shift exceeds the {0} threshold and cannot "
+                "be closed directly. Draft <b>{1}</b> has been saved and "
+                "routed to your Plant Manager for approval. "
+                "Track progress at "
+                "<a href='/app/pos-closing-shift/{1}'>{1}</a>."
+            ).format(tier, doc.name),
+            title=frappe._("Shift Routed to Plant Manager"),
+            indicator="orange",
+        )
+        return doc.name
 
-    remark_lines = [
-        f"Cash {kind} JE auto-posted by Sungas Close Policy hook.",
-        f"POS Closing Shift: {doc.name}",
-        f"Outlet: {doc.pos_profile}    Cashier: {doc.user}",
-        f"Variance: NGN {total_var:+,.2f}",
-    ]
-    if is_reclassification:
-        remark_lines.append(f"Reclassifies provisional JE: {provisional_je}")
-    approver = doc.get("variance_approved_by")
-    if approver and approver != doc.user:
-        remark_lines.append(f"Approved by: {approver}")
-    cashier_remarks = (doc.get("variance_remarks") or "").strip()
-    if cashier_remarks:
-        remark_lines.append(f"Cashier remarks: {cashier_remarks}")
-    remark = "\n".join(remark_lines)
-
+    # Warn / notice / none: standard submit path. `before_submit`
+    # (validate_variance) still enforces remarks etc. on warn tier.
     try:
-        je = frappe.get_doc({
-            "doctype": "Journal Entry",
-            "voucher_type": "Journal Entry",
-            "company": doc.company,
-            "posting_date": _shift_posting_date(doc),
-            "title": f"Cash {kind} - {doc.name}",
-            "user_remark": remark,
-            "accounts": rows,
-        })
-        je.insert(ignore_permissions=True)
-        je.submit()
-        frappe.db.set_value(
-            "POS Closing Shift", doc.name, "variance_je", je.name, update_modified=False
+        doc.submit()
+    except frappe.exceptions.ValidationError:
+        # Surface a friendlier follow-up note so the cashier knows where
+        # the draft went. (Warn-tier: remarks missing -> cashier retries
+        # with remarks; draft above is durable via the commit.)
+        frappe.msgprint(
+            frappe._(
+                "Draft <b>{0}</b> has been saved. Please address the "
+                "validation issue above and re-submit from "
+                "<a href='/app/pos-closing-shift/{0}'>{0}</a>."
+            ).format(doc.name),
+            title=frappe._("Shift Draft Saved"),
+            indicator="orange",
         )
-        frappe.db.commit()
-    except Exception as e:
-        frappe.log_error(
-            f"post_variance_journal failed for {doc.name}: {e}",
-            "Sungas variance hook"
-        )
+        raise
+
+    return doc.name
