@@ -106,16 +106,6 @@ def compute_variance_severity(doc, method=None):
     # (was previously left at 0). Signed: shortage = negative, overage = positive.
     doc.set("variance_amount", total_var)
 
-    # Auto-route into the workflow when block/critical and not yet in one.
-    if severity in ("block", "critical"):
-        current_state = doc.get("workflow_state")
-        if not current_state or current_state in ("", "Draft"):
-            doc.set("workflow_state", "Pending Plant Manager")
-    else:
-        # Warn / none: keep workflow_state in Draft (Path A).
-        if not doc.get("workflow_state"):
-            doc.set("workflow_state", "Draft")
-
     # Stamp signer fields on workflow transitions.
     _stamp_workflow_signers(doc)
 
