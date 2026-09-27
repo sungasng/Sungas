@@ -305,21 +305,34 @@ def post_provisional_journal(doc, method=None):
     abs_var = abs(total_var)
     employee = frappe.db.get_value("Employee", {"user_id": doc.user}, "name")
 
-    if total_var < 0:
-        kind = "Shortage"
-        row_first = {
+    def _pending_row(dr_amt: float, cr_amt: float) -> dict:
+        """Build a JE row that hits cash_variance_pending_account.
+
+        This account is Receivable/Payable at the chart level, so
+        Frappe requires Party Type + Party on EVERY row that touches
+        it (both provisional debit and reclassification credit). Add
+        the cashier Employee as party whenever we can resolve it.
+        """
+        row = {
             "account": pending_acct,
-            "debit_in_account_currency": abs_var,
-            "credit_in_account_currency": 0,
+            "debit_in_account_currency": dr_amt,
+            "credit_in_account_currency": cr_amt,
         }
         if employee:
-            row_first["party_type"] = "Employee"
-            row_first["party"] = employee
-        rows = [row_first, {
-            "account": cash_acct,
-            "debit_in_account_currency": 0,
-            "credit_in_account_currency": abs_var,
-        }]
+            row["party_type"] = "Employee"
+            row["party"] = employee
+        return row
+
+    if total_var < 0:
+        kind = "Shortage"
+        rows = [
+            _pending_row(abs_var, 0),
+            {
+                "account": cash_acct,
+                "debit_in_account_currency": 0,
+                "credit_in_account_currency": abs_var,
+            },
+        ]
     else:
         kind = "Overage"
         rows = [
@@ -328,11 +341,7 @@ def post_provisional_journal(doc, method=None):
                 "debit_in_account_currency": abs_var,
                 "credit_in_account_currency": 0,
             },
-            {
-                "account": pending_acct,
-                "debit_in_account_currency": 0,
-                "credit_in_account_currency": abs_var,
-            },
+            _pending_row(0, abs_var),
         ]
 
     remark = "\n".join([
@@ -448,6 +457,22 @@ def post_variance_journal(doc, method=None):
                 "Sungas variance hook",
             )
             return
+
+        def _pending_row(dr_amt: float, cr_amt: float) -> dict:
+            """Same party-tagging discipline as the provisional hook --
+            cash_variance_pending_account is Receivable/Payable, so both
+            legs of the reclassification also need Employee party.
+            """
+            row = {
+                "account": pending_acct,
+                "debit_in_account_currency": dr_amt,
+                "credit_in_account_currency": cr_amt,
+            }
+            if employee:
+                row["party_type"] = "Employee"
+                row["party"] = employee
+            return row
+
         if total_var < 0:
             kind = "Shortage Reclassification"
             row_first = {
@@ -458,19 +483,11 @@ def post_variance_journal(doc, method=None):
             if employee:
                 row_first["party_type"] = "Employee"
                 row_first["party"] = employee
-            rows = [row_first, {
-                "account": pending_acct,
-                "debit_in_account_currency": 0,
-                "credit_in_account_currency": abs_var,
-            }]
+            rows = [row_first, _pending_row(0, abs_var)]
         else:
             kind = "Overage Reclassification"
             rows = [
-                {
-                    "account": pending_acct,
-                    "debit_in_account_currency": abs_var,
-                    "credit_in_account_currency": 0,
-                },
+                _pending_row(abs_var, 0),
                 {
                     "account": overage_acct,
                     "debit_in_account_currency": 0,
@@ -551,6 +568,9 @@ def post_variance_journal(doc, method=None):
         frappe.db.commit()
     except Exception as e:
         frappe.log_error(
-            f"post_variance_journal failed for {doc.name}: {e}",
-            "Sungas variance hook"
+            title="Sungas variance JE failed",
+            message=(
+                f"post_variance_journal failed for {doc.name}: {e}\n\n"
+                f"{frappe.get_traceback()}"
+            ),
         )
