@@ -1,24 +1,58 @@
-"""Sungas Close Policy -- single doctype for cash-variance enforcement settings."""
+"""Sungas Close Policy -- single doctype for cash-variance enforcement settings.
+
+Threshold-field semantics (Wave TG-1, Feb 2026):
+
+    A threshold field left blank or set to 0 means the corresponding tier
+    is DISABLED. `get_thresholds()` returns `math.inf` for those, so the
+    downstream comparison `abs_var >= threshold` can never trip.
+
+    The single exception is `block_pct_min_expected`, which is a *gate /
+    floor* (not a tier). Blank/0 there means "no floor -- percent rules
+    apply to every shift".
+
+    This lets operators explicitly turn off tiers they don't want
+    enforced (e.g. leave Critical Absolute blank to skip the HOD-Finance
+    tier entirely, keeping the workflow at PM -> HOD Ops).
+"""
+import math
+
 import frappe
 from frappe.model.document import Document
+
+
+# Sentinel used for disabled tiers. Any `abs_var >= math.inf` is False,
+# so the tier never trips.
+_DISABLED = math.inf
+
+
+def _thr(value: float | None) -> float:
+    """Convert a policy field to a threshold: 0 / blank -> disabled sentinel."""
+    v = float(value or 0)
+    return v if v > 0 else _DISABLED
 
 
 class SungasClosePolicy(Document):
     """No special validations -- field defaults handle everything."""
 
     def get_thresholds(self):
-        """Return resolved threshold values with sensible defaults if user left fields blank."""
+        """Return resolved threshold values.
+
+        Blank / 0 on any tier field yields `math.inf` -> tier disabled.
+        `block_pct_min_expected` is a floor, so blank / 0 yields 0 (no
+        floor, percent rules always apply).
+        """
         return {
-            "warn_abs": float(self.variance_warn_abs or 5000),
-            "warn_pct": float(self.variance_warn_pct or 0.5),
-            "block_abs": float(self.variance_block_abs or 50000),
-            "block_pct": float(self.variance_block_pct or 2.0),
-            "block_pct_min_expected": float(self.block_pct_min_expected or 500000),
-            "warn_abs_overage": float(self.variance_warn_abs_overage or 10000),
-            "block_abs_overage": float(self.variance_block_abs_overage or 100000),
-            "critical_abs": float(self.get("variance_critical_abs") or 100000),
-            "critical_pct": float(self.get("variance_critical_pct") or 3.0),
-            "critical_abs_overage": float(self.get("variance_critical_abs_overage") or 200000),
+            "warn_abs": _thr(self.variance_warn_abs),
+            "warn_pct": _thr(self.variance_warn_pct),
+            "block_abs": _thr(self.variance_block_abs),
+            "block_pct": _thr(self.variance_block_pct),
+            # Floor / gate -- 0 means "no floor".
+            "block_pct_min_expected": float(self.block_pct_min_expected or 0),
+            "warn_abs_overage": _thr(self.variance_warn_abs_overage),
+            "block_abs_overage": _thr(self.variance_block_abs_overage),
+            "critical_abs": _thr(self.get("variance_critical_abs")),
+            "critical_pct": _thr(self.get("variance_critical_pct")),
+            "critical_abs_overage": _thr(self.get("variance_critical_abs_overage")),
         }
 
     def get_approver_roles(self):

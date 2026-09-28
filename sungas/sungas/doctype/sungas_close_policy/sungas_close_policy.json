@@ -45,14 +45,14 @@
    "fieldtype": "Currency",
    "label": "Warn Threshold (Absolute, NGN)",
    "default": "5000",
-   "description": "Above this absolute variance, remarks become mandatory."
+   "description": "Above this absolute variance, remarks become mandatory. Leave blank or set to 0 to DISABLE this tier."
   },
   {
    "fieldname": "variance_warn_pct",
    "fieldtype": "Percent",
    "label": "Warn Threshold (Percent of Expected)",
    "default": "0.5",
-   "description": "Above this percent of expected total, remarks become mandatory."
+   "description": "Above this percent of expected total, remarks become mandatory. Leave blank or set to 0 to DISABLE this tier."
   },
   {
    "fieldname": "column_break_var",
@@ -63,42 +63,42 @@
    "fieldtype": "Currency",
    "label": "Block Threshold (Absolute, NGN)",
    "default": "50000",
-   "description": "Above this absolute variance, requires approver role sign-off."
+   "description": "Above this absolute variance, requires approver role sign-off. Leave blank or set to 0 to DISABLE this tier."
   },
   {
    "fieldname": "variance_block_pct",
    "fieldtype": "Percent",
    "label": "Block Threshold (Percent of Expected)",
    "default": "2",
-   "description": "Above this percent, requires approver role sign-off (only applied when expected total exceeds the minimum below)."
+   "description": "Above this percent, requires approver role sign-off (only applied when expected total exceeds the minimum below). Leave blank or set to 0 to DISABLE this tier."
   },
   {
    "fieldname": "block_pct_min_expected",
    "fieldtype": "Currency",
    "label": "Percent-Block Minimum Expected (NGN)",
    "default": "500000",
-   "description": "The percent-based block threshold only triggers when the shift's total expected amount exceeds this floor. Prevents small-shift false positives (e.g., a NGN 15k variance on a NGN 340k shift = 4.4% but is below 500k floor, so only the absolute rule applies)."
+   "description": "The percent-based block threshold only triggers when the shift's total expected amount exceeds this floor. Prevents small-shift false positives (e.g., a NGN 15k variance on a NGN 340k shift = 4.4% but is below 500k floor, so only the absolute rule applies). Leave blank or set to 0 to REMOVE the floor entirely -- percent rules will then apply to every shift regardless of size."
   },
   {
    "fieldname": "variance_critical_abs",
    "fieldtype": "Currency",
    "label": "Critical Threshold (Shortage Absolute, NGN)",
    "default": "100000",
-   "description": "Above this shortage, routing escalates to HOD Finance + (optional) COO sign-off. Used by Wave D-1 Sequential Workflow."
+   "description": "Above this shortage, routing escalates to HOD Finance + (optional) COO sign-off. Used by Wave D-1 Sequential Workflow. Leave blank or set to 0 to DISABLE the critical tier -- workflow will stop at HOD Ops."
   },
   {
    "fieldname": "variance_critical_pct",
    "fieldtype": "Percent",
    "label": "Critical Threshold (Percent of Expected)",
    "default": "3",
-   "description": "Above this percent, escalates to HOD Finance. Subject to the same min-expected floor as block_pct_min_expected."
+   "description": "Above this percent, escalates to HOD Finance. Subject to the same min-expected floor as block_pct_min_expected. Leave blank or set to 0 to DISABLE the critical-pct tier."
   },
   {
    "fieldname": "variance_critical_abs_overage",
    "fieldtype": "Currency",
    "label": "Critical Threshold (Overage Absolute, NGN)",
    "default": "200000",
-   "description": "Above this overage, escalates to HOD Finance. Defaults to 2x the shortage critical threshold."
+   "description": "Above this overage, escalates to HOD Finance. Defaults to 2x the shortage critical threshold. Leave blank or set to 0 to DISABLE the overage-critical tier."
   },
   {
    "fieldname": "overage_section",
@@ -110,7 +110,7 @@
    "fieldtype": "Currency",
    "label": "Overage Warn Threshold (Absolute, NGN)",
    "default": "10000",
-   "description": "Above this overage, remarks become mandatory. Defaults to 2x the shortage warn threshold because overages are typically less serious than shortages (no immediate cash loss to the company)."
+   "description": "Above this overage, remarks become mandatory. Defaults to 2x the shortage warn threshold because overages are typically less serious than shortages (no immediate cash loss to the company). Leave blank or set to 0 to DISABLE this tier."
   },
   {
    "fieldname": "column_break_ovr",
@@ -121,7 +121,7 @@
    "fieldtype": "Currency",
    "label": "Overage Block Threshold (Absolute, NGN)",
    "default": "100000",
-   "description": "Above this overage, manager approval is required. Defaults to 2x the shortage block threshold. Percent-rule and minimum-expected floor are shared with the shortage rules above."
+   "description": "Above this overage, manager approval is required. Defaults to 2x the shortage block threshold. Percent-rule and minimum-expected floor are shared with the shortage rules above. Leave blank or set to 0 to DISABLE this tier."
   },
   {
    "fieldname": "require_remarks_on_variance",
@@ -207,7 +207,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-05-31 06:00:00.000000",
+ "modified": "2026-02-28 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Sungas Close Policy",
