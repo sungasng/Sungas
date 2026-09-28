@@ -15,8 +15,6 @@
   "period_end_date",
   "variance_severity",
   "variance_amount",
-  "denom_section",
-  "denom_totals_column_break",
   "cause_section",
   "primary_cause",
   "other_cause_detail",
