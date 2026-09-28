@@ -159,6 +159,10 @@ doc_events = {
             'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
         ],
     },
+    "POS Opening Shift": {
+        # Wave B-11: Cashier Lockout on Unresolved Variance.
+        'before_insert': 'sungas.overrides.cashier_variance_lockout.enforce_cashier_variance_lockout',
+    },
     "Purchase Receipt": {
         'on_submit': 'sungas.overrides.receipt_trigger_review.review_on_receipt_submit',
     },
