@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 0,
- "autoname": "format:AT07-{YY}-{#####}",
+ "autoname": "format:PVI-{YY}-{#####}",
  "creation": "2026-02-17 00:00:00.000000",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -16,11 +16,7 @@
   "variance_severity",
   "variance_amount",
   "denom_section",
-  "denominations",
   "denom_totals_column_break",
-  "total_expected",
-  "total_actual",
-  "total_variance",
   "cause_section",
   "primary_cause",
   "other_cause_detail",
@@ -109,42 +105,6 @@
    "read_only": 1
   },
   {
-   "fieldname": "denom_section",
-   "fieldtype": "Section Break",
-   "label": "Cash Count by Denomination"
-  },
-  {
-   "fieldname": "denominations",
-   "fieldtype": "Table",
-   "label": "Denominations",
-   "options": "Annex T-07 Denomination Row"
-  },
-  {
-   "fieldname": "denom_totals_column_break",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "total_expected",
-   "fieldtype": "Currency",
-   "label": "Total Expected",
-   "options": "NGN",
-   "read_only": 1
-  },
-  {
-   "fieldname": "total_actual",
-   "fieldtype": "Currency",
-   "label": "Total Actual",
-   "options": "NGN",
-   "read_only": 1
-  },
-  {
-   "fieldname": "total_variance",
-   "fieldtype": "Currency",
-   "label": "Total Variance (Actual − Expected)",
-   "options": "NGN",
-   "read_only": 1
-  },
-  {
    "fieldname": "cause_section",
    "fieldtype": "Section Break",
    "label": "Cause Taxonomy"
@@ -162,7 +122,7 @@
    "depends_on": "eval:doc.primary_cause === 'Other'",
    "fieldname": "other_cause_detail",
    "fieldtype": "Small Text",
-   "label": "Other — please specify",
+   "label": "Other \u2014 please specify",
    "mandatory_depends_on": "eval:doc.primary_cause === 'Other'"
   },
   {
@@ -286,7 +246,7 @@
    "fieldtype": "Link",
    "label": "Amended From",
    "no_copy": 1,
-   "options": "Annex T-07 Worksheet",
+   "options": "POS Variance Investigation",
    "print_hide": 1,
    "read_only": 1
   }
@@ -296,7 +256,7 @@
  "modified": "2026-02-17 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
- "name": "Annex T-07 Worksheet",
+ "name": "POS Variance Investigation",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [

@@ -127,7 +127,11 @@ doc_events = {
     },
     "Sales Invoice": {
         'autoname': 'sungas.controllers.sales_invoice.autoname_sales_invoice',
-        'on_submit': 'sungas.controllers.sales_invoice.validate_sales_invoice'
+        'on_submit': 'sungas.controllers.sales_invoice.validate_sales_invoice',
+        'before_submit': [
+            'sungas.overrides.returns_approval_gate.require_manager_for_return',
+            'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
+        ],
     },
     "Journal Entry": {
         'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry'
@@ -136,7 +140,7 @@ doc_events = {
         'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
         'before_submit': [
             'sungas.overrides.pos_closing_shift.validate_variance',
-            'sungas.overrides.annex_t07_integration.require_t07_for_hard_variance',
+            'sungas.overrides.pos_variance_investigation_integration.require_investigation_for_hard_variance',
         ],
         'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
         'on_update': [
@@ -144,12 +148,19 @@ doc_events = {
             'sungas.overrides.pos_closing_shift.post_provisional_journal',
             'sungas.overrides.pos_closing_shift.cancel_provisional_journal',
             'sungas.overrides.coo_notification.notify_coo_on_critical_approval',
-            'sungas.overrides.annex_t07_integration.auto_create_t07',
+            'sungas.overrides.pos_variance_investigation_integration.auto_create_variance_investigation',
         ],
     },
     "POS Invoice": {
         'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
         'validate': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
+        'before_submit': [
+            'sungas.overrides.returns_approval_gate.require_manager_for_return',
+            'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
+        ],
+    },
+    "Purchase Receipt": {
+        'on_submit': 'sungas.overrides.receipt_trigger_review.review_on_receipt_submit',
     },
 }
 
@@ -159,6 +170,19 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "sungas.scheduled_jobs.event_digest.send_event_digest",
+        # Pricing Wave D — P-9: Margin Band Exception cron. Gated by
+        # `Sungas Pricing Policy.margin_check_enabled`.
+        "sungas.scheduled_jobs.margin_band_check.run",
+        # Pricing Wave D — P-8: Market Price Log completeness digest.
+        "sungas.scheduled_jobs.market_log_completeness.run",
+        # Wave E follow-up: Auto-Case Generator. Runs after the variance
+        # SLA cron (which sets variance_sla_escalation_level on shifts).
+        "sungas.scheduled_jobs.fraud_auto_case.run",
+    ],
+    "hourly": [
+        # Pricing Wave D — P-10: LPG PCR SLA timer. Hourly during trading
+        # hours; idempotent via `lpg_pcr_sla_breach_level` on each PCR.
+        "sungas.scheduled_jobs.lpg_pcr_sla.run",
     ],
     # Wave D-2: Open Shift Age escalation. Runs 07:00 UTC = 08:00 WAT (before
     # shop open) so it never overlaps with POS load. Single indexed query per
@@ -166,6 +190,12 @@ scheduler_events = {
     "cron": {
         "0 7 * * *": [
             "sungas.scheduled_jobs.shift_age_escalation.run",
+        ],
+        # Pricing Wave C — P-5: Unpriced Item Queue daily digest. Runs at
+        # 06:30 UTC (07:30 WAT) before shop open. Idempotent via the day's
+        # ISO date in the description.
+        "30 6 * * *": [
+            "sungas.scheduled_jobs.unpriced_item_queue.run",
         ],
         # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
         # 90 min after the open-shift cron. Single indexed query/day,
