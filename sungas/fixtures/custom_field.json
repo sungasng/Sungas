@@ -1535,6 +1535,132 @@
   "options": "User"
  },
  {
+  "collapsible": 1,
+  "dt": "Purchase Order",
+  "fieldname": "sungas_matrix_section",
+  "fieldtype": "Section Break",
+  "insert_after": "amended_from",
+  "label": "Sungas PO Approval Matrix",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_matrix_section"
+ },
+ {
+  "description": "Auto-set based on Item Groups. Determines which matrix applies.",
+  "dt": "Purchase Order",
+  "fieldname": "sungas_is_lpg",
+  "fieldtype": "Check",
+  "insert_after": "sungas_approval_tier",
+  "label": "Is LPG PO",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_is_lpg",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_hoo_approved_by",
+  "fieldtype": "Link",
+  "insert_after": "sungas_col_break_1",
+  "label": "HoO Approved By",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_hoo_approved_by",
+  "options": "User",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_coo_approved_on",
+  "fieldtype": "Datetime",
+  "insert_after": "sungas_coo_approved_by",
+  "label": "COO Approved On",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_coo_approved_on",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_cpl_approved_on",
+  "fieldtype": "Datetime",
+  "insert_after": "sungas_cpl_approved_by",
+  "label": "CPL Approved On",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_cpl_approved_on",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_hof_approved_by",
+  "fieldtype": "Link",
+  "insert_after": "sungas_cpl_approved_on",
+  "label": "HoF Approved By",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_hof_approved_by",
+  "options": "User",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_hof_approved_on",
+  "fieldtype": "Datetime",
+  "insert_after": "sungas_hof_approved_by",
+  "label": "HoF Approved On",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_hof_approved_on",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_coo_approved_by",
+  "fieldtype": "Link",
+  "insert_after": "sungas_hof_approved_on",
+  "label": "COO Approved By",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_coo_approved_by",
+  "options": "User",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_hoo_approved_on",
+  "fieldtype": "Datetime",
+  "insert_after": "sungas_hoo_approved_by",
+  "label": "HoO Approved On",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_hoo_approved_on",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_cpl_approved_by",
+  "fieldtype": "Link",
+  "insert_after": "sungas_hoo_approved_on",
+  "label": "CPL Approved By",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_cpl_approved_by",
+  "options": "User",
+  "read_only": 1
+ },
+ {
+  "dt": "Purchase Order",
+  "fieldname": "sungas_col_break_1",
+  "fieldtype": "Column Break",
+  "insert_after": "sungas_is_lpg",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_col_break_1"
+ },
+ {
+  "description": "T1 / T2 / T3 -- computed from grand total & qty against Sungas Procurement Policy.",
+  "dt": "Purchase Order",
+  "fieldname": "sungas_approval_tier",
+  "fieldtype": "Data",
+  "in_list_view": 1,
+  "in_standard_filter": 1,
+  "insert_after": "sungas_matrix_section",
+  "label": "Sungas Approval Tier",
+  "module": "Sungas",
+  "name": "Purchase Order-sungas_approval_tier",
+  "read_only": 1
+ },
+ {
   "default": "24",
   "doctype": "Custom Field",
   "dt": "Sungas Close Policy",

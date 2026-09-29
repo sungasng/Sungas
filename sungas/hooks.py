@@ -170,6 +170,11 @@ doc_events = {
     "Purchase Receipt": {
         'on_submit': 'sungas.overrides.receipt_trigger_review.review_on_receipt_submit',
     },
+    # Wave P-1: LPG + Non-LPG PO Approval Matrix.
+    "Purchase Order": {
+        'validate': 'sungas.overrides.purchase_order_matrix.classify_tier',
+        'before_submit': 'sungas.overrides.purchase_order_matrix.enforce_tier_approvals',
+    },
 }
 
 # Scheduled Tasks
@@ -178,6 +183,13 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "sungas.scheduled_jobs.event_digest.send_event_digest",
+    ],
+    # Wave P-2: GIT Ageing. Hourly. Opens ToDo on Draft Material Receipt
+    # SEs that have been sitting in GIT past Sungas Procurement Policy
+    # git_stale_hours (default 72). Idempotent via existing-Open-ToDo
+    # check so re-runs are safe.
+    "hourly": [
+        "sungas.scheduled_jobs.git_ageing.run",
     ],
     # Wave D-2: Open Shift Age escalation. Runs 07:00 UTC = 08:00 WAT (before
     # shop open) so it never overlaps with POS load. Single indexed query per
@@ -268,6 +280,7 @@ fixtures = [
                 "POS Closing Shift",
                 "POS Opening Shift",
                 "POS Profile",
+                "Purchase Order",
                 "Sungas Close Policy"
             ]]
         ]

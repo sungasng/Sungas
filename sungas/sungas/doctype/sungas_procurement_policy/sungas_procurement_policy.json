@@ -1,0 +1,214 @@
+{
+ "actions": [],
+ "creation": "2026-02-28 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_enabled",
+  "section_lpg_matrix",
+  "lpg_item_groups",
+  "column_break_lpg_1",
+  "lpg_tier_2_value_ngn",
+  "lpg_tier_2_volume_kg",
+  "column_break_lpg_2",
+  "lpg_tier_3_value_ngn",
+  "lpg_tier_3_volume_kg",
+  "section_nonlpg_matrix",
+  "nonlpg_tier_2_value_ngn",
+  "column_break_nonlpg_1",
+  "nonlpg_tier_3_value_ngn",
+  "section_roles",
+  "hoo_role",
+  "hof_role",
+  "column_break_roles_1",
+  "coo_role",
+  "cpl_role",
+  "section_git_ageing",
+  "git_stale_hours",
+  "column_break_git_1",
+  "git_reviewer_role"
+ ],
+ "fields": [
+  {
+   "default": "1",
+   "description": "Master switch. Uncheck to disable ALL Procurement Policy enforcement (matrix classification + approval gate + GIT ageing cron) without deleting configuration.",
+   "fieldname": "policy_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Procurement Policy"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_lpg_matrix",
+   "fieldtype": "Section Break",
+   "label": "LPG PO Approval Matrix"
+  },
+  {
+   "default": "LPG",
+   "description": "Comma-separated Item Group names that count as LPG (top-level or exact). Any PO whose lines all fall in one of these groups is classified as an LPG PO and uses the LPG matrix below; anything else uses the Non-LPG matrix.",
+   "fieldname": "lpg_item_groups",
+   "fieldtype": "Small Text",
+   "label": "LPG Item Groups (comma-separated)"
+  },
+  {
+   "fieldname": "column_break_lpg_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "16000000",
+   "description": "PO grand total >= this NGN AND value ceiling of Tier 1: routes to Tier 2 (HoO + HoF). Leave 0 to DISABLE this tier.",
+   "fieldname": "lpg_tier_2_value_ngn",
+   "fieldtype": "Currency",
+   "label": "LPG Tier 2 Value Trigger (NGN)"
+  },
+  {
+   "default": "25000",
+   "description": "PO total qty in kg >= this AND volume ceiling of Tier 1: routes to Tier 2. Leave 0 to DISABLE volume-based routing.",
+   "fieldname": "lpg_tier_2_volume_kg",
+   "fieldtype": "Float",
+   "label": "LPG Tier 2 Volume Trigger (kg)"
+  },
+  {
+   "fieldname": "column_break_lpg_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "100000000",
+   "description": "PO grand total > this NGN: routes to Tier 3 (HoO + HoF + COO). Leave 0 to DISABLE this tier -- Tier 2 becomes the ceiling.",
+   "fieldname": "lpg_tier_3_value_ngn",
+   "fieldtype": "Currency",
+   "label": "LPG Tier 3 Value Trigger (NGN)"
+  },
+  {
+   "default": "100000",
+   "description": "PO total qty in kg > this: routes to Tier 3. Leave 0 to DISABLE volume-based Tier 3 routing.",
+   "fieldname": "lpg_tier_3_volume_kg",
+   "fieldtype": "Float",
+   "label": "LPG Tier 3 Volume Trigger (kg)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_nonlpg_matrix",
+   "fieldtype": "Section Break",
+   "label": "Non-LPG PO Approval Matrix"
+  },
+  {
+   "default": "1000000",
+   "description": "PO grand total >= this NGN: routes to Tier 2 (CPL + HoF). Leave 0 to DISABLE this tier.",
+   "fieldname": "nonlpg_tier_2_value_ngn",
+   "fieldtype": "Currency",
+   "label": "Non-LPG Tier 2 Value Trigger (NGN)"
+  },
+  {
+   "fieldname": "column_break_nonlpg_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "15000000",
+   "description": "PO grand total > this NGN: routes to Tier 3 (CPL + HoF + COO). Leave 0 to DISABLE.",
+   "fieldname": "nonlpg_tier_3_value_ngn",
+   "fieldtype": "Currency",
+   "label": "Non-LPG Tier 3 Value Trigger (NGN)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_roles",
+   "fieldtype": "Section Break",
+   "label": "Approver Roles"
+  },
+  {
+   "default": "LPG Head of Operations",
+   "fieldname": "hoo_role",
+   "fieldtype": "Link",
+   "label": "Head of Operations Role",
+   "options": "Role"
+  },
+  {
+   "default": "LPG Head of Finance",
+   "fieldname": "hof_role",
+   "fieldtype": "Link",
+   "label": "Head of Finance Role",
+   "options": "Role"
+  },
+  {
+   "fieldname": "column_break_roles_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Chief Operating Officer",
+   "fieldname": "coo_role",
+   "fieldtype": "Link",
+   "label": "COO Role",
+   "options": "Role"
+  },
+  {
+   "default": "Purchase Manager",
+   "fieldname": "cpl_role",
+   "fieldtype": "Link",
+   "label": "Central Procurement Lead Role",
+   "options": "Role"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_git_ageing",
+   "fieldtype": "Section Break",
+   "label": "GIT Ageing"
+  },
+  {
+   "default": "72",
+   "description": "Hours a Draft Material Receipt Stock Entry from a GIT warehouse may sit before the ageing cron opens a review ToDo for the reviewer role below. Leave 0 to DISABLE the ageing cron.",
+   "fieldname": "git_stale_hours",
+   "fieldtype": "Int",
+   "label": "GIT Stale Threshold (Hours)"
+  },
+  {
+   "fieldname": "column_break_git_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "LPG Head of Operations",
+   "fieldname": "git_reviewer_role",
+   "fieldtype": "Link",
+   "label": "GIT Ageing Reviewer Role",
+   "options": "Role"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-02-28 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Procurement Policy",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "LPG Head of Finance",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "LPG Head of Operations",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
