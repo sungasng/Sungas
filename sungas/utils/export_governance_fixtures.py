@@ -52,6 +52,50 @@ _SERVER_SCRIPT_PREFIXES = (
     "MR ",
     "LS ",
     "DLS ",
+    # HF-2: Transit Loss + Inter-Outlet subsystems (previously DB-only).
+    "Inter-Outlet ",
+    "Outlet SE ",
+    "Transit Loss ",
+)
+
+# Prefixes we own for Client Scripts too. HF-2.
+_CLIENT_SCRIPT_PREFIXES = (
+    "Sungas ",
+    "PR ",
+    "Inter-Outlet ",
+    "Transit Loss ",
+)
+
+# HF-2: parent DocTypes whose custom fields we own end-to-end. We export
+# Custom Fields where `dt` matches one of these so the fixture stays
+# comprehensive without leaking unrelated stock ERPNext extensions.
+_OWNED_CUSTOM_FIELD_PARENTS = (
+    "Company",
+    "Journal Entry",
+    "POS Closing Shift",
+    "POS Opening Shift",
+    "POS Profile",
+    "POS Invoice",
+    "Purchase Order",
+    "Purchase Receipt",
+    "Stock Entry",
+    "Material Request",
+    "Item",
+    "Customer",
+    "Daily Loading Schedule",
+    "Sungas Close Policy",
+    "Sungas Procurement Policy",
+    "Transit Loss Variance Case",
+    "Inter-Outlet Variance Case",
+    "Inter-Outlet Standing Agreement",
+    "Customer Asset Custody",
+)
+
+# HF-2: modules that mean "ours". Used to filter dashboards / reports /
+# print formats without hard-coding names.
+_OWNED_MODULES = (
+    "Sungas",
+    "Posawesome",
 )
 
 # Explicit workflow list. Kept explicit rather than pattern-matched to
@@ -59,8 +103,14 @@ _SERVER_SCRIPT_PREFIXES = (
 _OWNED_WORKFLOWS = (
     "POS Closing Shift Variance",
     "Purchase Receipt Sungas",
+    "Purchase Receipt",
+    "Purchase Order Sungas",
     "LPG Price Change Request",
     "LPG Bulk Price Upload",
+    "Transit Loss Variance Case",
+    "Inter-Outlet Variance Case",
+    "Material Request Sungas",
+    "Daily Loading Schedule Sungas",
 )
 
 # Roles the approver chains rely on. Include everything we've provisioned;
@@ -72,8 +122,13 @@ _OWNED_ROLES = (
     "LPG Head of Finance",
     "LPG Head of Sales",
     "LPG Chief Operating Officer",
+    "Chief Operating Officer",
     "CFO",
+    "Central Procurement Lead",
     "Accounts Manager",
+    "Purchase Manager",
+    "Stock User",
+    "Sales User",
 )
 
 # Volatile Frappe metadata we strip before writing (match `bench export-fixtures`).
@@ -88,6 +143,7 @@ def export_all() -> str:
     os.makedirs(out_dir, exist_ok=True)
 
     written: list[tuple[str, int]] = []
+    # HF-1
     written.append(("server_script.json", _dump_server_scripts(out_dir)))
     written.append(("workflow.json", _dump_workflows(out_dir)))
     written.append(("workflow_state.json", _dump_workflow_states(out_dir)))
@@ -95,6 +151,17 @@ def export_all() -> str:
                     _dump_workflow_action_masters(out_dir)))
     written.append(("custom_field_company.json", _dump_company_custom_fields(out_dir)))
     written.append(("role.json", _dump_roles(out_dir)))
+    # HF-2 (new)
+    written.append(("custom_field_owned.json",
+                    _dump_owned_custom_fields(out_dir)))
+    written.append(("client_script.json", _dump_client_scripts(out_dir)))
+    written.append(("property_setter.json", _dump_property_setters(out_dir)))
+    written.append(("dashboard.json", _dump_dashboards(out_dir)))
+    written.append(("dashboard_chart.json", _dump_dashboard_charts(out_dir)))
+    written.append(("number_card.json", _dump_number_cards(out_dir)))
+    written.append(("report.json", _dump_reports(out_dir)))
+    written.append(("print_format.json", _dump_print_formats(out_dir)))
+    written.append(("notification.json", _dump_notifications(out_dir)))
     _write_manifest(out_dir, written)
 
     frappe.msgprint(
@@ -185,6 +252,121 @@ def _dump_roles(out_dir: str) -> int:
         if frappe.db.exists("Role", role_name):
             docs.append(_clean(frappe.get_doc("Role", role_name).as_dict()))
     _write(out_dir, "role.json", docs)
+    return len(docs)
+
+
+# --------------------------------------------------------------------------- #
+# HF-2 dumpers -- expand coverage to Custom Fields on owned parent doctypes,
+# Client Scripts, Property Setters, Dashboards, Dashboard Charts, Number
+# Cards, Reports, Print Formats and Notifications owned by us.
+# --------------------------------------------------------------------------- #
+
+def _dump_owned_custom_fields(out_dir: str) -> int:
+    """Custom Fields on every parent DocType we own end-to-end."""
+    names = frappe.get_all(
+        "Custom Field",
+        filters={"dt": ["in", list(_OWNED_CUSTOM_FIELD_PARENTS)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Custom Field", n).as_dict()) for n in names]
+    _write(out_dir, "custom_field_owned.json", docs)
+    return len(docs)
+
+
+def _dump_client_scripts(out_dir: str) -> int:
+    or_filters = [["name", "like", f"{p}%"] for p in _CLIENT_SCRIPT_PREFIXES]
+    if not frappe.db.exists("DocType", "Client Script"):
+        _write(out_dir, "client_script.json", [])
+        return 0
+    names = frappe.get_all("Client Script", or_filters=or_filters, pluck="name")
+    docs = [_clean(frappe.get_doc("Client Script", n).as_dict()) for n in names]
+    _write(out_dir, "client_script.json", docs)
+    return len(docs)
+
+
+def _dump_property_setters(out_dir: str) -> int:
+    """Property Setters whose parent DocType is one we own."""
+    names = frappe.get_all(
+        "Property Setter",
+        filters={"doc_type": ["in", list(_OWNED_CUSTOM_FIELD_PARENTS)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Property Setter", n).as_dict()) for n in names]
+    _write(out_dir, "property_setter.json", docs)
+    return len(docs)
+
+
+def _dump_dashboards(out_dir: str) -> int:
+    names = frappe.get_all(
+        "Dashboard",
+        filters={"module": ["in", list(_OWNED_MODULES)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Dashboard", n).as_dict()) for n in names]
+    _write(out_dir, "dashboard.json", docs)
+    return len(docs)
+
+
+def _dump_dashboard_charts(out_dir: str) -> int:
+    names = frappe.get_all(
+        "Dashboard Chart",
+        filters={"module": ["in", list(_OWNED_MODULES)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Dashboard Chart", n).as_dict()) for n in names]
+    _write(out_dir, "dashboard_chart.json", docs)
+    return len(docs)
+
+
+def _dump_number_cards(out_dir: str) -> int:
+    names = frappe.get_all(
+        "Number Card",
+        filters={"module": ["in", list(_OWNED_MODULES)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Number Card", n).as_dict()) for n in names]
+    _write(out_dir, "number_card.json", docs)
+    return len(docs)
+
+
+def _dump_reports(out_dir: str) -> int:
+    """Non-standard reports (custom Query / Script / Report Builder) in our modules."""
+    names = frappe.get_all(
+        "Report",
+        filters={
+            "is_standard": "No",
+            "module": ["in", list(_OWNED_MODULES)],
+        },
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Report", n).as_dict()) for n in names]
+    _write(out_dir, "report.json", docs)
+    return len(docs)
+
+
+def _dump_print_formats(out_dir: str) -> int:
+    """Non-standard print formats in our modules."""
+    names = frappe.get_all(
+        "Print Format",
+        filters={
+            "standard": "No",
+            "module": ["in", list(_OWNED_MODULES)],
+        },
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Print Format", n).as_dict()) for n in names]
+    _write(out_dir, "print_format.json", docs)
+    return len(docs)
+
+
+def _dump_notifications(out_dir: str) -> int:
+    names = frappe.get_all(
+        "Notification",
+        filters={"module": ["in", list(_OWNED_MODULES)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Notification", n).as_dict()) for n in names]
+    _write(out_dir, "notification.json", docs)
     return len(docs)
 
 
