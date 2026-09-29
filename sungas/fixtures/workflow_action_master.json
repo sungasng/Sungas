@@ -1,0 +1,27 @@
+[
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Approve",
+  "workflow_action_name": "Approve"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Escalate to Finance",
+  "workflow_action_name": "Escalate to Finance"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Reject",
+  "workflow_action_name": "Reject"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Reopen",
+  "workflow_action_name": "Reopen"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Submit for Approval",
+  "workflow_action_name": "Submit for Approval"
+ }
+]

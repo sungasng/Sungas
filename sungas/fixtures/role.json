@@ -1,10 +1,65 @@
 [
  {
-  "doctype": "Role",
-  "name": "LPG Head of Operations",
-  "role_name": "LPG Head of Operations",
   "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "Accounts Manager",
+  "restrict_to_domain": null,
+  "role_name": "Accounts Manager",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "LPG Head of Finance",
+  "restrict_to_domain": null,
+  "role_name": "LPG Head of Finance",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
   "is_custom": 1,
-  "disabled": 0
+  "name": "LPG Head of Operations",
+  "role_name": "LPG Head of Operations"
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "LPG Head of Sales",
+  "restrict_to_domain": null,
+  "role_name": "LPG Head of Sales",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "LPG POS User",
+  "restrict_to_domain": null,
+  "role_name": "LPG POS User",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "LPG Plant Manager",
+  "restrict_to_domain": null,
+  "role_name": "LPG Plant Manager",
+  "two_factor_auth": 0
  }
 ]

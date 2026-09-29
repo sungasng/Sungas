@@ -70,6 +70,10 @@ doctype_js = {
 # The seed function is idempotent, so it's safe to re-run on every migrate.
 after_migrate = [
     "sungas.patches.v1.seed_cash_variance_pending_account.execute",
+    # Wave HF-1: early-warning that our governance fixtures actually
+    # landed. Never throws -- just log_error if anything is missing so
+    # that the next dev looking at Error Log sees the gap immediately.
+    "sungas.utils.verify_governance_fixtures.run",
 ]
 
 # Desk Notifications
@@ -259,6 +263,7 @@ fixtures = [
         "dt": "Custom Field",
         "filters": [
             ["dt", "in", [
+                "Company",
                 "Journal Entry",
                 "POS Closing Shift",
                 "POS Opening Shift",
@@ -286,7 +291,87 @@ fixtures = [
         "dt": "Role",
         "filters": [
             ["name", "in", [
-                "LPG Head of Operations"
+                "LPG POS User",
+                "LPG Plant Manager",
+                "LPG Head of Operations",
+                "LPG Head of Finance",
+                "LPG Head of Sales",
+                "Accounts Manager"
+            ]]
+        ]
+    },
+    # Wave HF-1: harden ERPNext-DB-resident governance artifacts into git.
+    # Without these fixtures, a site rebuild would silently lose the
+    # Sungas / SE / MR / DLS / LS server scripts, the POS Closing Shift
+    # variance workflow, and every workflow state / action our approvers
+    # rely on.
+    {
+        "dt": "Server Script",
+        "filters": [
+            ["name", "in", [
+                # POS variance workflow
+                "Sungas POS Close \u00b7 variance_amount Backfill",
+                "Sungas POS Close \u00b7 Block-Tier Auto-Route",
+                # Customer guards
+                "Sungas - Block Customer Edits By Cashier",
+                "Sungas - Force Retail Group On Customer Insert",
+                # Stock Entry pack (inter-outlet, receipts, spawns, dims)
+                "Sungas SE \u2014 Material Receipt Guard",
+                "Sungas SE \u2014 Auto Accounting Dimensions",
+                "Sungas SE \u2014 Row-Level Permission (PM outlet scope)",
+                "SE Inter-Outlet SoD Guard",
+                "SE Inter-Outlet SoD Guard V2",
+                "SE Single-Drop Spawn",
+                "SE Multi-Drop Spawn",
+                "SE Sync PR Discharge Totals",
+                "SE Sync PR Discharge Totals On Cancel",
+                # Material Request pack (auto-approve, dims, permissions)
+                "MR Auto-Approve Rules",
+                "MR Attach To Loading Schedule",
+                "Sungas MR \u2014 Auto Status On Receipt",
+                "Sungas MR \u2014 Share With Source PM",
+                "Sungas MR \u2014 Auto Accounting Dimensions",
+                "Sungas MR \u2014 Row-Level Permission (PM outlet scope)",
+                # Daily Loading Schedule pack
+                "Sungas DLS \u2014 Drop Integrity Guard",
+                "Sungas DLS \u2014 Row-Level Permission (PM outlet scope)",
+                "DLS Dispatch \u2192 Outward SE Spawn",
+                "LS Capacity Check",
+                "LS Truck-Return Guard",
+            ]]
+        ]
+    },
+    {
+        "dt": "Workflow",
+        "filters": [
+            ["name", "in", [
+                "POS Closing Shift Variance"
+            ]]
+        ]
+    },
+    {
+        "dt": "Workflow State",
+        "filters": [
+            ["name", "in", [
+                "Draft",
+                "Pending Plant Manager",
+                "Pending HOD Operations",
+                "Pending HOD Finance",
+                "Pending COO",
+                "Approved",
+                "Rejected"
+            ]]
+        ]
+    },
+    {
+        "dt": "Workflow Action Master",
+        "filters": [
+            ["name", "in", [
+                "Submit for Approval",
+                "Approve",
+                "Escalate to Finance",
+                "Reject",
+                "Reopen"
             ]]
         ]
     }

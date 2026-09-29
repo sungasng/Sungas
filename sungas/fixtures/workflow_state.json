@@ -1,0 +1,51 @@
+[
+ {
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "name": "Approved",
+  "style": "Success",
+  "workflow_state_name": "Approved"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Draft",
+  "style": "Warning",
+  "workflow_state_name": "Draft"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Pending COO",
+  "style": "Danger",
+  "workflow_state_name": "Pending COO"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Pending HOD Finance",
+  "style": "Danger",
+  "workflow_state_name": "Pending HOD Finance"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Pending HOD Operations",
+  "style": "Warning",
+  "workflow_state_name": "Pending HOD Operations"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Pending Plant Manager",
+  "style": "Warning",
+  "workflow_state_name": "Pending Plant Manager"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "remove",
+  "name": "Rejected",
+  "style": "Danger",
+  "workflow_state_name": "Rejected"
+ }
+]
