@@ -1,0 +1,75 @@
+[
+ {
+  "cards": [
+   {
+    "card": "Transit Loss \u2014 Open Cases (90d)",
+    "doctype": "Number Card Link",
+    "name": "0e95fc504e",
+    "parent": "Transit Loss",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "Transit Loss \u2014 Hauler Liable (90d)",
+    "doctype": "Number Card Link",
+    "name": "0e95f8efl1",
+    "parent": "Transit Loss",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   },
+   {
+    "card": "Transit Loss \u2014 Written Off (90d)",
+    "doctype": "Number Card Link",
+    "name": "0e95qb7qoe",
+    "parent": "Transit Loss",
+    "parentfield": "cards",
+    "parenttype": "Dashboard"
+   }
+  ],
+  "chart_options": null,
+  "charts": [
+   {
+    "chart": "Transit Loss by Hauler (90d)",
+    "doctype": "Dashboard Chart Link",
+    "name": "0e952gs4g2",
+    "parent": "Transit Loss",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Transit Loss by Outlet (90d)",
+    "doctype": "Dashboard Chart Link",
+    "name": "0e95ho0vsd",
+    "parent": "Transit Loss",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   },
+   {
+    "chart": "Transit Loss Trend (12mo)",
+    "doctype": "Dashboard Chart Link",
+    "name": "0e95tgruds",
+    "parent": "Transit Loss",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Full"
+   },
+   {
+    "chart": "Transit Loss by In-House Driver (90d)",
+    "doctype": "Dashboard Chart Link",
+    "name": "ankq762viv",
+    "parent": "Transit Loss",
+    "parentfield": "charts",
+    "parenttype": "Dashboard",
+    "width": "Half"
+   }
+  ],
+  "dashboard_name": "Transit Loss",
+  "doctype": "Dashboard",
+  "is_default": 0,
+  "is_standard": 0,
+  "module": "Sungas",
+  "name": "Transit Loss"
+ }
+]

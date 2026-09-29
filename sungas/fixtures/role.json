@@ -61,5 +61,38 @@
   "restrict_to_domain": null,
   "role_name": "LPG Plant Manager",
   "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "Purchase Manager",
+  "restrict_to_domain": null,
+  "role_name": "Purchase Manager",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "Sales User",
+  "restrict_to_domain": null,
+  "role_name": "Sales User",
+  "two_factor_auth": 0
+ },
+ {
+  "desk_access": 1,
+  "disabled": 0,
+  "doctype": "Role",
+  "home_page": null,
+  "is_custom": 0,
+  "name": "Stock User",
+  "restrict_to_domain": null,
+  "role_name": "Stock User",
+  "two_factor_auth": 0
  }
 ]

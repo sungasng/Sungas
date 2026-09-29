@@ -1,0 +1,45 @@
+[
+ {
+  "add_total_row": 0,
+  "add_translate_data": 0,
+  "columns": [],
+  "disable_prepared_report_automation": 0,
+  "disabled": 0,
+  "doctype": "Report",
+  "doctype_to_sync": [],
+  "filters": [],
+  "is_standard": "No",
+  "javascript": null,
+  "json": null,
+  "letter_head": null,
+  "module": "Sungas",
+  "name": "Transit Loss Recovery Aging",
+  "prepared_report": 0,
+  "query": "\nSELECT\n    c.name                              AS `Case ID:Link/Transit Loss Variance Case:150`,\n    c.opening_date                       AS `Opened:Date:100`,\n    DATEDIFF(CURDATE(), c.opening_date)  AS `Days Open:Int:80`,\n    c.workflow_state                     AS `Status:Data:100`,\n    c.resolution                         AS `Resolution:Data:140`,\n    c.hauler_type                        AS `Hauler Type:Data:100`,\n    COALESCE(c.hauler, c.in_house_driver) AS `Culpable Party:Data:160`,\n    c.qty_dispatched                     AS `Dispatched:Float:100`,\n    c.qty_received                       AS `Received:Float:100`,\n    (c.qty_dispatched - c.qty_received)  AS `Shortfall Qty:Float:100`,\n    c.value_variance                     AS `Value NGN:Currency/NGN:120`,\n    c.resolution_journal_entry           AS `Recovery JE:Link/Journal Entry:150`,\n    c.assigned_to                        AS `Assigned To:Link/User:180`\nFROM `tabTransit Loss Variance Case` c\nWHERE c.docstatus < 2\nORDER BY c.docstatus ASC, c.opening_date DESC\n",
+  "ref_doctype": "Transit Loss Variance Case",
+  "reference_report": null,
+  "report_name": "Transit Loss Recovery Aging",
+  "report_script": null,
+  "report_type": "Query Report",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "name": "4c7icnh5li",
+    "parent": "Transit Loss Recovery Aging",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "System Manager"
+   },
+   {
+    "doctype": "Has Role",
+    "name": "4c7iprs9lj",
+    "parent": "Transit Loss Recovery Aging",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Accounts Manager"
+   }
+  ],
+  "snapshot_report": 0,
+  "timeout": 0
+ }
+]

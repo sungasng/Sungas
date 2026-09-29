@@ -276,12 +276,24 @@ fixtures = [
         "filters": [
             ["dt", "in", [
                 "Company",
+                "Customer",
+                "Customer Asset Custody",
+                "Daily Loading Schedule",
+                "Inter-Outlet Standing Agreement",
+                "Inter-Outlet Variance Case",
+                "Item",
                 "Journal Entry",
+                "Material Request",
                 "POS Closing Shift",
+                "POS Invoice",
                 "POS Opening Shift",
                 "POS Profile",
                 "Purchase Order",
-                "Sungas Close Policy"
+                "Purchase Receipt",
+                "Stock Entry",
+                "Sungas Close Policy",
+                "Sungas Procurement Policy",
+                "Transit Loss Variance Case"
             ]]
         ]
     },
@@ -301,6 +313,25 @@ fixtures = [
         ]
     },
     {
+        "dt": "Property Setter",
+        "filters": [
+            ["doc_type", "in", [
+                "Company",
+                "Customer",
+                "Daily Loading Schedule",
+                "Item",
+                "Material Request",
+                "POS Closing Shift",
+                "POS Invoice",
+                "POS Opening Shift",
+                "POS Profile",
+                "Purchase Order",
+                "Purchase Receipt",
+                "Stock Entry"
+            ]]
+        ]
+    },
+    {
         "dt": "Role",
         "filters": [
             ["name", "in", [
@@ -309,7 +340,67 @@ fixtures = [
                 "LPG Head of Operations",
                 "LPG Head of Finance",
                 "LPG Head of Sales",
-                "Accounts Manager"
+                "Accounts Manager",
+                "Purchase Manager",
+                "Sales User",
+                "Stock User"
+            ]]
+        ]
+    },
+    # Wave HF-2: extended coverage -- Client Scripts, Dashboards, Charts,
+    # Cards and Reports that were previously DB-only.
+    {
+        "dt": "Client Script",
+        "filters": [
+            ["name", "in", [
+                "Inter-Outlet Variance Auto-Calc",
+                "PR Discharge Dashboard",
+                "PR Get-Items Remaining Qty Hint",
+                "PR Hide Close Menu",
+                "PR User Stamps on Workflow",
+                "PR Variance Auto-Calc",
+                "PR Weighbridge Live Preview",
+                "Sungas - Cashier Customer Restrictions",
+                "Sungas DLS \u2014 Drop Table Guards",
+                "Sungas MR \u2014 Client Enhancements",
+                "Sungas SE \u2014 Material Transfer Auto-populate"
+            ]]
+        ]
+    },
+    {
+        "dt": "Dashboard",
+        "filters": [
+            ["name", "in", [
+                "Transit Loss"
+            ]]
+        ]
+    },
+    {
+        "dt": "Dashboard Chart",
+        "filters": [
+            ["name", "in", [
+                "Transit Loss by Hauler (90d)",
+                "Transit Loss by Outlet (90d)",
+                "Transit Loss by In-House Driver (90d)",
+                "Transit Loss Trend (12mo)"
+            ]]
+        ]
+    },
+    {
+        "dt": "Number Card",
+        "filters": [
+            ["name", "in", [
+                "Transit Loss \u2014 Open Cases (90d)",
+                "Transit Loss \u2014 Hauler Liable (90d)",
+                "Transit Loss \u2014 Written Off (90d)"
+            ]]
+        ]
+    },
+    {
+        "dt": "Report",
+        "filters": [
+            ["name", "in", [
+                "Transit Loss Recovery Aging"
             ]]
         ]
     },
@@ -351,6 +442,15 @@ fixtures = [
                 "DLS Dispatch \u2192 Outward SE Spawn",
                 "LS Capacity Check",
                 "LS Truck-Return Guard",
+                # HF-2: Transit Loss subsystem
+                "Outlet SE Open Transit Loss Case",
+                "Transit Loss Case Resolve",
+                # HF-2: Inter-Outlet Variance subsystem
+                "Inter-Outlet Open Variance Case on Receipt",
+                "Inter-Outlet Variance Case Resolve",
+                "Inter-Outlet Variance Enforce",
+                "Inter-Outlet Auto-Receipt and Notify",
+                "Inter-Outlet Clear COGS Expense"
             ]]
         ]
     },

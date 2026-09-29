@@ -57,6 +57,15 @@ REQUIRED_SERVER_SCRIPTS = (
     "DLS Dispatch → Outward SE Spawn",
     "LS Capacity Check",
     "LS Truck-Return Guard",
+    # HF-2: Transit Loss subsystem
+    "Outlet SE Open Transit Loss Case",
+    "Transit Loss Case Resolve",
+    # HF-2: Inter-Outlet Variance subsystem
+    "Inter-Outlet Open Variance Case on Receipt",
+    "Inter-Outlet Variance Case Resolve",
+    "Inter-Outlet Variance Enforce",
+    "Inter-Outlet Auto-Receipt and Notify",
+    "Inter-Outlet Clear COGS Expense",
 )
 
 REQUIRED_WORKFLOWS = (
@@ -80,6 +89,9 @@ REQUIRED_ROLES = (
     "LPG Head of Finance",
     "LPG Head of Sales",
     "Accounts Manager",
+    "Purchase Manager",
+    "Sales User",
+    "Stock User",
 )
 
 REQUIRED_COMPANY_FIELDS = (
@@ -90,6 +102,42 @@ REQUIRED_COMPANY_FIELDS = (
     "cutoff_hard_hour",
     "truck_roll_hour",
     "transit_variance_threshold_pct",
+)
+
+# HF-2: additional artifact classes that must survive migrate.
+REQUIRED_CLIENT_SCRIPTS = (
+    "PR Variance Auto-Calc",
+    "PR User Stamps on Workflow",
+    "PR Weighbridge Live Preview",
+    "PR Discharge Dashboard",
+    "PR Get-Items Remaining Qty Hint",
+    "PR Hide Close Menu",
+    "Inter-Outlet Variance Auto-Calc",
+    "Sungas MR — Client Enhancements",
+    "Sungas SE — Material Transfer Auto-populate",
+    "Sungas DLS — Drop Table Guards",
+    "Sungas - Cashier Customer Restrictions",
+)
+
+REQUIRED_DASHBOARDS = (
+    "Transit Loss",
+)
+
+REQUIRED_DASHBOARD_CHARTS = (
+    "Transit Loss by Hauler (90d)",
+    "Transit Loss by Outlet (90d)",
+    "Transit Loss by In-House Driver (90d)",
+    "Transit Loss Trend (12mo)",
+)
+
+REQUIRED_NUMBER_CARDS = (
+    "Transit Loss — Open Cases (90d)",
+    "Transit Loss — Hauler Liable (90d)",
+    "Transit Loss — Written Off (90d)",
+)
+
+REQUIRED_REPORTS = (
+    "Transit Loss Recovery Aging",
 )
 
 
@@ -119,6 +167,12 @@ def _collect_missing() -> dict[str, list[str]]:
         ("Workflow", "Workflow", REQUIRED_WORKFLOWS),
         ("Workflow State", "Workflow State", REQUIRED_WORKFLOW_STATES),
         ("Role", "Role", REQUIRED_ROLES),
+        # HF-2
+        ("Client Script", "Client Script", REQUIRED_CLIENT_SCRIPTS),
+        ("Dashboard", "Dashboard", REQUIRED_DASHBOARDS),
+        ("Dashboard Chart", "Dashboard Chart", REQUIRED_DASHBOARD_CHARTS),
+        ("Number Card", "Number Card", REQUIRED_NUMBER_CARDS),
+        ("Report", "Report", REQUIRED_REPORTS),
     ):
         gone = [n for n in names if not frappe.db.exists(doctype, n)]
         if gone:
