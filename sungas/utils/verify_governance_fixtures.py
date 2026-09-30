@@ -70,7 +70,7 @@ REQUIRED_SERVER_SCRIPTS = (
 
 REQUIRED_WORKFLOWS = (
     "POS Closing Shift Variance",
-    "Purchase Receipt Sungas",
+    "Sungas Purchase Receipt Approval",
 )
 
 REQUIRED_WORKFLOW_STATES = (

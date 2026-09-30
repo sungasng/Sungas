@@ -70,6 +70,10 @@ doctype_js = {
 # The seed function is idempotent, so it's safe to re-run on every migrate.
 after_migrate = [
     "sungas.patches.v1.seed_cash_variance_pending_account.execute",
+    # Patch 0011b: ensure our canonical PR workflow is the only
+    # active workflow on Purchase Receipt (defensive against the
+    # stale DB workflow that outranked our fixture in 0011).
+    "sungas.patches.v1.ensure_pr_workflow_active.execute",
     # Wave HF-1: early-warning that our governance fixtures actually
     # landed. Never throws -- just log_error if anything is missing so
     # that the next dev looking at Error Log sees the gap immediately.
@@ -465,7 +469,7 @@ fixtures = [
         "filters": [
             ["name", "in", [
                 "POS Closing Shift Variance",
-                "Purchase Receipt Sungas"
+                "Sungas Purchase Receipt Approval"
             ]]
         ]
     },
