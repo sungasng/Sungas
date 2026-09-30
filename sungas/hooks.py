@@ -168,7 +168,10 @@ doc_events = {
         'before_insert': 'sungas.overrides.cashier_variance_lockout.enforce_cashier_variance_lockout',
     },
     "Purchase Receipt": {
-        'on_submit': 'sungas.overrides.receipt_trigger_review.review_on_receipt_submit',
+        'on_submit': [
+            'sungas.overrides.receipt_trigger_review.review_on_receipt_submit',
+            'sungas.overrides.pr_auto_draft_se.spawn_git_to_plant_se',
+        ],
     },
     # Wave P-1: LPG + Non-LPG PO Approval Matrix.
     "Purchase Order": {
@@ -301,9 +304,12 @@ fixtures = [
         "dt": "Custom DocPerm",
         "filters": [
             ["parent", "in", [
-                "POS Closing Shift"
+                "POS Closing Shift",
+                "Purchase Receipt"
             ]],
             ["role", "in", [
+                "Stock User",
+                "LPG Plant Manager",
                 "LPG Head of Operations",
                 "LPG Head of Finance",
                 "LPG Head of Sales",
@@ -458,7 +464,8 @@ fixtures = [
         "dt": "Workflow",
         "filters": [
             ["name", "in", [
-                "POS Closing Shift Variance"
+                "POS Closing Shift Variance",
+                "Purchase Receipt Sungas"
             ]]
         ]
     },
@@ -472,7 +479,9 @@ fixtures = [
                 "Pending HOD Finance",
                 "Pending COO",
                 "Approved",
-                "Rejected"
+                "Rejected",
+                "HoO Approved",
+                "Submitted"
             ]]
         ]
     },
@@ -484,7 +493,8 @@ fixtures = [
                 "Approve",
                 "Escalate to Finance",
                 "Reject",
-                "Reopen"
+                "Reopen",
+                "Submit to Finance"
             ]]
         ]
     }

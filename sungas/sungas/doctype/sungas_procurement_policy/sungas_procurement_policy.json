@@ -26,7 +26,11 @@
   "section_git_ageing",
   "git_stale_hours",
   "column_break_git_1",
-  "git_reviewer_role"
+  "git_reviewer_role",
+  "section_pr_receiving",
+  "hoi_cost_center",
+  "column_break_pr_1",
+  "pr_variance_threshold_pct"
  ],
  "fields": [
   {
@@ -170,6 +174,31 @@
    "fieldtype": "Link",
    "label": "GIT Ageing Reviewer Role",
    "options": "Role"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_pr_receiving",
+   "fieldtype": "Section Break",
+   "label": "PR Receiving (Head Office)"
+  },
+  {
+   "default": "70003 - Procurement - SCL",
+   "description": "Cost center auto-populated on Purchase Receipt lines when set_warehouse = 'Goods in Transit from Suppliers - SCL'. All central procurement receipts book to this CC. Also stamped on the auto-spawned Draft Stock Entry that moves stock from GIT-Suppliers to the destination plant.",
+   "fieldname": "hoi_cost_center",
+   "fieldtype": "Link",
+   "label": "HO Procurement Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "column_break_pr_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "5",
+   "description": "Purchase Receipt qty/rate variance vs its Purchase Order (%). At or above this threshold, on_submit fires an in-app ToDo to the reviewer role for post-submit review. Leave 0 to DISABLE variance flagging.",
+   "fieldname": "pr_variance_threshold_pct",
+   "fieldtype": "Float",
+   "label": "PR Variance Threshold (%)"
   }
  ],
  "index_web_pages_for_search": 1,

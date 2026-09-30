@@ -70,6 +70,7 @@ REQUIRED_SERVER_SCRIPTS = (
 
 REQUIRED_WORKFLOWS = (
     "POS Closing Shift Variance",
+    "Purchase Receipt Sungas",
 )
 
 REQUIRED_WORKFLOW_STATES = (
@@ -80,6 +81,8 @@ REQUIRED_WORKFLOW_STATES = (
     "Pending COO",
     "Approved",
     "Rejected",
+    "HoO Approved",
+    "Submitted",
 )
 
 REQUIRED_ROLES = (
@@ -117,6 +120,7 @@ REQUIRED_CLIENT_SCRIPTS = (
     "Sungas SE — Material Transfer Auto-populate",
     "Sungas DLS — Drop Table Guards",
     "Sungas - Cashier Customer Restrictions",
+    "PR - GIT Suppliers Cost Center Auto-populate",
 )
 
 REQUIRED_DASHBOARDS = (

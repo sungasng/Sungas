@@ -154,6 +154,8 @@ def export_all() -> str:
     # HF-2 (new)
     written.append(("custom_field_owned.json",
                     _dump_owned_custom_fields(out_dir)))
+    written.append(("custom_docperm.json",
+                    _dump_owned_custom_docperms(out_dir)))
     written.append(("client_script.json", _dump_client_scripts(out_dir)))
     written.append(("property_setter.json", _dump_property_setters(out_dir)))
     written.append(("dashboard.json", _dump_dashboards(out_dir)))
@@ -270,6 +272,23 @@ def _dump_owned_custom_fields(out_dir: str) -> int:
     )
     docs = [_clean(frappe.get_doc("Custom Field", n).as_dict()) for n in names]
     _write(out_dir, "custom_field_owned.json", docs)
+    return len(docs)
+
+
+def _dump_owned_custom_docperms(out_dir: str) -> int:
+    """Custom DocPerms on every parent DocType we own end-to-end.
+
+    Patch 0011: previously PR docperms lived in DB only; the last
+    fixture-sync wiped them silently. Now every DocPerm we grant to
+    Sungas-owned roles on our owned doctypes is git-tracked.
+    """
+    names = frappe.get_all(
+        "Custom DocPerm",
+        filters={"parent": ["in", list(_OWNED_CUSTOM_FIELD_PARENTS)]},
+        pluck="name",
+    )
+    docs = [_clean(frappe.get_doc("Custom DocPerm", n).as_dict()) for n in names]
+    _write(out_dir, "custom_docperm.json", docs)
     return len(docs)
 
 
