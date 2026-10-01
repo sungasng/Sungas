@@ -10567,7 +10567,8 @@
   "insert_after": "amended_from",
   "label": "Sungas PO Approval Matrix",
   "module": "Sungas",
-  "name": "Purchase Order-sungas_matrix_section"
+  "name": "Purchase Order-sungas_matrix_section",
+  "doctype": "Custom Field"
  },
  {
   "allow_in_quick_entry": 0,
@@ -10743,7 +10744,8 @@
   "label": "Is LPG PO",
   "module": "Sungas",
   "name": "Purchase Order-sungas_is_lpg",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10754,7 +10756,8 @@
   "module": "Sungas",
   "name": "Purchase Order-sungas_hoo_approved_by",
   "options": "User",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10764,7 +10767,8 @@
   "label": "COO Approved On",
   "module": "Sungas",
   "name": "Purchase Order-sungas_coo_approved_on",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10774,7 +10778,8 @@
   "label": "CPL Approved On",
   "module": "Sungas",
   "name": "Purchase Order-sungas_cpl_approved_on",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10785,7 +10790,8 @@
   "module": "Sungas",
   "name": "Purchase Order-sungas_hof_approved_by",
   "options": "User",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10795,7 +10801,8 @@
   "label": "HoF Approved On",
   "module": "Sungas",
   "name": "Purchase Order-sungas_hof_approved_on",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10806,7 +10813,8 @@
   "module": "Sungas",
   "name": "Purchase Order-sungas_coo_approved_by",
   "options": "User",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10816,7 +10824,8 @@
   "label": "HoO Approved On",
   "module": "Sungas",
   "name": "Purchase Order-sungas_hoo_approved_on",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10827,7 +10836,8 @@
   "module": "Sungas",
   "name": "Purchase Order-sungas_cpl_approved_by",
   "options": "User",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "dt": "Purchase Order",
@@ -10835,7 +10845,8 @@
   "fieldtype": "Column Break",
   "insert_after": "sungas_is_lpg",
   "module": "Sungas",
-  "name": "Purchase Order-sungas_col_break_1"
+  "name": "Purchase Order-sungas_col_break_1",
+  "doctype": "Custom Field"
  },
  {
   "description": "T1 / T2 / T3 -- computed from grand total & qty against Sungas Procurement Policy.",
@@ -10848,7 +10859,8 @@
   "label": "Sungas Approval Tier",
   "module": "Sungas",
   "name": "Purchase Order-sungas_approval_tier",
-  "read_only": 1
+  "read_only": 1,
+  "doctype": "Custom Field"
  },
  {
   "allow_in_quick_entry": 0,
