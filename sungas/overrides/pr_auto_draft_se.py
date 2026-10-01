@@ -31,9 +31,19 @@ DEFAULT_HOI_COST_CENTER = "70003 - Procurement - SCL"
 
 
 def spawn_git_to_plant_se(doc, method=None) -> None:
-    """on_submit hook for Purchase Receipt. Never throws."""
+    """on_submit hook for Purchase Receipt. Never throws.
+
+    Always leaves a Comment on the PR describing what happened
+    (spawned / skipped / errored) so users can self-diagnose from
+    the PR's Activity tab without needing Error Log access.
+    """
     try:
         if not _should_spawn(doc):
+            _comment(doc, (
+                "[Auto Draft SE] Skipped: PR did not match spawn rule "
+                f"(set_warehouse={doc.get('set_warehouse')!r}, "
+                f"final_destination_warehouse={doc.get('final_destination_warehouse')!r})."
+            ))
             return
 
         # Idempotency: skip if we already spawned an SE for this PR
@@ -44,6 +54,10 @@ def spawn_git_to_plant_se(doc, method=None) -> None:
             limit=1,
         )
         if existing:
+            _comment(doc, (
+                f"[Auto Draft SE] Skipped: Stock Entry <b>{existing[0]}</b> "
+                "already exists for this PR (idempotent)."
+            ))
             return
 
         destination = doc.get("final_destination_warehouse")
@@ -79,26 +93,43 @@ def spawn_git_to_plant_se(doc, method=None) -> None:
 
         se.insert(ignore_permissions=True)
 
-        # Comment for audit trail on the PR
-        frappe.get_doc({
-            "doctype": "Comment",
-            "comment_type": "Info",
-            "reference_doctype": "Purchase Receipt",
-            "reference_name": doc.name,
-            "content": (
-                f"[Auto Draft SE] Spawned Draft Stock Entry <b>{se.name}</b> "
-                f"(GIT-Suppliers &rarr; {destination}) for plant team to receive."
-            ),
-        }).insert(ignore_permissions=True)
+        _comment(doc, (
+            f"[Auto Draft SE] Spawned Draft Stock Entry <b>{se.name}</b> "
+            f"(GIT-Suppliers &rarr; {destination}) for plant team to receive. "
+            f"Cost center: {cost_center}."
+        ))
 
         # Notify destination plant manager
         _notify_destination_plant_manager(doc, se, destination)
 
     except Exception:
+        err = frappe.get_traceback()
         frappe.log_error(
             title="pr_auto_draft_se.spawn_git_to_plant_se failed",
-            message=frappe.get_traceback(),
+            message=err,
         )
+        try:
+            _comment(doc, (
+                "[Auto Draft SE] <b>FAILED</b> to spawn Stock Entry. "
+                "See Error Log for traceback. Message: "
+                f"<code>{frappe.utils.strip_html(str(err)[-500:])}</code>"
+            ))
+        except Exception:
+            pass
+
+
+def _comment(doc, html: str) -> None:
+    """Idempotent audit comment on the PR. Swallows errors."""
+    try:
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Info",
+            "reference_doctype": "Purchase Receipt",
+            "reference_name": doc.name,
+            "content": html,
+        }).insert(ignore_permissions=True)
+    except Exception:
+        pass
 
 
 def _should_spawn(doc) -> bool:

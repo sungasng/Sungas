@@ -603,7 +603,7 @@
    },
    {
     "action": "Submit to Finance",
-    "allow_self_approval": 1,
+    "allow_self_approval": 0,
     "allowed": "LPG Head of Finance",
     "condition": "",
     "doctype": "Workflow Transition",
@@ -617,7 +617,7 @@
    },
    {
     "action": "Submit to Finance",
-    "allow_self_approval": 1,
+    "allow_self_approval": 0,
     "allowed": "Accounts Manager",
     "condition": "",
     "doctype": "Workflow Transition",
@@ -631,7 +631,7 @@
    },
    {
     "action": "Submit to Finance",
-    "allow_self_approval": 1,
+    "allow_self_approval": 0,
     "allowed": "System Manager",
     "condition": "",
     "doctype": "Workflow Transition",
