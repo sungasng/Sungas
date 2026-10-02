@@ -1,4 +1,4 @@
-"""sungas.api -- lightweight whitelisted endpoints
+"""sungas.api.governance -- lightweight whitelisted governance endpoints.
 
 Minimum surface, read-only, callable by any logged-in user. These exist so
 that client scripts don't need to pierce DocType read-perms on singletons
