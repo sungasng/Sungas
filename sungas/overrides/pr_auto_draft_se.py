@@ -79,6 +79,15 @@ def spawn_git_to_plant_se(doc, method=None) -> None:
         se.set_posting_time = 0
 
         for row in (doc.items or []):
+            # PurchaseReceiptItem has `rate` (+ `base_rate`), NOT `basic_rate`.
+            # `basic_rate` is a Stock Entry Detail field. Resolve the price
+            # defensively across all possible PR-side fieldnames.
+            unit_rate = (
+                row.get("rate")
+                or row.get("base_rate")
+                or row.get("net_rate")
+                or 0
+            )
             se.append("items", {
                 "item_code": row.item_code,
                 "qty": row.qty,
@@ -87,7 +96,7 @@ def spawn_git_to_plant_se(doc, method=None) -> None:
                 "conversion_factor": row.conversion_factor or 1,
                 "s_warehouse": GIT_SUPPLIERS_WAREHOUSE,
                 "t_warehouse": destination,
-                "basic_rate": row.basic_rate or row.rate,
+                "basic_rate": unit_rate,
                 "cost_center": cost_center,
             })
 
