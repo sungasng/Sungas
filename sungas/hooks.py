@@ -309,7 +309,8 @@ fixtures = [
         "filters": [
             ["parent", "in", [
                 "POS Closing Shift",
-                "Purchase Receipt"
+                "Purchase Receipt",
+                "Purchase Order"
             ]],
             ["role", "in", [
                 "Stock User",
@@ -317,7 +318,9 @@ fixtures = [
                 "LPG Head of Operations",
                 "LPG Head of Finance",
                 "LPG Head of Sales",
+                "COO",
                 "Accounts Manager",
+                "Purchase Manager",
                 "System Manager"
             ]]
         ]

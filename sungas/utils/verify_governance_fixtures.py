@@ -121,6 +121,7 @@ REQUIRED_CLIENT_SCRIPTS = (
     "Sungas DLS — Drop Table Guards",
     "Sungas - Cashier Customer Restrictions",
     "PR - GIT Suppliers Cost Center Auto-populate",
+    "PO Approval Matrix UI",
 )
 
 REQUIRED_DASHBOARDS = (
