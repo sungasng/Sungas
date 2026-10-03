@@ -53,3 +53,45 @@ def get_po_item_qty(name: str) -> float:
         return float(qty) if qty else 0.0
     except Exception:
         return 0.0
+
+
+@frappe.whitelist()
+def approve_writeoff_as_hof(case: str, remarks: str = "") -> dict:
+    """Stamp Head-of-Finance sign-off on a Transit Loss Variance Case
+    before it can resolve as 'Written Off'. Role-gated to LPG Head of
+    Finance (break-glass: System Manager).
+
+    Called by the client-side 'Approve Write-Off as HoF' button on
+    Draft Transit Loss Variance Cases. Writes:
+        hod_finance_signed_by  = session.user
+        hod_finance_signed_on  = now
+        hof_remarks            = <optional user text>
+
+    Idempotent: re-signing silently replaces the previous stamp.
+    """
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not ({"LPG Head of Finance", "System Manager"} & user_roles):
+        frappe.throw(
+            "Only users with the LPG Head of Finance role may approve "
+            "a Transit Loss write-off."
+        )
+
+    doc = frappe.get_doc("Transit Loss Variance Case", case)
+    if doc.docstatus != 0:
+        frappe.throw("Transit Loss case must be in Draft to approve write-off.")
+    if doc.get("resolution") != "Written Off":
+        frappe.throw(
+            "HoF write-off approval only applies when Resolution = 'Written Off'. "
+            f"Current resolution: {doc.get('resolution') or '-'}."
+        )
+
+    doc.db_set("hod_finance_signed_by", frappe.session.user, update_modified=False)
+    doc.db_set("hod_finance_signed_on", frappe.utils.now_datetime(), update_modified=False)
+    if remarks:
+        doc.db_set("hof_remarks", remarks[:140], update_modified=False)
+    doc.add_comment(
+        "Info",
+        f"<b>[HoF Write-Off Approval]</b> Approved by {frappe.session.user}"
+        + (f" -- {frappe.utils.strip_html(remarks)[:140]}" if remarks else "")
+    )
+    return {"ok": True, "approved_by": frappe.session.user}

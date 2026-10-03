@@ -182,6 +182,11 @@ doc_events = {
         'validate': 'sungas.overrides.purchase_order_matrix.classify_tier',
         'before_submit': 'sungas.overrides.purchase_order_matrix.enforce_tier_approvals',
     },
+    # Patch 0013 (A) -- Transit Loss Write-Off HoF Gate: notify HoF when a
+    # case flips to resolution=Written Off and is still unsigned.
+    "Transit Loss Variance Case": {
+        'on_update': 'sungas.overrides.transit_loss_hof_notify.notify_hof_on_writeoff_pending',
+    },
 }
 
 # Scheduled Tasks
@@ -190,6 +195,11 @@ doc_events = {
 scheduler_events = {
     "daily": [
         "sungas.scheduled_jobs.event_digest.send_event_digest",
+        # Patch 0013 (B) -- Governance fixture drift audit. Compares each
+        # git-tracked fixture against a fresh DB export and logs any
+        # mismatch (plus ToDos the System Manager). Read-only -- never
+        # fixes drift, only reports it.
+        "sungas.scheduled_jobs.fixture_drift_audit.run",
     ],
     # Wave P-2: GIT Ageing. Hourly. Opens ToDo on Draft Material Receipt
     # SEs that have been sitting in GIT past Sungas Procurement Policy

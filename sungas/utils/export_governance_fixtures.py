@@ -137,9 +137,15 @@ _VOLATILE_KEYS = ("owner", "modified", "creation", "modified_by",
                   "_assign", "_liked_by")
 
 
-def export_all() -> str:
-    """Main entry — writes every fixture file. Returns the output dir."""
-    out_dir = _out_dir()
+def export_all(out_dir: str | None = None) -> str:
+    """Main entry — writes every fixture file. Returns the output dir.
+
+    Patch 0013 (B): accepts an optional out_dir so the daily fixture-
+    drift audit can dump into a tmp folder for comparison without
+    overwriting the git-tracked fixtures.
+    """
+    if out_dir is None:
+        out_dir = _out_dir()
     os.makedirs(out_dir, exist_ok=True)
 
     written: list[tuple[str, int]] = []

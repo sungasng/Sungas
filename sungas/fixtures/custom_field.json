@@ -14931,5 +14931,18 @@
   "translatable": 0,
   "unique": 0,
   "width": null
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Transit Loss Variance Case",
+  "fieldname": "hof_remarks",
+  "fieldtype": "Small Text",
+  "label": "HoF Write-Off Remarks",
+  "insert_after": "hod_finance_query",
+  "name": "Transit Loss Variance Case-hof_remarks",
+  "module": "Sungas",
+  "no_copy": 1,
+  "read_only": 1,
+  "description": "Patch 0013: optional remarks captured when LPG Head of Finance approves a Transit Loss write-off. Stamped alongside hod_finance_signed_by via sungas.api.governance.approve_writeoff_as_hof."
  }
 ]

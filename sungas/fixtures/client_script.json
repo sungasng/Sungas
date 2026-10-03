@@ -109,6 +109,15 @@
  },
  {
   "doctype": "Client Script",
+  "dt": "Transit Loss Variance Case",
+  "enabled": 1,
+  "module": null,
+  "name": "Transit Loss HoF Write-Off UI",
+  "view": "Form",
+  "script": "// Patch 0013 -- Transit Loss Write-Off HoF Gate UI\n// Shows an 'Approve Write-Off as HoF' button on Draft Transit Loss\n// Variance Cases where Resolution is set to 'Written Off' and the\n// HoF stamp (hod_finance_signed_by) is still empty. Visible ONLY to\n// users with the LPG Head of Finance role. Backed by\n// sungas.api.governance.approve_writeoff_as_hof which enforces the\n// role check server-side regardless.\nfrappe.ui.form.on('Transit Loss Variance Case', {\n    refresh(frm) {\n        if (!frm.doc || frm.doc.docstatus !== 0) return;\n        if (frm.doc.resolution !== 'Written Off') return;\n        if (frm.doc.hod_finance_signed_by) {\n            frm.dashboard.add_indicator(\n                __(`HoF Write-Off Approved by ${frm.doc.hod_finance_signed_by.split('@')[0]}`),\n                'green'\n            );\n            return;\n        }\n        const roles = frappe.user_roles || [];\n        if (!roles.includes('LPG Head of Finance') && !roles.includes('System Manager')) {\n            frm.dashboard.add_indicator(\n                __('Pending LPG Head of Finance Write-Off Approval'),\n                'orange'\n            );\n            return;\n        }\n        frm.add_custom_button(__('Approve Write-Off as HoF'), () => {\n            frappe.prompt([{\n                fieldtype: 'Small Text',\n                label: 'Remarks (optional)',\n                fieldname: 'remarks',\n                description: 'Why are you approving this write-off? Will be stamped on the case.'\n            }], (values) => {\n                frappe.call({\n                    method: 'sungas.api.governance.approve_writeoff_as_hof',\n                    args: { case: frm.doc.name, remarks: values.remarks || '' },\n                    freeze: true,\n                    freeze_message: __('Stamping HoF approval...'),\n                }).then((r) => {\n                    if (r && r.message && r.message.ok) {\n                        frappe.show_alert({ message: __('Write-Off approved as HoF'), indicator: 'green' });\n                        frm.reload_doc();\n                    }\n                });\n            }, __('Approve Write-Off'), __('Approve'));\n        }, __('Approvals')).addClass('btn-primary');\n    }\n});\n"
+ },
+ {
+  "doctype": "Client Script",
   "dt": "Purchase Order",
   "enabled": 1,
   "module": null,

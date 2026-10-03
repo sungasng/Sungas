@@ -122,6 +122,7 @@ REQUIRED_CLIENT_SCRIPTS = (
     "Sungas - Cashier Customer Restrictions",
     "PR - GIT Suppliers Cost Center Auto-populate",
     "PO Approval Matrix UI",
+    "Transit Loss HoF Write-Off UI",
 )
 
 REQUIRED_DASHBOARDS = (
