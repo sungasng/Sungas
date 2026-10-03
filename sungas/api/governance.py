@@ -29,3 +29,27 @@ def get_hoi_cost_center() -> str:
     except Exception:
         pass
     return DEFAULT_HOI_COST_CENTER
+
+
+@frappe.whitelist()
+def get_po_item_qty(name: str) -> float:
+    """Return `qty` on a Purchase Order Item row -- used by the PR
+    Variance Auto-Calc client script to compare dispatched qty to the
+    ordered qty on the parent PO.
+
+    Why this exists (Patch 0012a): the client script previously called
+    frappe.db.get_value('Purchase Order Item', ...) directly, which
+    forces check_parent_permission on Purchase Order. Users without
+    read-perm on Purchase Order (e.g. Stock User creating a PR off a
+    PO) saw a 'Not permitted' popup even though the JS wrapped the
+    call in try/catch -- Frappe shows the popup server-side before
+    the JS catch runs.
+
+    This endpoint bypasses that check by reading one field directly,
+    returning 0 on any failure. Safe: read-only, scalar, no PII.
+    """
+    try:
+        qty = frappe.db.get_value("Purchase Order Item", name, "qty")
+        return float(qty) if qty else 0.0
+    except Exception:
+        return 0.0
