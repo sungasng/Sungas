@@ -20,7 +20,7 @@ def _indent(body: str, spaces: int) -> str:
 
 # Helper function body -- plain Python, no leading indent.
 NUDGE_HELPER_RAW = (
-    "def _p0014b_nudge(ts, seconds):\n"
+    "def p0014b_nudge(ts, seconds):\n"
     "    # ts is 'HH:MM:SS' or 'HH:MM:SS.ffffff'; return a nudged HH:MM:SS\n"
     "    # clamped to 23:59:59.\n"
     "    if not ts:\n"
@@ -46,7 +46,7 @@ PATCH1_NEW = (
     "        # AFTER the plant SE committed, not simultaneously (which reads 0).\n"
     + _indent(NUDGE_HELPER_RAW, 8)
     + "        clear_se.posting_date = doc.posting_date\n"
-    "        clear_se.posting_time = _p0014b_nudge(doc.posting_time, 1)\n"
+    "        clear_se.posting_time = p0014b_nudge(doc.posting_time, 1)\n"
 )
 
 # ---------------------------------------------------------------------------
@@ -62,7 +62,7 @@ PATCH2_NEW = (
     "        # Patch 0014b -- nudge posting_time +1s so Frappe reads GIT balance\n"
     "        # AFTER the receiving SE committed, not simultaneously (which reads 0).\n"
     + _indent(NUDGE_HELPER_RAW, 8)
-    + "        clearing.posting_time = _p0014b_nudge(doc.posting_time, 1)\n"
+    + "        clearing.posting_time = p0014b_nudge(doc.posting_time, 1)\n"
 )
 
 # ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ PATCH3_NEW = (
     "    # ledger sees GIT populated before the drain.\n"
     + _indent(NUDGE_HELPER_RAW, 4)
     + "    receipt.posting_date = doc.posting_date\n"
-    "    receipt.posting_time = _p0014b_nudge(doc.posting_time, 60)\n"
+    "    receipt.posting_time = p0014b_nudge(doc.posting_time, 60)\n"
 )
 
 # ---------------------------------------------------------------------------
@@ -115,7 +115,7 @@ NEW_SCRIPT = {
         "#\n"
         "# Safe: never raises. Nudges silently; the operator sees their SE submit.\n"
         + NUDGE_HELPER_RAW + "\n"
-        "def _p0014b_time_to_sec(ts):\n"
+        "def p0014b_time_to_sec(ts):\n"
         "    if not ts:\n"
         "        return 0\n"
         "    parts = str(ts).split(':')\n"
@@ -150,13 +150,13 @@ NEW_SCRIPT = {
         "        max_sec = 0\n"
         "        max_name = None\n"
         "        for sib in siblings:\n"
-        "            s = _p0014b_time_to_sec(sib.get('posting_time'))\n"
+        "            s = p0014b_time_to_sec(sib.get('posting_time'))\n"
         "            if s > max_sec:\n"
         "                max_sec = s\n"
         "                max_name = sib.get('name')\n"
-        "        this_sec = _p0014b_time_to_sec(doc.posting_time)\n"
+        "        this_sec = p0014b_time_to_sec(doc.posting_time)\n"
         "        if this_sec <= max_sec:\n"
-        "            new_ts = _p0014b_nudge(doc.posting_time, (max_sec - this_sec) + 1)\n"
+        "            new_ts = p0014b_nudge(doc.posting_time, (max_sec - this_sec) + 1)\n"
         "            doc.set_posting_time = 1\n"
         "            doc.posting_time = new_ts\n"
         "            frappe.log_error(\n"
