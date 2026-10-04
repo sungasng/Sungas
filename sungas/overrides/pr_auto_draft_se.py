@@ -25,9 +25,18 @@ but request 500. All errors log_error'd and swallowed.
 from __future__ import annotations
 
 import frappe  # type: ignore
+from frappe.utils import add_to_date, now_datetime  # type: ignore
 
 GIT_SUPPLIERS_WAREHOUSE = "Goods in Transit from Suppliers - SCL"
 DEFAULT_HOI_COST_CENTER = "70003 - Procurement - SCL"
+
+# Patch 0014b -- Posting-Time Nudge.
+# When the plant team submits the auto-drafted SE *in the same minute* as the
+# HQ-submitted PR (or as a sibling plant drop), Frappe's stock ledger reads
+# the GIT balance as 0.00 at that exact second and raises "Insufficient Stock".
+# We pre-stamp the draft SE's posting_time to 60s AFTER the PR submit so the
+# ledger has unambiguous ordering if the plant submits immediately.
+POSTING_TIME_NUDGE_SECONDS = 60
 
 
 def spawn_git_to_plant_se(doc, method=None) -> None:
@@ -76,7 +85,8 @@ def spawn_git_to_plant_se(doc, method=None) -> None:
         se.pr_waybill_number = doc.get("waybill_number")
         se.is_pr_discharge = 1
         se.posting_date = frappe.utils.today()
-        se.set_posting_time = 0
+        se.set_posting_time = 1  # Patch 0014b -- stamp explicit posting_time
+        se.posting_time = _nudged_posting_time()
 
         for row in (doc.items or []):
             # PurchaseReceiptItem has `rate` (+ `base_rate`), NOT `basic_rate`.
@@ -164,6 +174,21 @@ def _resolve_cost_center() -> str:
     except Exception:
         pass
     return DEFAULT_HOI_COST_CENTER
+
+
+def _nudged_posting_time() -> str:
+    """Patch 0014b -- Return a HH:MM:SS string that is `POSTING_TIME_NUDGE_SECONDS`
+    after the current wall clock, clamped so it never crosses midnight.
+    This gives the plant-team's auto-drafted SE a safety margin so Frappe's
+    stock ledger has an unambiguous ordering vs the PR submit timestamp
+    (which just hit GIT-Suppliers one second earlier)."""
+    nudged = add_to_date(now_datetime(), seconds=POSTING_TIME_NUDGE_SECONDS)
+    # Clamp to 23:59:59 if the nudge would cross into the next day --
+    # posting_date was already fixed to today() above, so we must stay
+    # inside the same day.
+    if nudged.date() != now_datetime().date():
+        return "23:59:59"
+    return nudged.strftime("%H:%M:%S")
 
 
 def _notify_destination_plant_manager(pr_doc, se_doc, destination_warehouse: str) -> None:

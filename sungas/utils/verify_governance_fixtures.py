@@ -66,6 +66,8 @@ REQUIRED_SERVER_SCRIPTS = (
     "Inter-Outlet Variance Enforce",
     "Inter-Outlet Auto-Receipt and Notify",
     "Inter-Outlet Clear COGS Expense",
+    # Patch 0014b: Posting-Time Collision Guard
+    "SE Transit Posting-Time Collision Guard",
 )
 
 REQUIRED_WORKFLOWS = (
