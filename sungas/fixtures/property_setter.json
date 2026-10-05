@@ -740,5 +740,17 @@
   "property_type": "Check",
   "row_name": null,
   "value": "1"
+ },
+ {
+  "doc_type": "Inter-Outlet Variance Case",
+  "doctype": "Property Setter",
+  "doctype_or_field": "DocField",
+  "field_name": "resolution",
+  "is_system_generated": 0,
+  "module": null,
+  "name": "Inter-Outlet Variance Case-resolution-options",
+  "property": "options",
+  "property_type": "Text",
+  "value": "\nIdentify culpable staff and recover\nWrite-off as transit loss\nNo action / qty corrected separately\nReturn to Source\nRedeliver to another Outlet\nHold in GIT (Pending)\nHauler Liable\nDriver Liable"
  }
 ]

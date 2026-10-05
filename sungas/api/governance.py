@@ -95,3 +95,38 @@ def approve_writeoff_as_hof(case: str, remarks: str = "") -> dict:
         + (f" -- {frappe.utils.strip_html(remarks)[:140]}" if remarks else "")
     )
     return {"ok": True, "approved_by": frappe.session.user}
+
+
+@frappe.whitelist()
+def approve_writeoff_as_hof_iovc(case: str, remarks: str = "") -> dict:
+    """Stamp Head-of-Finance sign-off on an Inter-Outlet Variance Case
+    before it can resolve as 'Write-off as transit loss'. Mirrors the TLVC
+    pattern (Patch 0013) exactly. Role-gated to LPG Head of Finance
+    (break-glass: System Manager). Idempotent."""
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not ({"LPG Head of Finance", "System Manager"} & user_roles):
+        frappe.throw(
+            "Only users with the LPG Head of Finance role may approve "
+            "an Inter-Outlet variance write-off."
+        )
+
+    doc = frappe.get_doc("Inter-Outlet Variance Case", case)
+    if doc.docstatus != 0:
+        frappe.throw("Inter-Outlet variance case must be in Draft to approve write-off.")
+    if doc.get("resolution") != "Write-off as transit loss":
+        frappe.throw(
+            "HoF write-off approval only applies when Resolution = "
+            "'Write-off as transit loss'. "
+            f"Current resolution: {doc.get('resolution') or '-'}."
+        )
+
+    doc.db_set("hod_finance_signed_by", frappe.session.user, update_modified=False)
+    doc.db_set("hod_finance_signed_on", frappe.utils.now_datetime(), update_modified=False)
+    if remarks:
+        doc.db_set("hof_remarks", remarks[:140], update_modified=False)
+    doc.add_comment(
+        "Info",
+        f"<b>[HoF Write-Off Approval]</b> Approved by {frappe.session.user}"
+        + (f" -- {frappe.utils.strip_html(remarks)[:140]}" if remarks else "")
+    )
+    return {"ok": True, "approved_by": frappe.session.user}

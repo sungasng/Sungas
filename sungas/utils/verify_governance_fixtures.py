@@ -125,6 +125,7 @@ REQUIRED_CLIENT_SCRIPTS = (
     "PR - GIT Suppliers Cost Center Auto-populate",
     "PO Approval Matrix UI",
     "Transit Loss HoF Write-Off UI",
+    "IOVC HoF Write-Off Gate UI",
 )
 
 REQUIRED_DASHBOARDS = (
