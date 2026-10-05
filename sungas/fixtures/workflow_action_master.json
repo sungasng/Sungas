@@ -23,5 +23,15 @@
   "doctype": "Workflow Action Master",
   "name": "Submit for Approval",
   "workflow_action_name": "Submit for Approval"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Start Investigation",
+  "workflow_action_name": "Start Investigation"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Request HoF Write-Off Approval",
+  "workflow_action_name": "Request HoF Write-Off Approval"
  }
 ]

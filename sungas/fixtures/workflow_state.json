@@ -61,5 +61,19 @@
   "name": "Submitted",
   "style": "Success",
   "workflow_state_name": "Submitted"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Under Investigation",
+  "style": "Warning",
+  "workflow_state_name": "Under Investigation"
+ },
+ {
+  "doctype": "Workflow State",
+  "icon": "",
+  "name": "Pending HoF Approval",
+  "style": "Danger",
+  "workflow_state_name": "Pending HoF Approval"
  }
 ]

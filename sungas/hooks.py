@@ -482,7 +482,8 @@ fixtures = [
         "filters": [
             ["name", "in", [
                 "POS Closing Shift Variance",
-                "Sungas Purchase Receipt Approval"
+                "Sungas Purchase Receipt Approval",
+                "Sungas Inter-Outlet Variance Approval"
             ]]
         ]
     },
@@ -498,7 +499,9 @@ fixtures = [
                 "Approved",
                 "Rejected",
                 "HoO Approved",
-                "Submitted"
+                "Submitted",
+                "Under Investigation",
+                "Pending HoF Approval"
             ]]
         ]
     },
@@ -511,7 +514,9 @@ fixtures = [
                 "Escalate to Finance",
                 "Reject",
                 "Reopen",
-                "Submit to Finance"
+                "Submit to Finance",
+                "Start Investigation",
+                "Request HoF Write-Off Approval"
             ]]
         ]
     }
