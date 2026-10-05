@@ -320,10 +320,13 @@ fixtures = [
             ["parent", "in", [
                 "POS Closing Shift",
                 "Purchase Receipt",
-                "Purchase Order"
+                "Purchase Order",
+                "Inter-Outlet Variance Case",
+                "Transit Loss Variance Case"
             ]],
             ["role", "in", [
                 "Stock User",
+                "Stock Manager",
                 "LPG Plant Manager",
                 "LPG Head of Operations",
                 "LPG Head of Finance",
