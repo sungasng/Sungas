@@ -935,6 +935,7 @@
     "state": "Rejected",
     "workflow_builder_id": null
    }
-  ]
+  ],
+  "workflow_name": "Sungas Inter-Outlet Variance Approval"
  }
 ]

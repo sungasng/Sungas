@@ -118,6 +118,7 @@ IOVC_WORKFLOW = {
     "document_type": "Inter-Outlet Variance Case",
     "is_active": 1,
     "name": WF_NAME,
+    "workflow_name": WF_NAME,
     "override_status": 0,
     "send_email_alert": 1,
     "workflow_state_field": "workflow_state",
