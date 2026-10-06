@@ -68,6 +68,8 @@ REQUIRED_SERVER_SCRIPTS = (
     "Inter-Outlet Clear COGS Expense",
     # Patch 0014b: Posting-Time Collision Guard
     "SE Transit Posting-Time Collision Guard",
+    # Patch 0015d: IOVC sign-off auto-stamp
+    "IOVC Workflow Auto-Stamp Sign-Offs",
 )
 
 REQUIRED_WORKFLOWS = (
