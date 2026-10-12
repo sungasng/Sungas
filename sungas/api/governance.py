@@ -130,3 +130,51 @@ def approve_writeoff_as_hof_iovc(case: str, remarks: str = "") -> dict:
         + (f" -- {frappe.utils.strip_html(remarks)[:140]}" if remarks else "")
     )
     return {"ok": True, "approved_by": frappe.session.user}
+
+
+@frappe.whitelist()
+def force_close_trip(ls: str, reason: str) -> dict:
+    """Patch 0015e -- escape hatch for the Truck Open Trip Guard.
+
+    When a truck trip is stuck in Locked / Loading / Dispatched and the
+    truck physically cannot reconcile (broke down, driver unreachable,
+    residual gas written off, etc.), HoO can force-close the trip so the
+    truck is freed for a new Material Request / Loading Schedule.
+
+    Role-gated to LPG Head of Operations + System Manager. The reason
+    is MANDATORY and stamped on the DLS for audit.
+    """
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not ({"LPG Head of Operations", "System Manager"} & user_roles):
+        frappe.throw(
+            "Only users with the LPG Head of Operations role may force-close a trip."
+        )
+    if not (reason or "").strip():
+        frappe.throw("Reason is required for force-close.")
+
+    doc = frappe.get_doc("Daily Loading Schedule", ls)
+    if doc.state == "Closed":
+        return {"ok": True, "note": "already closed", "closed_by": doc.get("force_closed_by")}
+    if doc.state not in ("Locked", "Loading", "Dispatched"):
+        frappe.throw(
+            f"Trip is in state '{doc.state}'. Force-close only applies to "
+            "Locked / Loading / Dispatched trips."
+        )
+
+    doc.state = "Closed"
+    doc.force_closed_by = frappe.session.user
+    doc.force_closed_at = frappe.utils.now_datetime()
+    doc.force_close_reason = (reason or "").strip()[:1000]
+    doc.save(ignore_permissions=True)
+    doc.add_comment(
+        "Info",
+        f"<b>[Force Close Trip]</b> Closed by {frappe.session.user} -- "
+        f"{frappe.utils.strip_html(reason)[:500]}",
+    )
+    frappe.db.commit()
+    return {
+        "ok": True,
+        "state": "Closed",
+        "closed_by": frappe.session.user,
+        "truck_no": doc.truck_no,
+    }
