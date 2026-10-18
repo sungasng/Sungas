@@ -1,0 +1,143 @@
+{
+ "actions": [],
+ "creation": "2026-06-01 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_enabled",
+  "require_settlement_before_close",
+  "section_accounts",
+  "logistics_clearing_account",
+  "freight_accrued_account",
+  "column_break_acc_1",
+  "unproductive_haulage_account",
+  "haulage_variance_account",
+  "section_rates",
+  "default_haulage_rate_per_kg",
+  "column_break_rates_1",
+  "hq_operations_cost_center"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "description": "Master switch. When OFF, no standard haulage is added to Stock Entries and trips can close without cost settlement. Configure every account below BEFORE switching on.",
+   "fieldname": "policy_enabled",
+   "fieldtype": "Check",
+   "label": "Enable Logistics Cost Capitalisation"
+  },
+  {
+   "default": "1",
+   "description": "When ON, Force Close Trip is blocked on a dispatched trip until Finance has settled its trip costs (clearing balance = 0).",
+   "fieldname": "require_settlement_before_close",
+   "fieldtype": "Check",
+   "label": "Require Cost Settlement Before Trip Close"
+  },
+  {
+   "fieldname": "section_accounts",
+   "fieldtype": "Section Break",
+   "label": "Accounts (IAS 2 Trip Cost Pool)"
+  },
+  {
+   "description": "Balance-sheet clearing account. EVERY trip cost (hauler invoice, driver expense claim, diesel issued, prepaid drawdown) is coded here, never straight to P&L. Drained by Stock Entry additional costs (capitalised) and the trip settlement JE.",
+   "fieldname": "logistics_clearing_account",
+   "fieldtype": "Link",
+   "label": "Logistics Cost Clearing Account",
+   "options": "Account"
+  },
+  {
+   "description": "Liability. Credited at trip settlement for third-party hauler freight not yet invoiced. The hauler's Purchase Invoice is later coded to this account to clear it.",
+   "fieldname": "freight_accrued_account",
+   "fieldtype": "Link",
+   "label": "Freight Accrued (Hauliers) Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "column_break_acc_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "P&L. Share of trip cost attributable to kg returned to source / retained onboard / lost (IAS 2.16 abnormal cost).",
+   "fieldname": "unproductive_haulage_account",
+   "fieldtype": "Link",
+   "label": "Unproductive Haulage Account",
+   "options": "Account"
+  },
+  {
+   "description": "P&L. Actual delivered-share cost minus standard haulage capitalised on receipts. Charged to the SOURCE outlet's Operations cost centre.",
+   "fieldname": "haulage_variance_account",
+   "fieldtype": "Link",
+   "label": "Haulage Variance Account",
+   "options": "Account"
+  },
+  {
+   "fieldname": "section_rates",
+   "fieldtype": "Section Break",
+   "label": "Standard Rate & HQ Cost Centre"
+  },
+  {
+   "description": "NGN per kg. Defaulted onto every new Own-Fleet Daily Loading Schedule. Third-Party Hauler trips use the agreed rate entered on the DLS.",
+   "fieldname": "default_haulage_rate_per_kg",
+   "fieldtype": "Currency",
+   "label": "Default Standard Haulage Rate (per kg)"
+  },
+  {
+   "fieldname": "column_break_rates_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Charged with unproductive haulage when the cause is 'HQ dispatch / planning call' (e.g. Head Office - Operations).",
+   "fieldname": "hq_operations_cost_center",
+   "fieldtype": "Link",
+   "label": "HQ Operations Cost Center",
+   "options": "Cost Center"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-06-01 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Logistics Costing Policy",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "LPG Head of Finance",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Accounts Manager",
+   "share": 1
+  },
+  {
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "LPG Head of Operations",
+   "share": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

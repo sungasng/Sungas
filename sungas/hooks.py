@@ -142,7 +142,16 @@ doc_events = {
         ],
     },
     "Journal Entry": {
-        'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry'
+        'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry',
+        # Patch 0016 -- cancelling a trip settlement JE re-opens the DLS.
+        'on_cancel': 'sungas.overrides.haulage_costing.on_settlement_je_cancel',
+    },
+    # Patch 0016 -- IAS 2 standard haulage on GIT -> outlet receipt legs.
+    "Stock Entry": {
+        'before_validate': 'sungas.overrides.haulage_costing.apply_standard_haulage',
+    },
+    "Daily Loading Schedule": {
+        'validate': 'sungas.overrides.haulage_costing.default_haulage_rate',
     },
     "POS Closing Shift": {
         'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
@@ -296,21 +305,26 @@ fixtures = [
                 "Customer",
                 "Customer Asset Custody",
                 "Daily Loading Schedule",
+                "Employee Advance",
+                "Expense Claim",
                 "Inter-Outlet Standing Agreement",
                 "Inter-Outlet Variance Case",
                 "Item",
                 "Journal Entry",
                 "Material Request",
+                "Payment Entry",
                 "POS Closing Shift",
                 "POS Invoice",
                 "POS Opening Shift",
                 "POS Profile",
+                "Purchase Invoice",
                 "Purchase Order",
                 "Purchase Receipt",
                 "Stock Entry",
                 "Sungas Close Policy",
                 "Sungas Procurement Policy",
-                "Transit Loss Variance Case"
+                "Transit Loss Variance Case",
+                "Warehouse"
             ]]
         ]
     },
@@ -389,7 +403,13 @@ fixtures = [
                 "Sungas - Cashier Customer Restrictions",
                 "Sungas DLS \u2014 Drop Table Guards",
                 "Sungas MR \u2014 Client Enhancements",
-                "Sungas SE \u2014 Material Transfer Auto-populate"
+                "Sungas SE \u2014 Material Transfer Auto-populate",
+                "PR - GIT Suppliers Cost Center Auto-populate",
+                "Transit Loss HoF Write-Off UI",
+                "PO Approval Matrix UI",
+                "IOVC HoF Write-Off Gate UI",
+                "DLS Force Close Trip UI",
+                "DLS Haulage Costing UI"
             ]]
         ]
     },
@@ -476,7 +496,9 @@ fixtures = [
                 "Inter-Outlet Variance Case Resolve",
                 "Inter-Outlet Variance Enforce",
                 "Inter-Outlet Auto-Receipt and Notify",
-                "Inter-Outlet Clear COGS Expense"
+                "Inter-Outlet Clear COGS Expense",
+                "SE Transit Posting-Time Collision Guard",
+                "IOVC Workflow Auto-Stamp Sign-Offs"
             ]]
         ]
     },

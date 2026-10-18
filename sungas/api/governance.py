@@ -161,6 +161,10 @@ def force_close_trip(ls: str, reason: str) -> dict:
             "Locked / Loading / Dispatched trips."
         )
 
+    # Patch 0016 -- dispatched trips must have trip costs settled (clearing = 0).
+    from sungas.overrides.haulage_costing import ensure_trip_settled
+    ensure_trip_settled(doc)
+
     doc.state = "Closed"
     doc.force_closed_by = frappe.session.user
     doc.force_closed_at = frappe.utils.now_datetime()
