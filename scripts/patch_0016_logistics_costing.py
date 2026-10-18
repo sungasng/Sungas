@@ -19,7 +19,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "sungas" / "fixtures"
 LOCKED = "eval:doc.state=='Dispatched'||doc.state=='Closed'||doc.haulage_settled_on"
-THIRD_PARTY = "eval:doc.haulage_mode=='Third-Party Hauler'"
 
 
 def cf(dt, fieldname, fieldtype, label, insert_after, **kw):
@@ -62,10 +61,8 @@ DLS_FIELDS = [
     dls("haulage_mode", "Select", "Haulage Mode", "haulage_section",
         options="Own Fleet\nThird-Party Hauler", default="Own Fleet", no_copy=0,
         allow_on_submit=1, read_only_depends_on=LOCKED, in_standard_filter=1),
-    dls("hauler", "Link", "Hauler (Supplier)", "haulage_mode", options="Supplier", no_copy=0,
-        allow_on_submit=1, depends_on=THIRD_PARTY, mandatory_depends_on=THIRD_PARTY,
-        read_only_depends_on=LOCKED),
-    dls("haulage_rate_per_kg", "Currency", "Standard / Agreed Haulage Rate (per kg)", "hauler",
+    # The DLS already has a native `hauler` (Link Supplier) in the Truck section -- reused, not duplicated.
+    dls("haulage_rate_per_kg", "Currency", "Standard / Agreed Haulage Rate (per kg)", "haulage_mode",
         no_copy=0, allow_on_submit=1, read_only_depends_on=LOCKED,
         description="Own Fleet: defaulted from Sungas Logistics Costing Policy. Third-Party "
                     "Hauler: enter the agreed freight rate. Added to every receipt leg as an "
@@ -195,7 +192,10 @@ frappe.ui.form.on('Daily Loading Schedule', {
         frm.add_custom_button(__('Settle Trip Costs'), () => sungas_open_settle_dialog(frm), __('Actions'));
     },
     haulage_mode(frm) {
-        if (frm.doc.haulage_mode !== 'Third-Party Hauler') frm.set_value('hauler', null);
+        frm.toggle_reqd('hauler', frm.doc.haulage_mode === 'Third-Party Hauler');
+    },
+    onload_post_render(frm) {
+        frm.toggle_reqd('hauler', frm.doc.haulage_mode === 'Third-Party Hauler');
     },
 });
 """,
@@ -223,9 +223,13 @@ def patch_iovc(scripts):
     return scripts
 
 
+# 0016a -- removed: clashed with the DLS's native `hauler` field.
+DROPPED = {"Daily Loading Schedule-hauler"}
+
+
 def upsert(path, records):
     data = json.loads(path.read_text())
-    names = {r["name"] for r in records}
+    names = {r["name"] for r in records} | DROPPED
     data = [d for d in data if d.get("name") not in names] + records
     path.write_text(json.dumps(data, indent=1) + "\n")
 
