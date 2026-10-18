@@ -62,11 +62,11 @@ DLS_FIELDS = [
         options="Own Fleet\nThird-Party Hauler", default="Own Fleet", no_copy=0,
         allow_on_submit=1, read_only_depends_on=LOCKED, in_standard_filter=1),
     # The DLS already has a native `hauler` (Link Supplier) in the Truck section -- reused, not duplicated.
-    dls("haulage_rate_per_kg", "Currency", "Standard / Agreed Haulage Rate (per kg)", "haulage_mode",
+    dls("haulage_rate_per_kg", "Currency", "Agreed / Override Haulage Rate (per kg)", "haulage_mode",
         no_copy=0, allow_on_submit=1, read_only_depends_on=LOCKED,
-        description="Own Fleet: defaulted from Sungas Logistics Costing Policy. Third-Party "
-                    "Hauler: enter the agreed freight rate. Added to every receipt leg as an "
-                    "SE Additional Cost (kg x rate). Locked once the trip is dispatched."),
+        description="Leave BLANK to use the Route Rate table (each drop priced by its own route). "
+                    "Third-Party Hauler: enter the agreed freight rate per kg -- it overrides the "
+                    "route table for every drop. Locked once the trip is dispatched."),
     dls("haulage_cb1", "Column Break", None, "haulage_rate_per_kg"),
     ro("haulage_loaded_kg", "Float", "Loaded (kg)", "haulage_cb1"),
     ro("haulage_delivered_kg", "Float", "Delivered to Outlets (kg)", "haulage_loaded_kg"),

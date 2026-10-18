@@ -151,7 +151,7 @@ doc_events = {
         'before_validate': 'sungas.overrides.haulage_costing.apply_standard_haulage',
     },
     "Daily Loading Schedule": {
-        'validate': 'sungas.overrides.haulage_costing.default_haulage_rate',
+        'validate': 'sungas.overrides.haulage_costing.validate_trip_haulage',
     },
     "POS Closing Shift": {
         'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',

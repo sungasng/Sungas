@@ -4,7 +4,7 @@ Flow (per Daily Loading Schedule = one trip):
   1. Every trip cost (hauler PI, driver Expense Claim, diesel Material Issue,
      prepaid drawdown JE) is coded to the Logistics Cost Clearing account and
      linked to the DLS -- never straight to P&L.
-  2. Each receipt leg (GIT -> outlet) gets kg x standard rate as an SE
+  2. Each receipt leg (GIT -> outlet) gets kg x route rate as an SE
      Additional Cost (Dr outlet stock / Cr Clearing). Return-to-source legs
      get nothing, so source WAC is never inflated by a round trip.
   3. Finance settles the trip: optional freight accrual, then the actual pool
@@ -145,6 +145,21 @@ def apply_standard_haulage(doc, method=None):
         doc.set("additional_costs", rows)
 
 
+def resolve_route_rate(source, dest, trip_rate, routes, fallback) -> float:
+    """Trip rate (agreed / manual) > route table (exact, then reverse) > fallback."""
+    if float(trip_rate or 0) > 0:
+        return float(trip_rate)
+    for key in ((source, dest), (dest, source)):
+        if key in routes:
+            return float(routes[key] or 0)
+    return float(fallback or 0)
+
+
+def route_table(policy) -> dict:
+    return {(r.get("from_outlet"), r.get("to_outlet")): r.get("rate_per_kg")
+            for r in (policy.get("route_rates") or [])}
+
+
 def standard_haulage_row(doc):
     policy = get_policy()
     ls_name = doc.get("loading_schedule")
@@ -153,39 +168,43 @@ def standard_haulage_row(doc):
     ls = frappe.db.get_value(
         DLS, ls_name, ["source_outlet", "haulage_rate_per_kg", "haulage_settled_on"], as_dict=True,
     ) or {}
-    rate = float(ls.get("haulage_rate_per_kg") or 0)
-    if rate <= 0 or ls.get("haulage_settled_on"):
+    if ls.get("haulage_settled_on"):
         return None
-    qty = sum(
-        kg(r) for r in (doc.get("items") or [])
-        if r.get("s_warehouse") == GIT_WH and r.get("t_warehouse")
-        and r.get("t_warehouse") not in (GIT_WH, ls.get("source_outlet"))
-    )
-    if qty <= 0:
+    source = ls.get("source_outlet")
+    routes = route_table(policy)
+    per_dest = {}
+    for r in doc.get("items") or []:
+        dest = r.get("t_warehouse")
+        if r.get("s_warehouse") != GIT_WH or not dest or dest in (GIT_WH, source):
+            continue
+        per_dest[dest] = per_dest.get(dest, 0.0) + kg(r)
+    amount, parts = 0.0, []
+    for dest, qty in per_dest.items():
+        rate = resolve_route_rate(source, dest, ls.get("haulage_rate_per_kg"), routes,
+                                  policy.get("default_haulage_rate_per_kg"))
+        if rate > 0 and qty > 0:
+            amount += rate * qty
+            parts.append(f"{rate:,.2f}/kg x {qty:,.2f} kg to {dest}")
+    amount = round(amount, 2)
+    if amount <= 0:
         return None
     clearing = policy.get("logistics_clearing_account")
-    amount = round(rate * qty, 2)
     return {
         "expense_account": clearing,
         "account_currency": frappe.get_cached_value("Account", clearing, "account_currency"),
         "exchange_rate": 1,
-        "description": f"{STD_MARKER} {rate:,.2f}/kg x {qty:,.2f} kg -- {ls_name}",
+        "description": f"{STD_MARKER} {'; '.join(parts)} -- {ls_name}",
         "amount": amount,
         "base_amount": amount,
     }
 
 
-def default_haulage_rate(doc, method=None):
-    """DLS validate: default the standard rate on Own-Fleet trips."""
+def validate_trip_haulage(doc, method=None):
+    """DLS validate: a Third-Party Hauler trip must name its hauler."""
     if doc.get("haulage_settled_on") or doc.get("state") in ("Dispatched", "Closed"):
         return
-    if doc.get("haulage_mode") == THIRD_PARTY:
-        if not doc.get("hauler"):
-            frappe.throw("Select the Hauler (Supplier) for a Third-Party Hauler trip.")
-        return
-    policy = get_policy()
-    if policy and not float(doc.get("haulage_rate_per_kg") or 0):
-        doc.haulage_rate_per_kg = policy.get("default_haulage_rate_per_kg") or 0
+    if doc.get("haulage_mode") == THIRD_PARTY and not doc.get("hauler"):
+        frappe.throw("Select the Hauler (Supplier) for a Third-Party Hauler trip.")
 
 
 def on_settlement_je_cancel(doc, method=None):

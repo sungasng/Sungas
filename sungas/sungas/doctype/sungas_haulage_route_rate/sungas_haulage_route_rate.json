@@ -1,0 +1,62 @@
+{
+ "actions": [],
+ "creation": "2026-06-02 09:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "from_outlet",
+  "to_outlet",
+  "rate_per_kg",
+  "distance_km",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_outlet",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "From Outlet",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "to_outlet",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "To Outlet",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "description": "Standard (estimated) haulage NGN per kg for this route. Actual cost is trued-up at trip settlement; the gap goes to Haulage Variance.",
+   "fieldname": "rate_per_kg",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Rate per kg",
+   "reqd": 1
+  },
+  {
+   "fieldname": "distance_km",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Distance (km)"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Data",
+   "label": "Notes"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-02 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Haulage Route Rate",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -16,6 +16,16 @@ REQUIRED_ACCOUNTS = (
 
 class SungasLogisticsCostingPolicy(Document):
     def validate(self):
+        seen = set()
+        for row in self.get("route_rates") or []:
+            if row.from_outlet == row.to_outlet:
+                frappe.throw(f"Route Rates row {row.idx}: From and To outlet must differ.")
+            if (row.rate_per_kg or 0) < 0:
+                frappe.throw(f"Route Rates row {row.idx}: rate cannot be negative.")
+            key = (row.from_outlet, row.to_outlet)
+            if key in seen:
+                frappe.throw(f"Route Rates row {row.idx}: duplicate route {row.from_outlet} -> {row.to_outlet}.")
+            seen.add(key)
         if not self.policy_enabled:
             return
         missing = [f for f in REQUIRED_ACCOUNTS if not self.get(f)]

@@ -15,7 +15,9 @@
   "section_rates",
   "default_haulage_rate_per_kg",
   "column_break_rates_1",
-  "hq_operations_cost_center"
+  "hq_operations_cost_center",
+  "section_routes",
+  "route_rates"
  ],
  "fields": [
   {
@@ -75,10 +77,10 @@
    "label": "Standard Rate & HQ Cost Centre"
   },
   {
-   "description": "NGN per kg. Defaulted onto every new Own-Fleet Daily Loading Schedule. Third-Party Hauler trips use the agreed rate entered on the DLS.",
+   "description": "NGN per kg used only when a route is NOT in the Route Rate table below and the trip has no agreed rate. Leave 0 to add no haulage on unlisted routes.",
    "fieldname": "default_haulage_rate_per_kg",
    "fieldtype": "Currency",
-   "label": "Default Standard Haulage Rate (per kg)"
+   "label": "Fallback Standard Haulage Rate (per kg)"
   },
   {
    "fieldname": "column_break_rates_1",
@@ -90,12 +92,24 @@
    "fieldtype": "Link",
    "label": "HQ Operations Cost Center",
    "options": "Cost Center"
+  },
+  {
+   "fieldname": "section_routes",
+   "fieldtype": "Section Break",
+   "label": "Route Rate Table (From -> To outlet)",
+   "description": "Each drop uses the rate for its own route (source -> destination). If only the reverse route is listed, that rate is used. A rate entered on the trip itself (e.g. agreed third-party hauler rate) overrides this table for every drop on that trip."
+  },
+  {
+   "fieldname": "route_rates",
+   "fieldtype": "Table",
+   "label": "Route Rates",
+   "options": "Sungas Haulage Route Rate"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-01 12:00:00.000000",
+ "modified": "2026-06-02 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Sungas Logistics Costing Policy",
