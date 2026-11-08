@@ -149,9 +149,12 @@ doc_events = {
     # Patch 0016 -- IAS 2 standard haulage on GIT -> outlet receipt legs.
     "Stock Entry": {
         'before_validate': 'sungas.overrides.haulage_costing.apply_standard_haulage',
+        # Patch 0019 -- a submitted receipt may complete its trip.
+        'on_submit': 'sungas.overrides.trip_auto_close.on_stock_entry_submit',
     },
     "Daily Loading Schedule": {
         'validate': 'sungas.overrides.haulage_costing.validate_trip_haulage',
+        'on_update': 'sungas.overrides.trip_auto_close.on_dls_update',
     },
     "POS Closing Shift": {
         'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
@@ -226,6 +229,8 @@ scheduler_events = {
     # check so re-runs are safe.
     "hourly": [
         "sungas.scheduled_jobs.git_ageing.run",
+        # Patch 0019 -- close reconciled trips, flag trips open > 24h to HoO.
+        "sungas.overrides.trip_auto_close.sweep",
     ],
     # Wave D-2: Open Shift Age escalation. Runs 07:00 UTC = 08:00 WAT (before
     # shop open) so it never overlaps with POS load. Single indexed query per

@@ -437,4 +437,7 @@ def settle_trip_costs(ls: str, cause: str = None, cause_outlet: str = None,
         f"{calc['actual_total']:,.2f}, unproductive {calc['unproductive']:,.2f}, "
         f"variance {calc['variance']:,.2f}" + (f", JE {je_name}" if je_name else ", no JE needed"),
     )
-    return {"ok": True, "journal_entry": je_name, **calc}
+    # Patch 0019 -- a fully delivered trip closes itself once settled.
+    from sungas.overrides.trip_auto_close import try_auto_close
+    closed = try_auto_close(doc.name).get("closed")
+    return {"ok": True, "journal_entry": je_name, "trip_closed": bool(closed), **calc}
