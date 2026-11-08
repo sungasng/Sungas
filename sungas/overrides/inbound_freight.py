@@ -1,21 +1,20 @@
-"""Patch 0021 -- IAS 2 supplier inbound freight capitalisation.
+"""Patch 0021 / 0021a -- IAS 2 supplier inbound freight capitalisation.
 
 At Purchase Receipt submit (policy switch `inbound_freight_enabled`):
   * per-kg freight = freight amount / waybill kg (PR qty + supplier short-load)
-  * Landed Cost Voucher: Dr stock (GIT) / Cr Logistics Clearing for the
-    received kg only
-  * Drawdown JE by freight source:
-      Prepaid Haulier  -> Dr Clearing / Cr Haulier Advance (party = hauler);
-                          anything above the advance balance -> Cr Payable
-                          (owed to hauler) + Finance alert
-      Supplier Invoice -> Dr Clearing / Cr Freight Accrued (supplier PI clears it)
-      Own Truck        -> no credit here; actual fleet costs reach Clearing via
-                          the month-end true-up (market rate = standard)
-    plus, when the supplier short-loaded: Dr Payable (party = supplier) /
-    Cr Clearing for freight on the missing kg (recovered from supplier).
+  * Landed Cost Voucher adds freight on the RECEIVED kg to stock (Dr GIT stock):
+      Prepaid Haulier / Haulier (Pay on Invoice) / Supplier Invoice
+          -> Cr 6225 Freight Accrued. The haulier's or supplier's Purchase
+             Invoice codes its freight line to 6225; prepayments are ordinary
+             ERPNext supplier advances (Payment Entry) set off with Get Advances.
+      Own Truck -> Cr Logistics Clearing; actual fleet costs come in through the
+             month-end true-up (market rate = standard).
+  * Supplier short-load: Dr supplier (party) / Cr the same account for freight
+    on the missing kg -- recovered from the supplier.
+  * Prepaid Haulier: if the hauler's unused advance (less freight on earlier
+    receipts not yet invoiced) does not cover this load, Finance is alerted.
   * Transit losses (GIT -> outlet) are valued at gas + freight per kg by the
-    'Outlet SE Open Transit Loss Case' server script, so Hauler / Driver
-    Liable recovers freight too.
+    'Outlet SE Open Transit Loss Case' server script.
 
 Month-end (`month_end_fleet_true_up`): Draft JE that moves own-truck running
 costs from the listed fleet accounts into Clearing and posts the gap against
@@ -28,7 +27,8 @@ from frappe.utils import add_months, flt, get_first_day, get_last_day, getdate, 
 
 from sungas.overrides.haulage_costing import POLICY
 
-SOURCES = ("Prepaid Haulier", "Supplier Invoice", "Own Truck")
+SOURCES = ("Prepaid Haulier", "Haulier (Pay on Invoice)", "Supplier Invoice", "Own Truck")
+HAULIER_SOURCES = ("Prepaid Haulier", "Haulier (Pay on Invoice)")
 FINANCE_ROLES = ("LPG Head of Finance", "Accounts Manager")
 TRUE_UP_TAG = "[Fleet True-up"
 
@@ -47,10 +47,10 @@ def split_freight(freight, received_kg, shortload_kg) -> dict:
     return {"per_kg": flt(per_kg, 6), "capitalised": flt(freight - recovery, 2), "supplier_recovery": recovery}
 
 
-def split_prepaid(freight, advance_balance) -> dict:
-    freight = flt(freight, 2)
-    from_advance = flt(min(freight, max(flt(advance_balance), 0)), 2)
-    return {"from_advance": from_advance, "owed": flt(freight - from_advance, 2)}
+def advance_shortfall(freight, advance_balance, uninvoiced_freight) -> float:
+    """Freight on this load not covered by the hauler's remaining advance."""
+    available = max(flt(advance_balance) - flt(uninvoiced_freight), 0)
+    return flt(max(flt(freight) - available, 0), 2)
 
 
 def true_up_lines(fleet_balances, absorbed, clearing, variance_account, variance_cc) -> list:
@@ -127,8 +127,8 @@ def validate_inbound_freight(doc, method=None):
         doc.inbound_freight_amount = flt(flt(policy.get("own_truck_rate_per_kg")) * (received + short), 2)
     if flt(doc.get("inbound_freight_amount")) <= 0:
         frappe.throw("Enter the Inbound Freight Amount (NGN) for this delivery, or set Freight Source to None.")
-    if source == "Prepaid Haulier" and not doc.get("hauler"):
-        frappe.throw("Pick the Hauler on this receipt -- prepaid freight is drawn from that hauler's advance.")
+    if source in HAULIER_SOURCES and not doc.get("hauler"):
+        frappe.throw("Pick the Hauler on this receipt -- the freight is owed to (or prepaid with) that hauler.")
     split = split_freight(doc.inbound_freight_amount, received, short)
     doc.inbound_freight_per_kg = split["per_kg"]
     doc.freight_on_shortload = split["supplier_recovery"]
@@ -141,17 +141,24 @@ def on_submit_inbound_freight(doc, method=None):
     policy = get_inbound_policy()
     if not policy:
         return
-    _require(policy, "logistics_clearing_account")
+    credit = credit_account(policy, source)
     received, short = _kg(doc)
     split = split_freight(doc.inbound_freight_amount, received, short)
-    lcv = _make_lcv(doc, policy, split["capitalised"])
-    je, owed = _make_drawdown_je(doc, policy, source, split)
+    shortfall = _prepaid_shortfall(doc, policy) if source == "Prepaid Haulier" else 0.0
+    lcv = _make_lcv(doc, credit, split["capitalised"])
+    je = _make_shortload_je(doc, credit, split["supplier_recovery"])
     frappe.db.set_value("Purchase Receipt", doc.name, {
         "inbound_freight_lcv": lcv, "inbound_freight_je": je,
         "inbound_freight_capitalised": split["capitalised"],
     }, update_modified=False)
-    if owed > 0:
-        _alert_finance(doc, owed)
+    if shortfall > 0:
+        _alert_finance(doc, shortfall)
+
+
+def credit_account(policy, source):
+    field = "logistics_clearing_account" if source == "Own Truck" else "freight_accrued_account"
+    _require(policy, field)
+    return policy.get(field)
 
 
 def before_cancel_inbound_freight(doc, method=None):
@@ -161,7 +168,7 @@ def before_cancel_inbound_freight(doc, method=None):
             frappe.get_doc(dt, name).cancel()
 
 
-def _make_lcv(doc, policy, amount):
+def _make_lcv(doc, credit, amount):
     if amount <= 0:
         return None
     lcv = frappe.new_doc("Landed Cost Voucher")
@@ -174,7 +181,7 @@ def _make_lcv(doc, policy, amount):
     })
     lcv.get_items_from_purchase_receipts()
     lcv.append("taxes", {
-        "expense_account": policy.logistics_clearing_account,
+        "expense_account": credit,
         "description": f"Inbound freight ({doc.inbound_freight_source}) -- {doc.name}",
         "amount": amount,
     })
@@ -183,67 +190,68 @@ def _make_lcv(doc, policy, amount):
     return lcv.name
 
 
-def _party_balance(account, party_type, party, company):
+def _hauler_advance(hauler, company):
+    """Unallocated supplier advance = debit balance on the hauler's payable accounts."""
     row = frappe.db.sql(
-        """select coalesce(sum(debit - credit), 0) from `tabGL Entry`
-           where account=%s and party_type=%s and party=%s and company=%s and is_cancelled=0""",
-        (account, party_type, party, company))
+        """select coalesce(sum(gle.debit - gle.credit), 0) from `tabGL Entry` gle
+           join `tabAccount` acc on acc.name = gle.account
+           where gle.party_type='Supplier' and gle.party=%s and gle.company=%s
+           and gle.is_cancelled=0 and acc.account_type='Payable'""", (hauler, company))
     return flt(row[0][0]) if row else 0.0
 
 
-def _is_party_account(account):
-    return frappe.get_cached_value("Account", account, "account_type") in ("Payable", "Receivable")
+def _uninvoiced_freight(hauler, company, accrued_account, exclude):
+    """Freight accrued on this hauler's earlier receipts minus what their invoices cleared."""
+    accrued = frappe.db.sql(
+        """select coalesce(sum(inbound_freight_amount), 0) from `tabPurchase Receipt`
+           where docstatus=1 and company=%s and hauler=%s and name!=%s
+           and inbound_freight_source in ('Prepaid Haulier', 'Haulier (Pay on Invoice)')""",
+        (company, hauler, exclude))
+    invoiced = frappe.db.sql(
+        """select coalesce(sum(gle.debit - gle.credit), 0) from `tabGL Entry` gle
+           join `tabPurchase Invoice` pi on pi.name = gle.voucher_no
+           where gle.voucher_type='Purchase Invoice' and gle.account=%s and gle.is_cancelled=0
+           and pi.supplier=%s and pi.company=%s""", (accrued_account, hauler, company))
+    return max(flt(accrued[0][0]) - flt(invoiced[0][0]), 0)
 
 
-def _make_drawdown_je(doc, policy, source, split):
-    clearing = policy.logistics_clearing_account
+def _prepaid_shortfall(doc, policy):
+    advance = _hauler_advance(doc.hauler, doc.company)
+    pending = _uninvoiced_freight(doc.hauler, doc.company, policy.freight_accrued_account, doc.name)
+    return advance_shortfall(doc.inbound_freight_amount, advance, pending)
+
+
+def _make_shortload_je(doc, credit, amount):
+    if amount <= 0:
+        return None
+    from erpnext.accounts.party import get_party_account
+
+    payable = get_party_account("Supplier", doc.supplier, doc.company)
     cc = frappe.get_cached_value("Company", doc.company, "cost_center")
-    payable = frappe.get_cached_value("Company", doc.company, "default_payable_account")
-    freight = flt(doc.inbound_freight_amount, 2)
-    lines, owed = [], 0.0
-    if source == "Prepaid Haulier":
-        _require(policy, "haulier_advance_account")
-        adv = policy.haulier_advance_account
-        party = _is_party_account(adv)
-        balance = _party_balance(adv, "Supplier", doc.hauler, doc.company) if party else freight
-        p = split_prepaid(freight, balance)
-        owed = p["owed"]
-        lines.append(_row(clearing, freight, 0, cc))
-        if p["from_advance"]:
-            lines.append(_row(adv, 0, p["from_advance"], cc, *(("Supplier", doc.hauler) if party else (None, None))))
-        if owed:
-            lines.append(_row(payable, 0, owed, cc, "Supplier", doc.hauler))
-    elif source == "Supplier Invoice":
-        _require(policy, "freight_accrued_account")
-        lines += [_row(clearing, freight, 0, cc), _row(policy.freight_accrued_account, 0, freight, cc)]
-    if split["supplier_recovery"] > 0:
-        lines += [_row(payable, split["supplier_recovery"], 0, cc, "Supplier", doc.supplier),
-                  _row(clearing, 0, split["supplier_recovery"], cc)]
-    if not lines:
-        return None, owed
     je = frappe.new_doc("Journal Entry")
     je.voucher_type = "Journal Entry"
     je.company = doc.company
     je.posting_date = doc.posting_date
-    je.user_remark = (f"[Inbound Freight] {source} on {doc.name} -- NGN {freight:,.2f}"
-                      + (f"; supplier short-load freight recovered NGN {split['supplier_recovery']:,.2f}"
-                         if split["supplier_recovery"] else ""))
-    for row in lines:
-        je.append("accounts", row)
+    je.user_remark = (f"[Inbound Freight] Supplier short-load freight on {doc.name} recovered from "
+                      f"{doc.supplier} -- NGN {amount:,.2f}")
+    je.append("accounts", _row(payable, amount, 0, cc, "Supplier", doc.supplier))
+    je.append("accounts", _row(credit, 0, amount, cc))
     je.insert(ignore_permissions=True)
     je.submit()
-    return je.name, owed
+    return je.name
 
 
-def _alert_finance(doc, owed):
+def _alert_finance(doc, shortfall):
     from sungas.utils.bell import ring
 
     users = frappe.get_all("Has Role", filters={"role": ["in", list(FINANCE_ROLES)], "parenttype": "User"},
                            pluck="parent", distinct=True)
-    subject = f"Top up haulier advance -- {doc.hauler}: NGN {owed:,.2f} owed on {doc.name}"
-    msg = (f"<p>The prepaid advance with <b>{doc.hauler}</b> did not cover the freight on "
-           f"<b>{doc.name}</b>. NGN {owed:,.2f} was booked as owed to the hauler.</p>"
-           "<p>Pay or top up the advance with a Payment Entry against this hauler.</p>")
+    subject = f"Top up haulier advance -- {doc.hauler}: NGN {shortfall:,.2f} not covered on {doc.name}"
+    msg = (f"<p>The prepaid advance with <b>{doc.hauler}</b> (after freight on earlier receipts not yet "
+           f"invoiced) does not cover the freight on <b>{doc.name}</b>. NGN {shortfall:,.2f} will be "
+           "payable when the hauler's invoice is posted.</p>"
+           "<p>Top up the advance with a Payment Entry (Pay, Party = this hauler), or pay the balance on "
+           "the invoice.</p>")
     ring(users, subject, msg, "Purchase Receipt", doc.name)
     try:
         frappe.sendmail(recipients=users, subject=f"[SCL] {subject}", message=msg,
