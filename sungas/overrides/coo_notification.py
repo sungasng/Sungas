@@ -62,6 +62,8 @@ def notify_coo_on_critical_approval(doc, method=None) -> None:
         subject=subject,
         html_content=html,
         tags=["sungas-coo-notification", "critical-variance"],
+        ref_doctype=doc.doctype,
+        ref_name=doc.name,
     )
     _mark_notified(doc.name)
 

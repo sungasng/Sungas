@@ -54,6 +54,8 @@ def send_transactional_email(
     sender: dict[str, str] | None = None,
     tags: list[str] | None = None,
     params: dict[str, Any] | None = None,
+    ref_doctype: str | None = None,
+    ref_name: str | None = None,
 ) -> dict[str, Any]:
     """Send a transactional email via Brevo.
 
@@ -69,6 +71,11 @@ def send_transactional_email(
     """
     if not to:
         return {"ok": False, "status": None, "message_id": None, "error": "no_recipients"}
+
+    # Patch 0018: every Brevo alert also rings the ERPNext bell.
+    from sungas.utils.bell import ring
+
+    ring(to, subject, html_content, ref_doctype, ref_name)
 
     api_key = frappe.conf.get("brevo_api_key")
     if not api_key:

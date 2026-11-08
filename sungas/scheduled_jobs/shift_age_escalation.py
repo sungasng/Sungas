@@ -180,6 +180,8 @@ def _send_escalation(
         subject=subject,
         html_content=html,
         tags=["sungas-shift-escalation", f"L{level_hours}h"],
+        ref_doctype="POS Opening Shift",
+        ref_name=opening_shift.name,
     )
 
     # Mark sent regardless of Brevo outcome — failures are already logged and

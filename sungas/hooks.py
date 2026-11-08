@@ -196,6 +196,16 @@ doc_events = {
     "Transit Loss Variance Case": {
         'on_update': 'sungas.overrides.transit_loss_hof_notify.notify_hof_on_writeoff_pending',
     },
+    # Patch 0018 -- in-app bell alerts.
+    "ToDo": {
+        'after_insert': 'sungas.utils.bell.on_todo_insert',
+    },
+    "*": {
+        'on_update': 'sungas.utils.bell.on_workflow_change',
+        'on_submit': 'sungas.utils.bell.on_workflow_change',
+        'on_update_after_submit': 'sungas.utils.bell.on_workflow_change',
+        'on_cancel': 'sungas.utils.bell.on_workflow_change',
+    },
 }
 
 # Scheduled Tasks

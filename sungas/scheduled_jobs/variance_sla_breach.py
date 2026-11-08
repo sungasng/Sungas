@@ -169,6 +169,8 @@ def _send_breach(
         subject=subject,
         html_content=html,
         tags=["sungas-variance-sla", f"L{level}"],
+        ref_doctype="POS Closing Shift",
+        ref_name=shift.name,
     )
     _mark_escalated(shift.name, level)
 
