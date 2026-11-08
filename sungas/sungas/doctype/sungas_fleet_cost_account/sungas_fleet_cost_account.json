@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "creation": "2026-06-15 09:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "account",
+  "cost_center",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "account",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Fleet Expense Account",
+   "options": "Account",
+   "reqd": 1,
+   "description": "Own-truck running cost account (fuel, tolls/road levies, driver allowances, maintenance, tyres, insurance, truck depreciation)."
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Only Cost Center",
+   "options": "Cost Center",
+   "description": "Optional. Only move balances booked to this cost centre (e.g. Fleet). Leave blank to move the whole account."
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Notes"
+  }
+ ],
+ "istable": 1,
+ "links": [],
+ "modified": "2026-06-15 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Fleet Cost Account",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

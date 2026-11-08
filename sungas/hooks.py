@@ -186,7 +186,11 @@ doc_events = {
         'before_insert': 'sungas.overrides.cashier_variance_lockout.enforce_cashier_variance_lockout',
     },
     "Purchase Receipt": {
+        # Patch 0021 -- IAS 2 supplier inbound freight.
+        'validate': 'sungas.overrides.inbound_freight.validate_inbound_freight',
+        'before_cancel': 'sungas.overrides.inbound_freight.before_cancel_inbound_freight',
         'on_submit': [
+            'sungas.overrides.inbound_freight.on_submit_inbound_freight',
             'sungas.overrides.receipt_trigger_review.review_on_receipt_submit',
             'sungas.overrides.pr_auto_draft_se.spawn_git_to_plant_se',
         ],
@@ -241,6 +245,10 @@ scheduler_events = {
     # Wave D-2: Open Shift Age escalation. Runs 07:00 UTC = 08:00 WAT (before
     # shop open) so it never overlaps with POS load. Single indexed query per
     # day, idempotent via escalation_level_sent on POS Opening Shift.
+    "monthly": [
+        # Patch 0021 -- draft own-truck freight true-up for last month.
+        "sungas.overrides.inbound_freight.month_end_fleet_true_up",
+    ],
     "cron": {
         "0 7 * * *": [
             "sungas.scheduled_jobs.shift_age_escalation.run",
