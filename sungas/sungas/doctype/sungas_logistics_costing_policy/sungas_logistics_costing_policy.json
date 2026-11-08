@@ -21,7 +21,8 @@
   "section_inbound",
   "inbound_freight_enabled",
   "column_break_inbound_1",
-  "own_truck_rate_per_kg",
+  "section_inbound_rates",
+  "inbound_market_rates",
   "section_fleet",
   "fleet_cost_accounts"
  ],
@@ -129,10 +130,16 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "own_truck_rate_per_kg",
-   "fieldtype": "Currency",
-   "label": "Own-Truck Market Rate per kg",
-   "description": "Market (third-party) NGN per kg used as the standard cost when our own truck collects from the depot and no amount is typed on the receipt. The month-end true-up corrects it to actual fleet cost through Haulage Variance."
+   "fieldname": "section_inbound_rates",
+   "fieldtype": "Section Break",
+   "label": "Own-Truck Market Rates",
+   "description": "Market price per trip a third-party haulier would charge, by loading depot, receiving outlet and truck payload. When our own truck collects, the receipt looks up the row for its depot, outlet and truck (Sungas Fleet Truck payload) and uses that trip price as the freight. The month-end true-up corrects it to actual fleet cost through Haulage Variance."
+  },
+  {
+   "fieldname": "inbound_market_rates",
+   "fieldtype": "Table",
+   "label": "Own-Truck Market Rates",
+   "options": "Sungas Inbound Market Rate"
   },
   {
    "fieldname": "section_fleet",
@@ -150,7 +157,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-16 09:00:00.000000",
+ "modified": "2026-06-17 09:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Sungas Logistics Costing Policy",

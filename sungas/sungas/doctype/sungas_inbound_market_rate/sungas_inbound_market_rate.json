@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "creation": "2026-06-17 09:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "loading_depot",
+  "to_outlet",
+  "payload_kg",
+  "trip_rate",
+  "distance_km",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "loading_depot",
+   "fieldtype": "Link",
+   "label": "Loading Depot",
+   "options": "Sungas Loading Depot",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "to_outlet",
+   "fieldtype": "Link",
+   "label": "To Outlet",
+   "options": "Warehouse",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "payload_kg",
+   "fieldtype": "Float",
+   "label": "Truck Payload (kg)",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "trip_rate",
+   "fieldtype": "Currency",
+   "label": "Market Price per Trip (NGN)",
+   "reqd": 1,
+   "in_list_view": 1,
+   "description": "What a third-party haulier would charge for this run with this truck size."
+  },
+  {
+   "fieldname": "distance_km",
+   "fieldtype": "Float",
+   "label": "Distance (km)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Data",
+   "label": "Notes"
+  }
+ ],
+ "links": [],
+ "modified": "2026-06-17 09:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Inbound Market Rate",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "istable": 1
+}

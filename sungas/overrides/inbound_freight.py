@@ -123,8 +123,8 @@ def validate_inbound_freight(doc, method=None):
     if not policy:
         return
     received, short = _kg(doc)
-    if source == "Own Truck" and not flt(doc.get("inbound_freight_amount")):
-        doc.inbound_freight_amount = flt(flt(policy.get("own_truck_rate_per_kg")) * (received + short), 2)
+    if source == "Own Truck":
+        _apply_market_rate(doc, policy)
     if flt(doc.get("inbound_freight_amount")) <= 0:
         frappe.throw("Enter the Inbound Freight Amount (NGN) for this delivery, or set Freight Source to None.")
     if source in HAULIER_SOURCES and not doc.get("hauler"):
@@ -132,6 +132,32 @@ def validate_inbound_freight(doc, method=None):
     split = split_freight(doc.inbound_freight_amount, received, short)
     doc.inbound_freight_per_kg = split["per_kg"]
     doc.freight_on_shortload = split["supplier_recovery"]
+
+
+def find_market_rate(rates, depot, outlet, payload_kg):
+    """Exact depot + outlet + truck payload match on the Own-Truck Market Rates card."""
+    for r in rates or []:
+        if r.get("loading_depot") == depot and r.get("to_outlet") == outlet \
+                and abs(flt(r.get("payload_kg")) - flt(payload_kg)) < 0.5:
+            return flt(r.get("trip_rate"), 2)
+    return None
+
+
+def _apply_market_rate(doc, policy):
+    if not doc.get("loading_depot") or not doc.get("own_truck"):
+        frappe.throw("Own Truck freight: pick the Loading Depot and the Own Truck on this receipt.")
+    payload = flt(doc.get("own_truck_payload_kg")) or flt(
+        frappe.db.get_value("Sungas Fleet Truck", doc.own_truck, "payload_kg"))
+    outlet = doc.get("final_destination_warehouse") or doc.get("set_warehouse")
+    rate = find_market_rate(policy.get("inbound_market_rates"), doc.loading_depot, outlet, payload)
+    doc.own_truck_payload_kg = payload
+    doc.own_truck_trip_rate = rate or 0
+    if not flt(doc.get("inbound_freight_amount")):
+        if rate is None:
+            frappe.throw(
+                f"No own-truck market rate for {doc.loading_depot} &rarr; {outlet} with a {payload:,.0f} kg truck. "
+                f"Ask Finance to add it under {POLICY} &rarr; Own-Truck Market Rates, or type the freight amount.")
+        doc.inbound_freight_amount = rate
 
 
 def on_submit_inbound_freight(doc, method=None):
