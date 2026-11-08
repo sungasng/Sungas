@@ -78,6 +78,8 @@ after_migrate = [
     # landed. Never throws -- just log_error if anything is missing so
     # that the next dev looking at Error Log sees the gap immediately.
     "sungas.utils.verify_governance_fixtures.run",
+    # Patch 0020: role landing workspaces + module isolation.
+    "sungas.workspaces.install",
 ]
 
 # Desk Notifications
@@ -198,6 +200,10 @@ doc_events = {
     # case flips to resolution=Written Off and is still unsigned.
     "Transit Loss Variance Case": {
         'on_update': 'sungas.overrides.transit_loss_hof_notify.notify_hof_on_writeoff_pending',
+    },
+    # Patch 0020 -- role landing workspace + sidebar module isolation.
+    "User": {
+        'validate': 'sungas.workspaces.apply_to_user',
     },
     # Patch 0018 -- in-app bell alerts.
     "ToDo": {
