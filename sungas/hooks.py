@@ -84,6 +84,8 @@ after_migrate = [
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
     "sungas.scheduled_jobs.variance_case_ageing.fix_iovc_writeoff_account",
+    # Patch 0025: "No morning briefing" tick on User; service accounts ticked once.
+    "sungas.scheduled_jobs.morning_briefing.ensure_skip_field",
 ]
 
 # Desk Notifications
@@ -146,6 +148,8 @@ doc_events = {
     "Sales Invoice": {
         'autoname': 'sungas.controllers.sales_invoice.autoname_sales_invoice',
         'on_submit': 'sungas.controllers.sales_invoice.validate_sales_invoice',
+        # Patch 0025 -- hard zero-price block on till (is_pos) invoices.
+        'validate': 'sungas.overrides.zero_price_guard.block_zero_price',
         'before_submit': [
             'sungas.overrides.returns_approval_gate.require_manager_for_return',
             'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
@@ -183,7 +187,11 @@ doc_events = {
     },
     "POS Invoice": {
         'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
-        'validate': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
+        # Patch 0025 -- hard zero-price block at the till.
+        'validate': [
+            'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
+            'sungas.overrides.zero_price_guard.block_zero_price',
+        ],
         'before_submit': [
             'sungas.overrides.returns_approval_gate.require_manager_for_return',
             'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
