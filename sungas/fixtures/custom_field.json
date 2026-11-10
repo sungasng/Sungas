@@ -14171,7 +14171,7 @@
   "columns": 0,
   "default": "1609 - GIT - Transit Loss - SCL",
   "depends_on": null,
-  "description": "Expense account used when HOD Ops resolves a variance case as 'Write-off as transit loss'.",
+  "description": "Expense account that receives inter-outlet variances written off as transit loss (default 8600 - COS - Transit Loss (LPG)). Must be an Expense account (Patch 0023).",
   "doctype": "Custom Field",
   "dt": "Sungas Close Policy",
   "fetch_from": null,
@@ -14215,7 +14215,8 @@
   "sort_options": 0,
   "translatable": 0,
   "unique": 0,
-  "width": null
+  "width": null,
+  "modified": "2026-06-19 09:00:00.000000"
  },
  {
   "allow_in_quick_entry": 0,

@@ -908,5 +908,16 @@
   "property": "options",
   "property_type": "Text",
   "value": "Draft\nLocked\nLoading\nDispatched\nClosed"
+ },
+ {
+  "value": "MAT-STE-.YYYY.-",
+  "doctype": "Property Setter",
+  "doc_type": "Stock Entry",
+  "name": "Stock Entry-naming_series-options",
+  "field_name": "naming_series",
+  "property": "options",
+  "property_type": "Text",
+  "doctype_or_field": "DocField",
+  "is_system_generated": 1
  }
 ]

@@ -84,6 +84,18 @@ def run() -> dict:
     return summary
 
 
+VOLATILE = {"modified", "creation", "owner", "modified_by", "idx"}
+
+
+def _strip_volatile(data):
+    """Patch 0023: timestamps / ordering-only changes are not drift."""
+    if isinstance(data, list):
+        return [_strip_volatile(x) for x in data]
+    if isinstance(data, dict):
+        return {k: _strip_volatile(v) for k, v in data.items() if k not in VOLATILE}
+    return data
+
+
 def _normalised(path: Path) -> str:
     """Canonicalise a fixture JSON so field order / whitespace don't
     cause false positives. Lists of docs are sorted by name.
@@ -92,6 +104,7 @@ def _normalised(path: Path) -> str:
         data = json.loads(path.read_text())
     except Exception:
         return path.read_text()  # fallback: raw bytes
+    data = _strip_volatile(data)
     if isinstance(data, list):
         data = sorted(
             data,

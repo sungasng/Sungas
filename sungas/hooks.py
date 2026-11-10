@@ -82,6 +82,8 @@ after_migrate = [
     "sungas.workspaces.install",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
+    # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
+    "sungas.scheduled_jobs.variance_case_ageing.fix_iovc_writeoff_account",
 ]
 
 # Desk Notifications
@@ -232,6 +234,8 @@ doc_events = {
 
 scheduler_events = {
     "daily": [
+        # Patch 0023 -- open TLVC / IOVC older than 13 days -> HoO + HoF.
+        "sungas.scheduled_jobs.variance_case_ageing.run",
         "sungas.scheduled_jobs.event_digest.send_event_digest",
         # Patch 0013 (B) -- Governance fixture drift audit. Compares each
         # git-tracked fixture against a fresh DB export and logs any
@@ -403,7 +407,9 @@ fixtures = [
                 "POS Profile",
                 "Purchase Order",
                 "Purchase Receipt",
-                "Stock Entry"
+                "Stock Entry",
+                "Inter-Outlet Variance Case",
+                "Transit Loss Variance Case"
             ]]
         ]
     },
