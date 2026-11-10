@@ -211,6 +211,8 @@ doc_events = {
     # Patch 0013 (A) -- Transit Loss Write-Off HoF Gate: notify HoF when a
     # case flips to resolution=Written Off and is still unsigned.
     "Transit Loss Variance Case": {
+        # Patch 0024 -- cases are opened by the outlet-receipt automation only.
+        'before_insert': 'sungas.overrides.transit_loss_guard.require_system_opened',
         'on_update': 'sungas.overrides.transit_loss_hof_notify.notify_hof_on_writeoff_pending',
     },
     # Patch 0020 -- role landing workspace + sidebar module isolation.
@@ -262,6 +264,8 @@ scheduler_events = {
     "cron": {
         "0 7 * * *": [
             "sungas.scheduled_jobs.shift_age_escalation.run",
+            # Patch 0024 -- 7 AM manager morning briefing (bell + email).
+            "sungas.scheduled_jobs.morning_briefing.run",
         ],
         # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
         # 90 min after the open-shift cron. Single indexed query/day,
