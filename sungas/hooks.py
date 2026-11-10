@@ -80,6 +80,8 @@ after_migrate = [
     "sungas.utils.verify_governance_fixtures.run",
     # Patch 0020: role landing workspaces + module isolation.
     "sungas.workspaces.install",
+    # Patch 0022: IFRS category defaults + backfill of blank items.
+    "sungas.utils.ifrs_category.backfill",
 ]
 
 # Desk Notifications
@@ -133,7 +135,11 @@ doc_events = {
     },
     "Item": {
         'autoname': 'sungas.controllers.item.item_name',
-        'validate': 'sungas.overrides.item_pricing_gate.require_tier_before_enable',
+        'validate': [
+            'sungas.overrides.item_pricing_gate.require_tier_before_enable',
+            # Patch 0022 -- IFRS category on every Item.
+            'sungas.utils.ifrs_category.validate_item',
+        ],
     },
     "Sales Invoice": {
         'autoname': 'sungas.controllers.sales_invoice.autoname_sales_invoice',
@@ -339,6 +345,7 @@ fixtures = [
                 "Inter-Outlet Standing Agreement",
                 "Inter-Outlet Variance Case",
                 "Item",
+                "Item Group",
                 "Journal Entry",
                 "Material Request",
                 "Payment Entry",
@@ -475,7 +482,8 @@ fixtures = [
         "dt": "Report",
         "filters": [
             ["name", "in", [
-                "Transit Loss Recovery Aging"
+                "Transit Loss Recovery Aging",
+                "IFRS Stock Classification",
             ]]
         ]
     },

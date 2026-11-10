@@ -41,5 +41,77 @@
   ],
   "snapshot_report": 0,
   "timeout": 0
+ },
+ {
+  "add_total_row": 1,
+  "add_translate_data": 0,
+  "columns": [],
+  "disable_prepared_report_automation": 0,
+  "disabled": 0,
+  "doctype": "Report",
+  "doctype_to_sync": [],
+  "filters": [],
+  "is_standard": "No",
+  "javascript": null,
+  "json": null,
+  "letter_head": null,
+  "module": "Sungas",
+  "name": "IFRS Stock Classification",
+  "prepared_report": 0,
+  "query": "SELECT\n    COALESCE(NULLIF(i.sungas_ifrs_category, ''), '(not classified)') AS `IFRS Category:Data:280`,\n    COUNT(DISTINCT b.item_code)                                    AS `Items:Int:80`,\n    SUM(b.actual_qty)                                              AS `Qty on Hand:Float:130`,\n    SUM(b.stock_value)                                             AS `Stock Value:Currency:170`\nFROM `tabBin` b\nJOIN `tabItem` i ON i.name = b.item_code\nGROUP BY 1\nORDER BY 1",
+  "ref_doctype": "Item",
+  "reference_report": null,
+  "report_name": "IFRS Stock Classification",
+  "report_script": null,
+  "report_type": "Query Report",
+  "roles": [
+   {
+    "doctype": "Has Role",
+    "role": "System Manager",
+    "parent": "IFRS Stock Classification",
+    "parentfield": "roles",
+    "parenttype": "Report"
+   },
+   {
+    "doctype": "Has Role",
+    "role": "LPG Head of Finance",
+    "parent": "IFRS Stock Classification",
+    "parentfield": "roles",
+    "parenttype": "Report"
+   },
+   {
+    "doctype": "Has Role",
+    "role": "Accounts Manager",
+    "parent": "IFRS Stock Classification",
+    "parentfield": "roles",
+    "parenttype": "Report"
+   },
+   {
+    "doctype": "Has Role",
+    "role": "Accounts User",
+    "parent": "IFRS Stock Classification",
+    "parentfield": "roles",
+    "parenttype": "Report"
+   },
+   {
+    "doctype": "Has Role",
+    "role": "Stock Manager",
+    "parent": "IFRS Stock Classification",
+    "parentfield": "roles",
+    "parenttype": "Report"
+   },
+   {
+    "doctype": "Has Role",
+    "role": "COO",
+    "parent": "IFRS Stock Classification",
+    "parentfield": "roles",
+    "parenttype": "Report"
+   }
+  ],
+  "snapshot_report": 0,
+  "timeout": 0,
+  "modified": "2026-06-18 09:00:00.000000",
+  "creation": null,
+  "owner": null
  }
 ]
