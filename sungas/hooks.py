@@ -145,10 +145,14 @@ doc_events = {
     "LPG Outlet Price Tier": {
         'validate': 'sungas.overrides.price_edit_lock.block_direct_edit',
         'on_trash': 'sungas.overrides.price_edit_lock.block_direct_edit',
+        # Patch 0031 -- live price signal to open tills.
+        'on_update': 'sungas.overrides.price_edit_lock.broadcast_price_change',
     },
     "Item Price": {
         'validate': 'sungas.overrides.price_edit_lock.block_direct_edit',
         'on_trash': 'sungas.overrides.price_edit_lock.block_direct_edit',
+        # Patch 0031 -- live price signal to open tills.
+        'on_update': 'sungas.overrides.price_edit_lock.broadcast_price_change',
     },
     # Patch 0030 -- approved regional / national price replaces plant prices below it.
     "LPG Bulk Price Upload": {

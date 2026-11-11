@@ -32,3 +32,12 @@ def ensure_no_auto_price_insert():
     if frappe.db.get_single_value("Stock Settings", "auto_insert_price_list_rate_if_missing"):
         frappe.db.set_single_value("Stock Settings", "auto_insert_price_list_rate_if_missing", 0)
         frappe.db.commit()
+
+
+def broadcast_price_change(doc, method=None):
+    """Patch 0031: tell every open till that prices changed (POS re-prices open carts)."""
+    if frappe.flags.in_migrate or frappe.flags.in_install:
+        return
+    if doc.doctype == "Item Price" and not doc.get("selling"):
+        return
+    frappe.publish_realtime("sungas_prices_changed", {"item_code": doc.get("item_code")}, after_commit=True)
