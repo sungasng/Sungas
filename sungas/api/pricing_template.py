@@ -53,3 +53,49 @@ def download_bulk_template(item_code=None, customer_group=None, territory=None):
     frappe.response["filename"] = f"bulk_price_template_{frappe.utils.nowdate()}.csv"
     frappe.response["filecontent"] = "\ufeff" + buf.getvalue()
     frappe.response["type"] = "download"
+
+
+def _date(v):
+    v = (v or "").strip()
+    if not v:
+        return None
+    try:
+        return str(frappe.utils.getdate(v))
+    except Exception:
+        return v
+
+
+def parse_rows(text: str) -> list[dict]:
+    """Template / CSV text -> Bulk Price Upload rows. Rows whose new_rate equals the
+    reference current_rate column (unchanged template rows) are skipped."""
+    reader = csv.DictReader(io.StringIO(text.lstrip("\ufeff")))
+    missing = {"item_code", "customer_group", "new_rate"} - set(reader.fieldnames or [])
+    if missing:
+        frappe.throw("The file is missing column(s): " + ", ".join(sorted(missing)))
+    out = []
+    for raw in reader:
+        code = (raw.get("item_code") or "").strip()
+        if not code:
+            continue
+        new = flt(raw.get("new_rate"))
+        cur = (raw.get("current_rate") or "").strip()
+        if cur and flt(cur) == new:
+            continue
+        out.append({"item_code": code, "customer_group": (raw.get("customer_group") or "").strip() or None,
+                    "territory": (raw.get("territory") or "").strip() or None,
+                    "min_qty": flt(raw.get("min_qty")), "max_qty": flt(raw.get("max_qty")), "new_rate": new,
+                    "valid_from": _date(raw.get("valid_from")), "valid_to": _date(raw.get("valid_to")),
+                    "justification": (raw.get("justification") or "").strip() or None, "enabled": 1})
+    return out
+
+
+@frappe.whitelist()
+def parse_template(file_url):
+    """Patch 0030a: read an attached template on the form so the rows table is filled before saving."""
+    if not ALLOWED & set(frappe.get_roles()):
+        frappe.throw("Only Head of Sales, Head of Finance or System Manager can load a price file.",
+                     frappe.PermissionError)
+    content = frappe.get_doc("File", {"file_url": file_url}).get_content()
+    if isinstance(content, bytes):
+        content = content.decode("utf-8-sig")
+    return parse_rows(content)
