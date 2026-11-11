@@ -70,12 +70,35 @@ REQUIRED_SERVER_SCRIPTS = (
     "SE Transit Posting-Time Collision Guard",
     # Patch 0015d: IOVC sign-off auto-stamp
     "IOVC Workflow Auto-Stamp Sign-Offs",
+    # Patch 0027: live-only scripts brought into git
+    "GIT Aged Stock Daily Alert",
+    "LMD MR Append Note",
+    "LMD MR Approve",
+    "LMD MR PostHoc Signoff",
+    "LMD MR Reject",
+    "LMD SE Confirm Receipt",
+    "lmd_designation_role_sync",
+    "PR Auto-Route to Supplier GIT",
+    "PR Auto-Spawn Outlet Receipt SE",
+    "PR Close Reconcile",
+    "PR Guard Qty From Plant Manager Edit",
+    "PR Notify On Submit",
+    "PR Validate Final Destination",
+    "PR Weighbridge Auto-Reconcile",
+    "TLVC Auto-Sign HOD Ops",
 )
 
 REQUIRED_WORKFLOWS = (
     "POS Closing Shift Variance",
     "Sungas Purchase Receipt Approval",
     "Sungas Inter-Outlet Variance Approval",
+    # Patch 0027
+    "LPG Bulk Price Upload Approval",
+    "LPG Price Change Approval",
+    "Sungas Expense Claim Approval",
+    "Sungas Leave Approval",
+    "Sungas Payroll Approval",
+    "Sungas TLVC Approval",
 )
 
 REQUIRED_WORKFLOW_STATES = (

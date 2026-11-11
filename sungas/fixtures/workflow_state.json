@@ -1,79 +1,173 @@
 [
  {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-11 22:49:39.314987",
+  "name": "Pending Head of Sales",
+  "style": "Warning",
+  "workflow_state_name": "Pending Head of Sales"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-11 22:49:39.318809",
+  "name": "Pending Head of Finance",
+  "style": "Warning",
+  "workflow_state_name": "Pending Head of Finance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-22 07:13:08.199440",
+  "name": "Line Manager Review",
+  "style": "Warning",
+  "workflow_state_name": "Line Manager Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-22 07:13:08.201795",
+  "name": "HR Manager Review",
+  "style": "Warning",
+  "workflow_state_name": "HR Manager Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-22 07:13:08.204049",
+  "name": "Internal Control Review",
+  "style": "Warning",
+  "workflow_state_name": "Internal Control Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-22 07:13:08.206049",
+  "name": "Head of Finance Review",
+  "style": "Warning",
+  "workflow_state_name": "Head of Finance Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-22 07:13:08.208045",
+  "name": "COO Review",
+  "style": "Warning",
+  "workflow_state_name": "COO Review"
+ },
+ {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "ok-sign",
+  "modified": "2026-11-11 07:15:50.330641",
   "name": "Approved",
   "style": "Success",
   "workflow_state_name": "Approved"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.352054",
   "name": "Draft",
   "style": "Warning",
   "workflow_state_name": "Draft"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.366489",
   "name": "Pending COO",
   "style": "Danger",
   "workflow_state_name": "Pending COO"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.380390",
   "name": "Pending HOD Finance",
   "style": "Danger",
   "workflow_state_name": "Pending HOD Finance"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.393595",
   "name": "Pending HOD Operations",
   "style": "Warning",
   "workflow_state_name": "Pending HOD Operations"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.406516",
   "name": "Pending Plant Manager",
   "style": "Warning",
   "workflow_state_name": "Pending Plant Manager"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "remove",
+  "modified": "2026-11-11 07:15:50.419093",
   "name": "Rejected",
   "style": "Danger",
   "workflow_state_name": "Rejected"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "check",
+  "modified": "2026-11-11 07:15:50.433867",
   "name": "HoO Approved",
   "style": "Primary",
   "workflow_state_name": "HoO Approved"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "ok-sign",
+  "modified": "2026-11-11 07:15:50.447898",
   "name": "Submitted",
   "style": "Success",
   "workflow_state_name": "Submitted"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.461158",
   "name": "Under Investigation",
   "style": "Warning",
   "workflow_state_name": "Under Investigation"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-11 07:15:50.473647",
   "name": "Pending HoF Approval",
   "style": "Danger",
   "workflow_state_name": "Pending HoF Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-06 15:24:56.369663",
+  "name": "HOD Ops Signed",
+  "style": "",
+  "workflow_state_name": "HOD Ops Signed"
  }
 ]

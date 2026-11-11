@@ -5,34 +5,143 @@
   "columns": [],
   "disable_prepared_report_automation": 0,
   "disabled": 0,
+  "docstatus": 0,
   "doctype": "Report",
   "doctype_to_sync": [],
   "filters": [],
   "is_standard": "No",
-  "javascript": null,
-  "json": null,
-  "letter_head": null,
+  "javascript": "",
+  "json": "{}",
+  "modified": "2026-07-22 19:10:49.999628",
+  "module": "Stock",
+  "name": "Inter-Outlet Transit Aging",
+  "prepared_report": 0,
+  "query": "\nSELECT\n    CASE\n        WHEN DATEDIFF(CURDATE(), se.posting_date) <= 3 THEN '🟢 0-3d'\n        WHEN DATEDIFF(CURDATE(), se.posting_date) <= 7 THEN '🟡 4-7d'\n        ELSE '🔴 8+d'\n    END                                          AS `Severity:Data:100`,\n    DATEDIFF(CURDATE(), se.posting_date)         AS `Days in GIT:Int:110`,\n    se.name                                      AS `Transit SE:Link/Stock Entry:150`,\n    se.posting_date                              AS `Posted On:Date:100`,\n    se.from_warehouse                            AS `From Outlet:Link/Warehouse:180`,\n    sei.item_code                                AS `Item:Link/Item:130`,\n    sei.qty                                      AS `Qty Sent:Float:90`,\n    COALESCE((\n        SELECT SUM(sei2.qty)\n        FROM `tabStock Entry` se2\n        JOIN `tabStock Entry Detail` sei2 ON sei2.parent = se2.name\n        WHERE se2.docstatus = 1\n          AND se2.stock_entry_type IN ('Material Transfer', 'Receive at Warehouse')\n          AND se2.outgoing_stock_entry = se.name\n          AND sei2.item_code = sei.item_code\n    ), 0)                                         AS `Qty Received:Float:100`,\n    sei.qty - COALESCE((\n        SELECT SUM(sei2.qty)\n        FROM `tabStock Entry` se2\n        JOIN `tabStock Entry Detail` sei2 ON sei2.parent = se2.name\n        WHERE se2.docstatus = 1\n          AND se2.stock_entry_type IN ('Material Transfer', 'Receive at Warehouse')\n          AND se2.outgoing_stock_entry = se.name\n          AND sei2.item_code = sei.item_code\n    ), 0)                                         AS `Qty Remaining:Float:110`,\n    sei.uom                                       AS `UOM:Data:60`,\n    se.remarks                                    AS `Remarks:Data:220`\nFROM `tabStock Entry` se\nJOIN `tabStock Entry Detail` sei ON sei.parent = se.name\nWHERE se.docstatus = 1\n  AND se.stock_entry_type IN ('Material Transfer', 'Send to Warehouse')\n  AND (sei.t_warehouse = 'Goods In Transit - SCL' OR se.to_warehouse = 'Goods In Transit - SCL')\n  AND (sei.qty - COALESCE((\n        SELECT SUM(sei2.qty)\n        FROM `tabStock Entry` se2\n        JOIN `tabStock Entry Detail` sei2 ON sei2.parent = se2.name\n        WHERE se2.docstatus = 1\n          AND se2.stock_entry_type IN ('Material Transfer', 'Receive at Warehouse')\n          AND se2.outgoing_stock_entry = se.name\n          AND sei2.item_code = sei.item_code\n      ), 0)) > 0.0001\nORDER BY se.posting_date ASC\n",
+  "ref_doctype": "Stock Entry",
+  "report_name": "Inter-Outlet Transit Aging",
+  "report_type": "Query Report",
+  "roles": [
+   {
+    "parent": "Inter-Outlet Transit Aging",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "System Manager"
+   },
+   {
+    "parent": "Inter-Outlet Transit Aging",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Stock Manager"
+   },
+   {
+    "parent": "Inter-Outlet Transit Aging",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Stock User"
+   }
+  ],
+  "snapshot_report": 0,
+  "timeout": 0
+ },
+ {
+  "add_total_row": 0,
+  "add_translate_data": 0,
+  "columns": [],
+  "disable_prepared_report_automation": 0,
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "doctype_to_sync": [],
+  "filters": [],
+  "is_standard": "No",
+  "modified": "2026-09-06 06:29:44.402623",
+  "module": "Stock",
+  "name": "PR Discharge Reconciliation",
+  "prepared_report": 0,
+  "query": "\nSELECT\n    pr.name                              AS `PR:Link/Purchase Receipt:150`,\n    pr.posting_date                       AS `Date:Date:100`,\n    pr.supplier                           AS `Supplier:Link/Supplier:180`,\n    pr.workflow_state                     AS `Workflow:Data:100`,\n    pr.total_qty                          AS `Loaded (kg):Float:100`,\n    COALESCE(pr.total_discharged_qty, 0)  AS `Discharged (kg):Float:110`,\n    COALESCE(pr.remaining_in_git_qty, pr.total_qty)  AS `In GIT (kg):Float:100`,\n    pr.discharge_status                   AS `Discharge:Data:100`,\n    (SELECT COUNT(DISTINCT se.name)\n     FROM `tabStock Entry` se\n     WHERE se.pr_reference_new = pr.name AND se.docstatus = 1)  AS `# SEs:Int:60`,\n    pr.discharge_closed_by                AS `Closed By:Link/User:140`,\n    pr.discharge_closed_at                AS `Closed At:Datetime:140`\nFROM `tabPurchase Receipt` pr\nWHERE pr.docstatus = 1\nORDER BY pr.posting_date DESC, pr.creation DESC\n",
+  "ref_doctype": "Purchase Receipt",
+  "report_name": "PR Discharge Reconciliation",
+  "report_type": "Query Report",
+  "roles": [
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Accounts User"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Purchase User"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Stock Manager"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Stock User"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "LPG Head of Finance"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "LPG Head of Operations"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "Accounts Manager"
+   },
+   {
+    "parent": "PR Discharge Reconciliation",
+    "parentfield": "roles",
+    "parenttype": "Report",
+    "role": "LPG Plant Manager"
+   }
+  ],
+  "snapshot_report": 0,
+  "timeout": 0
+ },
+ {
+  "add_total_row": 0,
+  "add_translate_data": 0,
+  "columns": [],
+  "disable_prepared_report_automation": 0,
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "doctype_to_sync": [],
+  "filters": [],
+  "is_standard": "No",
+  "modified": "2026-11-11 07:15:49.025110",
   "module": "Sungas",
   "name": "Transit Loss Recovery Aging",
   "prepared_report": 0,
   "query": "\nSELECT\n    c.name                              AS `Case ID:Link/Transit Loss Variance Case:150`,\n    c.opening_date                       AS `Opened:Date:100`,\n    DATEDIFF(CURDATE(), c.opening_date)  AS `Days Open:Int:80`,\n    c.workflow_state                     AS `Status:Data:100`,\n    c.resolution                         AS `Resolution:Data:140`,\n    c.hauler_type                        AS `Hauler Type:Data:100`,\n    COALESCE(c.hauler, c.in_house_driver) AS `Culpable Party:Data:160`,\n    c.qty_dispatched                     AS `Dispatched:Float:100`,\n    c.qty_received                       AS `Received:Float:100`,\n    (c.qty_dispatched - c.qty_received)  AS `Shortfall Qty:Float:100`,\n    c.value_variance                     AS `Value NGN:Currency/NGN:120`,\n    c.resolution_journal_entry           AS `Recovery JE:Link/Journal Entry:150`,\n    c.assigned_to                        AS `Assigned To:Link/User:180`\nFROM `tabTransit Loss Variance Case` c\nWHERE c.docstatus < 2\nORDER BY c.docstatus ASC, c.opening_date DESC\n",
   "ref_doctype": "Transit Loss Variance Case",
-  "reference_report": null,
   "report_name": "Transit Loss Recovery Aging",
-  "report_script": null,
   "report_type": "Query Report",
   "roles": [
    {
-    "doctype": "Has Role",
-    "name": "4c7icnh5li",
     "parent": "Transit Loss Recovery Aging",
     "parentfield": "roles",
     "parenttype": "Report",
     "role": "System Manager"
    },
    {
-    "doctype": "Has Role",
-    "name": "4c7iprs9lj",
     "parent": "Transit Loss Recovery Aging",
     "parentfield": "roles",
     "parenttype": "Report",
@@ -48,70 +157,58 @@
   "columns": [],
   "disable_prepared_report_automation": 0,
   "disabled": 0,
+  "docstatus": 0,
   "doctype": "Report",
   "doctype_to_sync": [],
   "filters": [],
   "is_standard": "No",
-  "javascript": null,
-  "json": null,
-  "letter_head": null,
+  "modified": "2026-06-18 09:00:00",
   "module": "Sungas",
   "name": "IFRS Stock Classification",
   "prepared_report": 0,
   "query": "SELECT\n    COALESCE(NULLIF(i.sungas_ifrs_category, ''), '(not classified)') AS `IFRS Category:Data:280`,\n    COUNT(DISTINCT b.item_code)                                    AS `Items:Int:80`,\n    SUM(b.actual_qty)                                              AS `Qty on Hand:Float:130`,\n    SUM(b.stock_value)                                             AS `Stock Value:Currency:170`\nFROM `tabBin` b\nJOIN `tabItem` i ON i.name = b.item_code\nGROUP BY 1\nORDER BY 1",
   "ref_doctype": "Item",
-  "reference_report": null,
   "report_name": "IFRS Stock Classification",
-  "report_script": null,
   "report_type": "Query Report",
   "roles": [
    {
-    "doctype": "Has Role",
-    "role": "System Manager",
     "parent": "IFRS Stock Classification",
     "parentfield": "roles",
-    "parenttype": "Report"
+    "parenttype": "Report",
+    "role": "System Manager"
    },
    {
-    "doctype": "Has Role",
-    "role": "LPG Head of Finance",
     "parent": "IFRS Stock Classification",
     "parentfield": "roles",
-    "parenttype": "Report"
+    "parenttype": "Report",
+    "role": "LPG Head of Finance"
    },
    {
-    "doctype": "Has Role",
-    "role": "Accounts Manager",
     "parent": "IFRS Stock Classification",
     "parentfield": "roles",
-    "parenttype": "Report"
+    "parenttype": "Report",
+    "role": "Accounts Manager"
    },
    {
-    "doctype": "Has Role",
-    "role": "Accounts User",
     "parent": "IFRS Stock Classification",
     "parentfield": "roles",
-    "parenttype": "Report"
+    "parenttype": "Report",
+    "role": "Accounts User"
    },
    {
-    "doctype": "Has Role",
-    "role": "Stock Manager",
     "parent": "IFRS Stock Classification",
     "parentfield": "roles",
-    "parenttype": "Report"
+    "parenttype": "Report",
+    "role": "Stock Manager"
    },
    {
-    "doctype": "Has Role",
-    "role": "COO",
     "parent": "IFRS Stock Classification",
     "parentfield": "roles",
-    "parenttype": "Report"
+    "parenttype": "Report",
+    "role": "COO"
    }
   ],
   "snapshot_report": 0,
-  "timeout": 0,
-  "modified": "2026-06-18 09:00:00.000000",
-  "creation": null,
-  "owner": null
+  "timeout": 0
  }
 ]

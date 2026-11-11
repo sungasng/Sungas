@@ -1,37 +1,114 @@
 [
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-05-22 07:13:08.239153",
+  "name": "Forward to HR",
+  "workflow_action_name": "Forward to HR"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-22 07:13:08.241305",
+  "name": "Forward to Head of Finance",
+  "workflow_action_name": "Forward to Head of Finance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-22 07:13:08.243244",
+  "name": "Forward to Internal Control",
+  "workflow_action_name": "Forward to Internal Control"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-22 07:13:08.245241",
+  "name": "Forward to COO",
+  "workflow_action_name": "Forward to COO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-06 06:31:22.314057",
+  "name": "Submit",
+  "workflow_action_name": "Submit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-06 15:28:33.177288",
+  "name": "Approve & Submit",
+  "workflow_action_name": "Approve & Submit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-06 15:29:46.638192",
+  "name": "Reject with Query",
+  "workflow_action_name": "Reject with Query"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-06 15:31:10.323529",
+  "name": "Resume Investigation",
+  "workflow_action_name": "Resume Investigation"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.222753",
   "name": "Approve",
   "workflow_action_name": "Approve"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.234731",
   "name": "Escalate to Finance",
   "workflow_action_name": "Escalate to Finance"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.244888",
   "name": "Reject",
   "workflow_action_name": "Reject"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.254676",
   "name": "Reopen",
   "workflow_action_name": "Reopen"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.264076",
   "name": "Submit for Approval",
   "workflow_action_name": "Submit for Approval"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.273440",
   "name": "Start Investigation",
   "workflow_action_name": "Start Investigation"
  },
  {
+  "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-11-11 07:15:50.283463",
   "name": "Request HoF Write-Off Approval",
   "workflow_action_name": "Request HoF Write-Off Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-06 15:27:13.042359",
+  "name": "HOD Ops Sign-off",
+  "workflow_action_name": "HOD Ops Sign-off"
  }
 ]

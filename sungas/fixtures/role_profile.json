@@ -1,0 +1,182 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-05-18 02:35:26.542877",
+  "name": "LPG Head of Sales",
+  "role_profile": "LPG Head of Sales",
+  "roles": [
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Sales User"
+   },
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Stock User"
+   },
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Accounts User"
+   },
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG POS User"
+   },
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG Plant Manager"
+   },
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG Head of Sales"
+   },
+   {
+    "parent": "LPG Head of Sales",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Sales Manager"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-05-18 02:35:26.564555",
+  "name": "LPG Head of Finance",
+  "role_profile": "LPG Head of Finance",
+  "roles": [
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Sales User"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Stock User"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Accounts User"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG POS User"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG Plant Manager"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG Head of Sales"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG Head of Finance"
+   },
+   {
+    "parent": "LPG Head of Finance",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Accounts Manager"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-05-18 02:35:26.470322",
+  "name": "LPG POS User",
+  "role_profile": "LPG POS User",
+  "roles": [
+   {
+    "parent": "LPG POS User",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Sales User"
+   },
+   {
+    "parent": "LPG POS User",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Stock User"
+   },
+   {
+    "parent": "LPG POS User",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Accounts User"
+   },
+   {
+    "parent": "LPG POS User",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG POS User"
+   }
+  ]
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Role Profile",
+  "modified": "2026-10-04 00:10:28.841564",
+  "name": "LPG Plant Manager",
+  "role_profile": "LPG Plant Manager",
+  "roles": [
+   {
+    "parent": "LPG Plant Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Sales User"
+   },
+   {
+    "parent": "LPG Plant Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Stock User"
+   },
+   {
+    "parent": "LPG Plant Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "Accounts User"
+   },
+   {
+    "parent": "LPG Plant Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG POS User"
+   },
+   {
+    "parent": "LPG Plant Manager",
+    "parentfield": "roles",
+    "parenttype": "Role Profile",
+    "role": "LPG Plant Manager"
+   }
+  ]
+ }
+]

@@ -434,3 +434,23 @@ def _write_manifest(out_dir: str, written: list[tuple[str, int]]) -> None:
     }
     with open(os.path.join(out_dir, "_manifest.json"), "w") as f:
         json.dump(manifest, f, indent=2, default=str)
+
+
+def export_from_hooks(out_dir: str) -> list[str]:
+    """Patch 0027: dump exactly what hooks.py `fixtures` tracks, in
+    `bench export-fixtures` format. Used by the daily drift audit so it
+    compares like with like."""
+    from frappe.core.doctype.data_import.data_import import export_json
+
+    os.makedirs(out_dir, exist_ok=True)
+    written = []
+    for fx in frappe.get_hooks("fixtures", app_name="sungas"):
+        filters = or_filters = None
+        if isinstance(fx, dict):
+            filters, or_filters = fx.get("filters"), fx.get("or_filters")
+            fx = fx.get("doctype") or fx.get("dt")
+        fname = frappe.scrub(fx) + ".json"
+        export_json(fx, os.path.join(out_dir, fname), filters=filters, or_filters=or_filters,
+                    order_by="idx asc, creation asc")
+        written.append(fname)
+    return written

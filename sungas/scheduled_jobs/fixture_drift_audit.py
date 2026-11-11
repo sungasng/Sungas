@@ -45,7 +45,7 @@ def run() -> dict:
 
         with tempfile.TemporaryDirectory(prefix="sungas_drift_") as tmp:
             try:
-                exporter.export_all(tmp)
+                exporter.export_from_hooks(tmp)  # Patch 0027: same list as hooks.py fixtures
             except Exception:
                 summary["errors"].append("exporter_failed")
                 frappe.log_error(
@@ -84,15 +84,19 @@ def run() -> dict:
     return summary
 
 
-VOLATILE = {"modified", "creation", "owner", "modified_by", "idx"}
+VOLATILE = {"modified", "creation", "owner", "modified_by", "idx", "lft", "rgt", "docstatus"}
+CHILD_VOLATILE = VOLATILE | {"doctype", "name", "parent", "parentfield", "parenttype"}
 
 
-def _strip_volatile(data):
-    """Patch 0023: timestamps / ordering-only changes are not drift."""
+def _strip_volatile(data, child=False):
+    """Patch 0023: timestamps / ordering-only changes are not drift.
+    Patch 0027: empty values and child-row bookkeeping are not drift either."""
     if isinstance(data, list):
-        return [_strip_volatile(x) for x in data]
+        return [_strip_volatile(x, child) for x in data]
     if isinstance(data, dict):
-        return {k: _strip_volatile(v) for k, v in data.items() if k not in VOLATILE}
+        skip = CHILD_VOLATILE if child else VOLATILE
+        return {k: _strip_volatile(v, True) for k, v in data.items()
+                if k not in skip and v not in (None, "", 0, [])}
     return data
 
 
