@@ -2,7 +2,8 @@
 
 Any POS Invoice, or Sales Invoice raised from the till (is_pos), with an item
 line at price 0 is refused until the price is set. Returns and consolidated
-invoices are skipped. Respects the Sungas Pricing Policy master switch.
+invoices are skipped. Patch 0026: always on, independent of the Sungas
+Pricing Policy master switch (which is off on live).
 """
 from __future__ import annotations
 
@@ -24,8 +25,6 @@ def block_zero_price(doc, method=None):
     if doc.get("is_return") or doc.get("is_consolidated"):
         return
     if doc.doctype == "Sales Invoice" and not doc.get("is_pos"):
-        return
-    if not frappe.db.get_single_value("Sungas Pricing Policy", "policy_enabled"):
         return
     bad = zero_price_items(doc.get("items"))
     if bad:
