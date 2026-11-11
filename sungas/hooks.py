@@ -360,6 +360,8 @@ user_data_fields = [
 
 # Governance fixtures -- Patch 0027 aligned with live (live wins). Run
 # `python3 scripts/build_patch_0027_align.py` (agent) or `bench export-fixtures --app sungas`.
+# Governance fixtures -- Patch 0027 aligned with live (live wins). Run
+# `python3 scripts/build_patch_0027_align.py` (agent) or `bench export-fixtures --app sungas`.
 fixtures = [
     {
         "dt": "Custom Field",
@@ -463,6 +465,7 @@ fixtures = [
                     "HR Manager",
                     "HR User",
                     "Inbox User",
+                    "Internal Control",
                     "Item Manager",
                     "LPG Head of Finance",
                     "LPG Head of Operations",
@@ -545,6 +548,7 @@ fixtures = [
                     "Job Applicant",
                     "Journal Entry",
                     "LPG Outlet Price Tier",
+                    "LPG Price Change Request",
                     "Leave Allocation",
                     "Leave Application",
                     "Leave Type",
