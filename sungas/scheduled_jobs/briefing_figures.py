@@ -153,8 +153,9 @@ def missing_section(whs, missing: dict) -> str:
             f"<p>These cannot be sold at the till until a price is set.</p><ul>{lis}</ul>{more}")
 
 
-def for_user(user: str, roles: set, day: str, figs: dict, missing: dict | None = None):
-    """Returns (html, has_content); (None, False) for a plant manager with no plant."""
+def for_user(user: str, roles: set, day: str, figs: dict, missing: dict | None = None, policy_log: str = ""):
+    """Returns (html, has_content); (None, False) for a plant manager with no plant.
+    policy_log (Patch 0028) is shown to heads only."""
     missing = missing or {}
     whs = outlets_for(user, roles)
     if whs is not None and not whs:
@@ -169,5 +170,6 @@ def for_user(user: str, roles: set, day: str, figs: dict, missing: dict | None =
         if len(whs) > 1:
             rows.append(("Total", scope, True))
     gaps = missing_section(whs, missing)
-    has = bool(gaps) or any(scope[p][k] for p in PERIODS for k in ("sales", "losses"))
-    return table(day, rows, scope) + gaps, has
+    log = policy_log if whs is None else ""
+    has = bool(gaps or log) or any(scope[p][k] for p in PERIODS for k in ("sales", "losses"))
+    return table(day, rows, scope) + gaps + log, has

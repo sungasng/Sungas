@@ -109,6 +109,7 @@ def _sent_today(user: str) -> bool:
 def run() -> dict:
     from sungas.scheduled_jobs.briefing_figures import figures, for_user
     from sungas.scheduled_jobs.missing_prices import missing_by_warehouse
+    from sungas.scheduled_jobs.policy_changes import recent_changes, section
     from sungas.utils.bell import ring
 
     summary = {"managers": 0, "briefed": 0}
@@ -116,6 +117,7 @@ def run() -> dict:
     day = add_days(nowdate(), -1)
     figs = figures(day)
     missing = missing_by_warehouse(nowdate())
+    policy_log = section(recent_changes())
     for user in _managers():
         summary["managers"] += 1
         if _sent_today(user):
@@ -123,7 +125,7 @@ def run() -> dict:
         roles = set(frappe.get_roles(user))
         approvals = _approvals_for(user, roles, acts)
         tasks = _tasks_for(user)
-        figline, has_figs = for_user(user, roles, day, figs, missing)
+        figline, has_figs = for_user(user, roles, day, figs, missing, policy_log)
         if not approvals and not tasks and not has_figs:
             continue
         subj = subject(len(approvals), len(tasks))

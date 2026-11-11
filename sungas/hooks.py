@@ -86,6 +86,8 @@ after_migrate = [
     "sungas.scheduled_jobs.variance_case_ageing.fix_iovc_writeoff_account",
     # Patch 0025: "No morning briefing" tick on User; service accounts ticked once.
     "sungas.scheduled_jobs.morning_briefing.ensure_skip_field",
+    # Patch 0028: no automatic Item Price creation from typed rates.
+    "sungas.overrides.price_edit_lock.ensure_no_auto_price_insert",
 ]
 
 # Desk Notifications
@@ -136,6 +138,15 @@ override_doctype_class = {
 doc_events = {
     "Customer": {
         'validate': 'sungas.controllers.customer.validate_customer'
+    },
+    # Patch 0028 -- selling prices change only via approved PCR / Bulk Upload.
+    "LPG Outlet Price Tier": {
+        'validate': 'sungas.overrides.price_edit_lock.block_direct_edit',
+        'on_trash': 'sungas.overrides.price_edit_lock.block_direct_edit',
+    },
+    "Item Price": {
+        'validate': 'sungas.overrides.price_edit_lock.block_direct_edit',
+        'on_trash': 'sungas.overrides.price_edit_lock.block_direct_edit',
     },
     "Item": {
         'autoname': 'sungas.controllers.item.item_name',
