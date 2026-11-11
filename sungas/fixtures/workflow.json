@@ -745,7 +745,7 @@
    {
     "allow_edit": "System Manager",
     "avoid_status_override": 0,
-    "doc_status": "1",
+    "doc_status": "0",
     "is_optional_state": 0,
     "parent": "LPG Bulk Price Upload Approval",
     "parentfield": "states",

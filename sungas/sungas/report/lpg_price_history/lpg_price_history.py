@@ -22,7 +22,7 @@ MATCH_SECONDS = 600
 def execute(filters=None):
     f = frappe._dict(filters or {})
     rows = pcr_rows(f) + bulk_rows(f)
-    rows += direct_rows(f, {(r["tier"], r["_approved"]) for r in rows if r.get("tier")})
+    rows += direct_rows(f, {(r["tier"], r["_approved"]) for r in rows if r.get("tier")}, list(rows))
     rows = [r for r in rows if _in_scope(r, f, allowed_territories(frappe.session.user))]
     rows.sort(key=lambda r: (r["_approved"] or get_datetime("1900-01-01")), reverse=True)
     names = {}
@@ -121,7 +121,20 @@ def is_route_change(tier, at, routed) -> bool:
     return any(t == tier and ap and abs(time_diff_in_seconds(at, ap)) <= MATCH_SECONDS for t, ap in routed)
 
 
-def direct_rows(f, routed) -> list[dict]:
+CARRY = ("requested_by", "plant_manager", "plant_manager_on", "head_of_sales", "head_of_sales_on",
+         "head_of_finance", "head_of_finance_on", "reason", "ref_doctype", "ref_name")
+
+
+def cascade_event(d, at, events):
+    """Patch 0030: a plant tier changed within MATCH_SECONDS of an approved regional/national row."""
+    for ev in events:
+        if ev["item_code"] == d.item_code and ev["customer_group"] == d.customer_group and ev["_approved"] \
+                and ev.get("territory") != d.territory and abs(time_diff_in_seconds(at, ev["_approved"])) <= MATCH_SECONDS:
+            return ev
+    return None
+
+
+def direct_rows(f, routed, events=()) -> list[dict]:
     out = []
     span = _span(f)
     for dt, rate_field, route in (("LPG Outlet Price Tier", "rate", "Direct / system (tier)"),
@@ -145,7 +158,11 @@ def direct_rows(f, routed) -> list[dict]:
             at = get_datetime(v.creation)
             if not (getdate(f.from_date) <= at.date() <= getdate(f.to_date)) or (is_tier and is_route_change(v.docname, at, routed)):
                 continue
-            out.append(_direct(d, is_tier, at, v.owner, _rate(ch[0][1]), _rate(ch[0][2]), route, dt))
+            row = _direct(d, is_tier, at, v.owner, _rate(ch[0][1]), _rate(ch[0][2]), route, dt)
+            ev = cascade_event(d, at, events) if is_tier else None
+            if ev:
+                row.update({k: ev.get(k) for k in CARRY}, route=f"{ev['route']} (applied from {ev.get('territory') or 'national'})")
+            out.append(row)
         for name, d in docs.items():
             at = get_datetime(d.creation)
             if span[1][0] <= str(at) <= span[1][1] and not (is_tier and is_route_change(name, at, routed)):

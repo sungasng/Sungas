@@ -36,6 +36,8 @@ doctype_js = {
     "Delivery Trip": "public/js/delivery_trip.js",
     "POS Closing Shift": "public/js/pos_closing_shift.js",
     "Payroll Entry": "public/js/payroll_entry.js",
+    # Patch 0030: pre-filled price template download
+    "LPG Bulk Price Upload": "public/js/lpg_bulk_price_upload.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -147,6 +149,13 @@ doc_events = {
     "Item Price": {
         'validate': 'sungas.overrides.price_edit_lock.block_direct_edit',
         'on_trash': 'sungas.overrides.price_edit_lock.block_direct_edit',
+    },
+    # Patch 0030 -- approved regional / national price replaces plant prices below it.
+    "LPG Bulk Price Upload": {
+        'on_submit': 'sungas.overrides.price_cascade.on_bulk_approved',
+    },
+    "LPG Price Change Request": {
+        'on_submit': 'sungas.overrides.price_cascade.on_pcr_approved',
     },
     "Item": {
         'autoname': 'sungas.controllers.item.item_name',
