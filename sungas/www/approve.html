@@ -1,0 +1,57 @@
+{% extends "templates/web.html" %}
+{% block title %}Sungas approval{% endblock %}
+{% block page_content %}
+<style>
+  .sg-wrap { max-width: 520px; margin: 24px auto; padding: 0 16px; font-size: 16px; }
+  .sg-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #fff; }
+  .sg-rows { width: 100%; border-collapse: collapse; margin: 12px 0 16px; }
+  .sg-rows td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  .sg-rows td:first-child { color: #64748b; width: 40%; }
+  .sg-btn { display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px; font-size: 17px; font-weight: 600; margin-top: 10px; }
+  .sg-ok { background: #15803d; color: #fff; } .sg-no { background: #fff; color: #b91c1c; border: 2px solid #b91c1c; }
+  .sg-note { width: 100%; min-height: 70px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; }
+  .sg-msg { padding: 14px; border-radius: 10px; margin-top: 12px; display: none; }
+</style>
+<div class="sg-wrap">
+  <div class="sg-card" data-testid="approval-card">
+  {% if ok %}
+    <div style="color:#64748b">Hello {{ approver }}</div>
+    <h3 style="margin:4px 0" data-testid="approval-title">{{ title }}</h3>
+    <div style="color:#b45309;font-weight:600">{{ state }}</div>
+    <table class="sg-rows">{% for k, v in rows %}<tr><td>{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table>
+    <textarea class="sg-note" id="sg-note" data-testid="approval-note" placeholder="Note (required to reject)"></textarea>
+    <button class="sg-btn sg-ok" data-testid="approval-approve-btn" onclick="sgAct('Approve')">Approve</button>
+    <button class="sg-btn sg-no" data-testid="approval-reject-btn" onclick="sgAct('Reject')">Reject</button>
+    <div class="sg-msg" id="sg-msg" data-testid="approval-result"></div>
+    <p style="margin-top:16px;font-size:13px"><a href="{{ desk_url }}">Open full details in the ERP (login)</a> &middot; this link works once and expires 24 hours after it was sent.</p>
+  {% else %}
+    <h3 data-testid="approval-invalid">{{ reason }}</h3>
+  {% endif %}
+  </div>
+</div>
+{% if ok %}
+<script>
+  function sgAct(action) {
+    const note = document.getElementById("sg-note").value.trim();
+    const msg = document.getElementById("sg-msg");
+    if (action === "Reject" && !note) { alert("Please type a reason for rejecting."); return; }
+    if (!confirm(action + " {{ title }}?")) return;
+    document.querySelectorAll(".sg-btn").forEach((b) => (b.disabled = true));
+    fetch("/api/method/sungas.approval_link.act", {
+      method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ t: {{ token|tojson }}, action: action, note: note }),
+    }).then((r) => r.json().then((d) => ({ ok: r.ok, d })))
+      .then(({ ok, d }) => {
+        msg.style.display = "block";
+        if (ok) { msg.style.background = "#dcfce7"; msg.textContent = d.message.message; }
+        else {
+          let err = "Could not record your decision.";
+          try { err = JSON.parse(JSON.parse(d._server_messages)[0]).message; } catch (e) {}
+          msg.style.background = "#fee2e2"; msg.innerHTML = err;
+          document.querySelectorAll(".sg-btn").forEach((b) => (b.disabled = false));
+        }
+      });
+  }
+</script>
+{% endif %}
+{% endblock %}

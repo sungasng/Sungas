@@ -1,7 +1,7 @@
 """Patch 0032 -- customer group gate owned by the Commercial Desk.
 
 * New customers are always Retail (till, desk, import) unless created by the Commercial Desk.
-* Only the Commercial Desk (and System Manager) can change a customer's group; a reason is
+* Only the Commercial Desk, Head of Sales / Deputy (and System Manager) can change a customer's group; a reason is
   required and every change is logged as an approved Customer Group Change Request.
 * Everyone else raises a Customer Group Change Request; the desk approves / rejects it.
   Pending > 48 h nudges Head of Sales. Alerts go by bell, email and WhatsApp.
@@ -13,8 +13,9 @@ from frappe import _
 from frappe.utils import add_to_date, now_datetime
 
 DESK_ROLE = "LPG Commercial Desk"
-SETTER_ROLES = {DESK_ROLE, "System Manager"}
 HOS_ROLES = ("LPG Head of Sales", "LPG Deputy Head of Sales")
+SETTER_ROLES = {DESK_ROLE, "System Manager", *HOS_ROLES}
+LOCKED_FIELDS = ("customer_group", "sungas_account_owner", "sungas_expected_monthly_kg")
 DEFAULT_GROUP = "Retail"
 CGCR = "Customer Group Change Request"
 ESCALATE_HOURS = 48
@@ -69,11 +70,16 @@ def enforce_customer_group(doc, method=None):
             doc.customer_group = DEFAULT_GROUP
         return
     before = doc.get_doc_before_save()
-    if not before or before.customer_group == doc.customer_group:
+    if not before:
+        return
+    if not allowed and any((before.get(f) or None) != (doc.get(f) or None) for f in LOCKED_FIELDS[1:]):
+        frappe.throw(_("Only the Commercial Desk or Head of Sales can change the account owner or kg target."),
+                     title=_("Commercial Desk Fields Locked"))
+    if before.customer_group == doc.customer_group:
         return
     if not allowed:
-        frappe.throw(_("Only the Commercial Desk can change a customer's group. Use <b>Request Group Change</b> "
-                       "on the customer (or in the till) and the desk will review it."),
+        frappe.throw(_("Only the Commercial Desk or Head of Sales can change a customer's group. Use "
+                       "<b>Request Group Change</b> on the customer (or in the till) and the desk will review it."),
                      title=_("Customer Group Locked"))
     if not (doc.get("sungas_group_change_reason") or "").strip():
         frappe.throw(_("Enter a <b>Reason for group change</b> before changing the customer group."),
@@ -127,9 +133,18 @@ def notify_new_request(doc):
             "state": "Pending Commercial Desk", "link": _link(doc.name)})
 
 
+def plant_manager_for(pos_profile, requester):
+    """Default account owner: manager of the plant that raised the request."""
+    wh = frappe.db.get_value("POS Profile", pos_profile, "warehouse") if pos_profile else None
+    if not wh and requester:
+        wh = (frappe.get_all("Warehouse", or_filters={"outlet_plant_manager": requester,
+                                                      "outlet_secondary_manager": requester}, pluck="name") or [None])[0]
+    return frappe.db.get_value("Warehouse", wh, "outlet_plant_manager") if wh else None
+
+
 def _decide(name, status, note):
     if not can_set_group(frappe.get_roles()):
-        frappe.throw(_("Only the Commercial Desk can decide group change requests."), frappe.PermissionError)
+        frappe.throw(_("Only the Commercial Desk or Head of Sales can decide group change requests."), frappe.PermissionError)
     doc = frappe.get_doc(CGCR, name)
     if doc.status != "Pending":
         frappe.throw(_("This request is already {0}.").format(doc.status))
@@ -146,7 +161,7 @@ def _decide(name, status, note):
         if doc.expected_monthly_kg:
             cust.sungas_expected_monthly_kg = doc.expected_monthly_kg
         if doc.requested_group != DEFAULT_GROUP and not cust.get("sungas_account_owner"):
-            cust.sungas_account_owner = frappe.session.user
+            cust.sungas_account_owner = plant_manager_for(doc.requested_from, doc.requested_by) or frappe.session.user
         cust.flags.sungas_group_change_ok = True
         cust.save(ignore_permissions=True)
     _notify_requester(doc)
@@ -228,6 +243,7 @@ def weekly_digest():
              (d.current_group != DEFAULT_GROUP and d.requested_group == DEFAULT_GROUP))]
     accts = account_rows(today)
     dormant = [a for a in accts if a["dormant"]]
+    behind = [a for a in accts if a["status"] == "Behind"]
     prospects = prospect_rows(30)
     leaks = [r for r in leakage_rows(add_days(today, -7), add_days(today, -1)) if r["flag"]]
 
@@ -241,21 +257,27 @@ def weekly_digest():
             f"<p>Requests waiting: <b>{len(pending)}</b>{oldest}<br>"
             f"Decided last week: {approved} approved, {len(decided) - approved} rejected; "
             f"{len(watch)} to watch (downgrades to Retail or moves to Distributors)<br>"
-            f"Commercial / Distributors accounts: {len(accts)}, dormant over 30 days: <b>{len(dormant)}</b></p>"
+            f"Commercial / Distributors accounts: {len(accts)}, dormant over 30 days: <b>{len(dormant)}</b>, "
+            f"behind kg target: <b>{len(behind)}</b></p>"
+            "<h4>Behind target this month</h4>" +
+            lst(behind, lambda r: "{0}: {1:,.0f} of {2:,.0f} kg so far ({3})".format(
+                r["customer_name"] or r["customer"], r["kg_mtd"], r["target_to_date"], r["account_owner"] or "no owner")) +
             "<h4>Dormant accounts</h4>" + lst(dormant, lambda r: r["customer_name"] or r["customer"]) +
             "<h4>Upgrade prospects (Retail, 200+ kg in 30 days)</h4>" +
             lst(prospects, lambda r: "{0}: {1:,.0f} kg".format(r["customer"], r["kg"])) +
             "<h4>Leakage watch (3+ invoices in a day on one account at one till)</h4>" +
             lst(leaks, lambda r: "{0} at {1} ({2} in one day)".format(r["customer"], r["plant"], r["max_per_day"])) +
             f'<p><a href="{frappe.utils.get_url("/app/sungas-commercial-desk")}">Open the Commercial Desk</a></p>')
-    subj = f"Commercial Desk weekly - {len(pending)} waiting, {len(dormant)} dormant, {len(leaks)} to check"
+    subj = (f"Commercial Desk weekly - {len(pending)} waiting, {len(behind)} behind target, "
+            f"{len(dormant)} dormant, {len(leaks)} to check")
     users = sorted(set(desk_users()) | set(_users_with(HOS_ROLES)))
     for u in users:
         ring([u], subj, body)
     if users:
         frappe.sendmail(recipients=[frappe.db.get_value("User", u, "email") or u for u in users],
                         subject=f"[SCL] {subj}", message=body, now=False)
-    return {"recipients": len(users), "pending": len(pending), "dormant": len(dormant), "leaks": len(leaks)}
+    return {"recipients": len(users), "pending": len(pending), "behind": len(behind), "dormant": len(dormant),
+            "leaks": len(leaks)}
 
 
 # -- Install (after_migrate) -------------------------------------------------
@@ -264,9 +286,11 @@ CUSTOMER_FIELDS = [
     {"fieldname": "sungas_commercial_section", "fieldtype": "Section Break", "label": "Commercial Desk",
      "insert_after": "customer_group", "collapsible": 1},
     {"fieldname": "sungas_account_owner", "fieldtype": "Link", "options": "User", "label": "Account Owner",
-     "insert_after": "sungas_commercial_section", "description": "Commercial Desk member responsible for this account."},
-    {"fieldname": "sungas_expected_monthly_kg", "fieldtype": "Float", "label": "Expected kg / month",
-     "insert_after": "sungas_account_owner"},
+     "insert_after": "sungas_commercial_section",
+     "description": "Defaults to the manager of the plant that raised the upgrade; the desk can change it."},
+    {"fieldname": "sungas_expected_monthly_kg", "fieldtype": "Float", "label": "Monthly kg Target",
+     "insert_after": "sungas_account_owner",
+     "description": "Standing monthly target. Behind = this month's kg below the target for the days gone."},
     {"fieldname": "sungas_group_change_reason", "fieldtype": "Small Text", "label": "Reason for group change",
      "insert_after": "sungas_expected_monthly_kg",
      "description": "Required when the Commercial Desk changes the customer group."},

@@ -1,7 +1,7 @@
 // Patch 0032 -- Commercial Desk approves / rejects group change requests.
 frappe.ui.form.on("Customer Group Change Request", {
 	refresh(frm) {
-		const desk = frappe.user.has_role("LPG Commercial Desk") || frappe.user.has_role("System Manager");
+		const desk = ["LPG Commercial Desk", "LPG Head of Sales", "LPG Deputy Head of Sales", "System Manager"].some((r) => frappe.user.has_role(r));
 		if (frm.is_new() || frm.doc.status !== "Pending" || !desk) return;
 		const decide = (method, title, reqd) =>
 			frappe.prompt(

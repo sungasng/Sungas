@@ -60,13 +60,31 @@ def account_rows(day=None) -> list[dict]:
     for a in accts:
         exp = flt(a.sungas_expected_monthly_kg)
         since = date_diff(day, last[a.name]) if a.name in last else None
+        to_date = target_to_date(exp, day)
+        kg = mtd.get(a.name, 0.0)
         out.append({"customer": a.name, "customer_name": a.customer_name, "customer_group": a.customer_group,
                     "account_owner": a.sungas_account_owner, "expected_kg": exp, "kg_mtd": mtd.get(a.name, 0.0),
                     "kg_last_month": lm.get(a.name, 0.0),
                     "pct_of_expected": round(mtd.get(a.name, 0.0) * 100 / exp, 1) if exp else None,
                     "last_purchase": last.get(a.name), "days_since": since,
-                    "dormant": 1 if since is None or since > DORMANT_DAYS else 0})
+                    "dormant": 1 if since is None or since > DORMANT_DAYS else 0,
+                    "target_to_date": to_date, "gap_kg": round(kg - to_date, 1) if exp else None,
+                    "status": target_status(kg, exp, day)})
     return sorted(out, key=lambda r: (-r["dormant"], -(r["days_since"] or 9999), r["customer_name"] or ""))
+
+
+def target_to_date(target, day) -> float:
+    """Target pro-rated to the days gone this month (today included)."""
+    import calendar
+
+    day = getdate(day)
+    return round(flt(target) * day.day / calendar.monthrange(day.year, day.month)[1], 1)
+
+
+def target_status(kg_mtd, target, day) -> str:
+    if not flt(target):
+        return "No Target"
+    return "Behind" if flt(kg_mtd) < target_to_date(target, day) else "On Track"
 
 
 def prospect_rows(days=30, min_kg=PROSPECT_MIN_KG, day=None) -> list[dict]:

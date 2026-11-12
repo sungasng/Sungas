@@ -75,11 +75,16 @@ def first_name(user) -> str:
 def workflow_alert(doctype, name, users, state, actions, actor):
     if doctype not in WA_DOCTYPES:
         return
+    from sungas.approval_link import link_for
+
     for user in users:
+        if not phone_for(user):
+            continue
+        link = link_for(user, doctype, name, state, actions) or doc_url(doctype, name)
         send([user], "sungas_approval_needed", {
             "approver_name": first_name(user), "doc_label": f"{doctype} {name}",
             "summary": f"Raised/moved by {frappe.db.get_value('User', actor, 'full_name') or actor}",
-            "state": f"{state} ({' / '.join(actions)})", "link": doc_url(doctype, name)},
+            "state": f"{state} ({' / '.join(actions)})", "link": link},
             ref=f"{doctype}:{name}:{state}")
 
 

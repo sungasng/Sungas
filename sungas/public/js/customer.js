@@ -1,8 +1,10 @@
-// Patch 0032 -- customer group is set by the Commercial Desk only.
+// Patch 0032/0033 -- group, account owner and kg target are set by the Commercial Desk / Head of Sales only.
 frappe.ui.form.on("Customer", {
 	refresh(frm) {
-		const desk = frappe.user.has_role("LPG Commercial Desk") || frappe.user.has_role("System Manager");
-		frm.set_df_property("customer_group", "read_only", desk ? 0 : 1);
+		const desk = ["LPG Commercial Desk", "LPG Head of Sales", "LPG Deputy Head of Sales", "System Manager"].some((r) => frappe.user.has_role(r));
+		["customer_group", "sungas_account_owner", "sungas_expected_monthly_kg"].forEach((f) =>
+			frm.set_df_property(f, "read_only", desk ? 0 : 1),
+		);
 		frm.toggle_display("sungas_group_change_reason", desk);
 		if (frm.is_new()) return;
 		frm.add_custom_button(

@@ -45,8 +45,13 @@ def send(po, missing, roles):
                             subject=f"[SCL] {subject}", message=body, now=False)
         except Exception:
             frappe.log_error(frappe.get_traceback(), "sungas.po_approval_alerts email")
+        from sungas.approval_link import make
+
         for u in users:
+            if not whatsapp.phone_for(u):
+                continue
             whatsapp.send([u], "sungas_approval_needed", {
                 "approver_name": whatsapp.first_name(u), "doc_label": f"Purchase Order {po}",
                 "summary": f"{doc.supplier}, NGN {doc.grand_total:,.0f}, Tier {doc.sungas_approval_tier}",
-                "state": f"waiting for {label}", "link": link}, ref=f"PO:{po}:{field}")
+                "state": f"waiting for {label} - tap the link to approve or reject",
+                "link": make(u, "Purchase Order", po, field)}, ref=f"PO:{po}:{field}")
