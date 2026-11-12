@@ -140,12 +140,17 @@ def ring_workflow(doctype: str, name: str, state: str, actor: str):
         return
     transitions = get_next_possible_transitions(workflow, state, doc)
     label = f"{doctype} {name}"
+    from sungas.utils import whatsapp
+
     if transitions:
         for user, data in get_users_next_action_data(transitions, doc).items():
             actions = sorted({a.action_name for a in data.possible_actions})
             ring([user], f"Action needed \u2014 {label} is '{state}' ({' / '.join(actions)})",
                  f"<p><b>{label}</b> moved to <b>{state}</b>. You can: {', '.join(actions)}.</p>",
                  doctype, name, from_user=actor)
+            if user != actor:
+                whatsapp.workflow_alert(doctype, name, [user], state, actions, actor)
     elif doc.owner and doc.owner != actor:
         ring([doc.owner], f"Update \u2014 your {label} is now '{state}'",
              f"<p><b>{label}</b> reached <b>{state}</b>.</p>", doctype, name, from_user=actor)
+        whatsapp.workflow_update(doctype, name, doc.owner, state)

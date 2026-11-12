@@ -1,0 +1,43 @@
+{
+ "add_total_row": 0,
+ "columns": [],
+ "creation": "2026-06-20 00:00:00.000000",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "is_standard": "Yes",
+ "letter_head": "",
+ "modified": "2026-06-20 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Group Upgrade Prospects",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Customer",
+ "report_name": "Group Upgrade Prospects",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "LPG Commercial Desk"
+  },
+  {
+   "role": "LPG Head of Sales"
+  },
+  {
+   "role": "LPG Deputy Head of Sales"
+  },
+  {
+   "role": "LPG Sales Executive"
+  },
+  {
+   "role": "Internal Control"
+  },
+  {
+   "role": "COO"
+  }
+ ]
+}

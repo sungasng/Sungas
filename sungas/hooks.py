@@ -38,6 +38,8 @@ doctype_js = {
     "Payroll Entry": "public/js/payroll_entry.js",
     # Patch 0030: pre-filled price template download
     "LPG Bulk Price Upload": "public/js/lpg_bulk_price_upload.js",
+    # Patch 0032: customer group locked to the Commercial Desk
+    "Customer": "public/js/customer.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -82,6 +84,8 @@ after_migrate = [
     "sungas.utils.verify_governance_fixtures.run",
     # Patch 0020: role landing workspaces + module isolation.
     "sungas.workspaces.install",
+    # Patch 0032: Commercial Desk role, customer fields, workflow emails.
+    "sungas.commercial_desk.install",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -139,7 +143,12 @@ override_doctype_class = {
 
 doc_events = {
     "Customer": {
-        'validate': 'sungas.controllers.customer.validate_customer'
+        'validate': [
+            'sungas.controllers.customer.validate_customer',
+            # Patch 0032 -- group set by the Commercial Desk only; new customers Retail.
+            'sungas.commercial_desk.enforce_customer_group',
+        ],
+        'on_update': 'sungas.commercial_desk.log_direct_change',
     },
     # Patch 0028 -- selling prices change only via approved PCR / Bulk Upload.
     "LPG Outlet Price Tier": {
@@ -239,6 +248,8 @@ doc_events = {
     "Purchase Order": {
         'validate': 'sungas.overrides.purchase_order_matrix.classify_tier',
         'before_submit': 'sungas.overrides.purchase_order_matrix.enforce_tier_approvals',
+        # Patch 0032 -- bell + email + WhatsApp to each missing approver.
+        'on_update': 'sungas.overrides.po_approval_alerts.notify_po_approvers',
     },
     # Patch 0013 (A) -- Transit Loss Write-Off HoF Gate: notify HoF when a
     # case flips to resolution=Written Off and is still unsigned.
@@ -299,6 +310,9 @@ scheduler_events = {
             # Patch 0024 -- 7 AM manager morning briefing (bell + email).
             "sungas.scheduled_jobs.morning_briefing.run",
         ],
+        # Patch 0032 -- Commercial Desk: hourly 48 h nudge, Monday digest.
+        "15 * * * *": ["sungas.commercial_desk.escalate_overdue"],
+        "30 7 * * 1": ["sungas.commercial_desk.weekly_digest"],
         # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
         # 90 min after the open-shift cron. Single indexed query/day,
         # idempotent via variance_sla_escalation_level.

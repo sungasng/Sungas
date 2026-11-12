@@ -26,6 +26,10 @@ PERSONAS = [
     {"key": "hr", "workspace": "Sungas HR Desk", "module": "HR", "icon": "hr",
      "roles": ["LPG Head of HR", "HR Manager", "HR User"],
      "modules": ["HR", "Payroll", "Sungas"]},
+    # Patch 0032: Commercial Desk lands before general sales.
+    {"key": "commercial", "workspace": "Sungas Commercial Desk", "module": "Selling", "icon": "sell",
+     "roles": ["LPG Commercial Desk"],
+     "modules": ["Selling", "CRM", "FCRM", "Stock", "POSAwesome", "Sungas"]},
     {"key": "sales", "workspace": "Sungas Sales", "module": "Selling", "icon": "sell",
      "roles": ["LPG Head of Sales", "LPG Deputy Head of Sales", "LPG Sales Executive", "Sales Manager"],
      "modules": ["Selling", "CRM", "FCRM", "Stock", "POSAwesome", "Sungas"]},
@@ -81,6 +85,11 @@ NEW_CARDS = {
         ["LPG Bulk Price Upload", "docstatus", "=", 0]], color="#f39c12"),
     "Sungas · Leave Applications Open": _card("Leave Application", [
         ["Leave Application", "status", "=", "Open"], ["Leave Application", "docstatus", "=", 0]], color="#27ae60"),
+    "Sungas · Group Requests Pending": _card("Customer Group Change Request", [
+        ["Customer Group Change Request", "status", "=", "Pending"]], color="#e67e22"),
+    "Sungas · Commercial Accounts": _card("Customer", [
+        ["Customer", "customer_group", "in", ["Commercial", "Distributors"]], ["Customer", "disabled", "=", 0]],
+        color="#2980b9"),
 }
 
 COMMON = ["Sungas · My Open Tasks", "Sungas · My Unread Alerts"]
@@ -140,15 +149,30 @@ LAYOUT = {
                       _sc("Attendance", "Attendance"), _sc("Expense Claim", "Expense Claim"),
                       _sc("Salary Slip", "Salary Slip"), _sc("Payroll Entry", "Payroll Entry")],
     },
+    "Sungas Commercial Desk": {
+        "cards": COMMON + ["Sungas · Group Requests Pending", "Sungas · Commercial Accounts",
+                           "Sungas · Price Requests Open"],
+        "charts": ["Top Customers"],
+        "shortcuts": [MY_TASKS,
+                      _sc("Group Change Requests", "Customer Group Change Request", color="Orange",
+                          stats='{"status": "Pending"}'),
+                      _sc("Commercial Accounts", "Commercial Accounts Performance", kind="Report"),
+                      _sc("Upgrade Prospects", "Group Upgrade Prospects", kind="Report", color="Green"),
+                      _sc("Leakage Watch", "Account Leakage Watch", kind="Report", color="Red"),
+                      _sc("Customer", "Customer"), _sc("Sales Invoice", "Sales Invoice")],
+    },
     "Sungas Sales": {
         "cards": COMMON + ["Sungas · Price Requests Open", "Sungas · Bulk Price Uploads Pending",
+                           "Sungas · Group Requests Pending",
                            "Active Customers", "Annual Sales", "Sales Orders to Deliver"],
         "charts": ["Territory Wise Sales", "Top Customers"],
         "shortcuts": [MY_TASKS, POS_APP,
                       _sc("Customer", "Customer"), _sc("Sales Order", "Sales Order"),
                       _sc("Sales Invoice", "Sales Invoice"),
                       _sc("Price Change Requests", "LPG Price Change Request", color="Orange"),
-                      _sc("Bulk Price Upload", "LPG Bulk Price Upload", color="Orange")],
+                      _sc("Bulk Price Upload", "LPG Bulk Price Upload", color="Orange"),
+                      _sc("Group Change Requests", "Customer Group Change Request", color="Orange"),
+                      _sc("Leakage Watch", "Account Leakage Watch", kind="Report", color="Red")],
     },
 }
 
