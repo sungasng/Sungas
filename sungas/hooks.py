@@ -361,6 +361,8 @@ scheduler_events = {
         # Patch 0032 -- Commercial Desk: hourly 48 h nudge, Monday digest.
         "15 * * * *": ["sungas.commercial_desk.escalate_overdue"],
         "30 7 * * 1": ["sungas.commercial_desk.weekly_digest"],
+        # Patch 0034 -- Tuesday 23:00 behind-target nudge (owners + desk portfolio view).
+        "0 23 * * 2": ["sungas.commercial_desk.target_nudge"],
         # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
         # 90 min after the open-shift cron. Single indexed query/day,
         # idempotent via variance_sla_escalation_level.

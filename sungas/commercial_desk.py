@@ -280,6 +280,80 @@ def weekly_digest():
             "leaks": len(leaks)}
 
 
+def _period(day) -> str:
+    import calendar
+
+    return f"{day.strftime('%B')} so far (day {day.day} of {calendar.monthrange(day.year, day.month)[1]})"
+
+
+def nudge_lines(rows, limit=5) -> str:
+    """One line per account (WhatsApp params cannot hold newlines)."""
+    parts = [f"{r['customer_name'] or r['customer']} {r['kg_mtd']:,.0f} of {r['target_to_date']:,.0f} kg"
+             for r in sorted(rows, key=lambda r: r["gap_kg"])[:limit]]
+    more = len(rows) - limit
+    return "; ".join(parts) + (f"; +{more} more" if more > 0 else "")
+
+
+def desk_summary(rows) -> str:
+    targeted = [r for r in rows if r["status"] != "No Target"]
+    behind = [r for r in targeted if r["status"] == "Behind"]
+    kg, due = sum(r["kg_mtd"] for r in targeted), sum(r["target_to_date"] for r in targeted)
+    owners: dict = {}
+    for r in behind:
+        owners[r["account_owner"] or "no owner"] = owners.get(r["account_owner"] or "no owner", 0) + 1
+    worst = ", ".join(f"{o} ({n})" for o, n in sorted(owners.items(), key=lambda x: -x[1])[:3]) or "none"
+    pct = f"{kg * 100 / due:.0f}%" if due else "-"
+    return (f"{len(behind)} of {len(targeted)} targeted accounts behind; portfolio at {pct} of target to date "
+            f"({kg:,.0f} of {due:,.0f} kg, gap {max(due - kg, 0):,.0f} kg); most behind by owner: {worst}; "
+            f"{sum(1 for r in rows if r['status'] == 'No Target')} accounts have no target, "
+            f"{sum(1 for r in rows if not r['account_owner'])} no owner, {sum(r['dormant'] for r in rows)} dormant")
+
+
+def target_nudge():
+    """Tuesday 23:00: each owner gets their behind accounts; the desk gets the portfolio view."""
+    from frappe.utils import escape_html, getdate, nowdate
+    from sungas.commercial_desk_data import account_rows
+
+    day = getdate(nowdate())
+    rows = account_rows(day)
+    link = frappe.utils.get_url("/app/query-report/Commercial Accounts Performance?behind_only=1")
+    period = _period(day)
+    by_owner: dict = {}
+    for r in rows:
+        if r["status"] == "Behind" and r["account_owner"]:
+            by_owner.setdefault(r["account_owner"], []).append(r)
+    sent = 0
+    for owner, mine in by_owner.items():
+        if owner in SERVICE_ACCOUNTS or not frappe.db.get_value("User", owner, "enabled"):
+            continue
+        lines = nudge_lines(mine)
+        subj = f"{len(mine)} of your accounts are behind kg target - {period}"
+        body = f"<p>{escape_html(subj)}:</p><p>{escape_html(lines)}</p><p><a href=\"{link}\">Open the report</a></p>"
+        _notify(owner, subj, body, link, period, f"{len(mine)} accounts behind: {lines}", ref=f"nudge:{day}:{owner}")
+        sent += 1
+    summary = desk_summary(rows)
+    for u in desk_users():
+        subj = f"Commercial portfolio vs kg target - {period}"
+        _notify(u, subj, f"<p>{escape_html(summary)}.</p><p><a href=\"{link}\">Open the report</a></p>", link, period,
+                summary, ref=f"nudge-desk:{day}:{u}")
+    frappe.db.commit()
+    return {"owners": sent, "desk": len(desk_users())}
+
+
+def _notify(user, subj, body, link, period, summary, ref):
+    from sungas.utils import whatsapp
+    from sungas.utils.bell import ring
+
+    ring([user], subj, body)
+    try:
+        frappe.sendmail(recipients=[frappe.db.get_value("User", user, "email") or user],
+                        subject=f"[SCL] {subj}", message=body, now=False)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "sungas.commercial_desk nudge email")
+    whatsapp.send([user], "sungas_target_nudge", {"name": whatsapp.first_name(user), "period": period,
+                                                  "summary": summary, "link": link}, ref=ref)
+
+
 # -- Install (after_migrate) -------------------------------------------------
 
 CUSTOMER_FIELDS = [
