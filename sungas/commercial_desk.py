@@ -227,6 +227,16 @@ def briefing_rows(user, roles, day):
     return pending, changes
 
 
+def _plans_block(today) -> str:
+    try:
+        from sungas.engagement import digest_html
+
+        return digest_html(today)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "sungas.commercial_desk digest plans")
+        return ""
+
+
 def weekly_digest():
     """Monday: Commercial Desk digest (bell + email); Head of Sales gets the same summary."""
     from frappe.utils import add_days, escape_html, nowdate
@@ -267,6 +277,7 @@ def weekly_digest():
             lst(prospects, lambda r: "{0}: {1:,.0f} kg".format(r["customer"], r["kg"])) +
             "<h4>Leakage watch (3+ invoices in a day on one account at one till)</h4>" +
             lst(leaks, lambda r: "{0} at {1} ({2} in one day)".format(r["customer"], r["plant"], r["max_per_day"])) +
+            + _plans_block(today) +
             f'<p><a href="{frappe.utils.get_url("/app/sungas-commercial-desk")}">Open the Commercial Desk</a></p>')
     subj = (f"Commercial Desk weekly - {len(pending)} waiting, {len(behind)} behind target, "
             f"{len(dormant)} dormant, {len(leaks)} to check")

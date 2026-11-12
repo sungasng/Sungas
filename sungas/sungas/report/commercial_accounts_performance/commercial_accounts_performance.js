@@ -4,6 +4,7 @@ frappe.query_reports["Commercial Accounts Performance"] = {
         { fieldname: "as_of", label: __("As Of"), fieldtype: "Date", default: frappe.datetime.get_today(), reqd: 1 },
         { fieldname: "dormant_only", label: __("Dormant Only"), fieldtype: "Check" },
         { fieldname: "behind_only", label: __("Behind Target Only"), fieldtype: "Check" },
+        { fieldname: "account_owner", label: __("Account Owner"), fieldtype: "Link", options: "User" },
     ],
     formatter(value, row, column, data, default_formatter) {
         value = default_formatter(value, row, column, data);

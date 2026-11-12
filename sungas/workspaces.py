@@ -85,6 +85,13 @@ NEW_CARDS = {
         ["LPG Bulk Price Upload", "docstatus", "=", 0]], color="#f39c12"),
     "Sungas · Leave Applications Open": _card("Leave Application", [
         ["Leave Application", "status", "=", "Open"], ["Leave Application", "docstatus", "=", 0]], color="#27ae60"),
+    "Sungas · My Accounts": _card("Customer", [], dynamic=[["Customer", "sungas_account_owner", "=", ME]],
+                                  color="#2980b9"),
+    "Sungas · My Open Engagement Plans": _card("Weekly Engagement Plan", [["Weekly Engagement Plan", "status", "!=", "Closed"]],
+                                               dynamic=[["Weekly Engagement Plan", "owner_user", "=", ME]],
+                                               color="#e67e22"),
+    "Sungas · Plans Awaiting Approval": _card("Weekly Engagement Plan", [
+        ["Weekly Engagement Plan", "status", "in", ["Pending Approval", "Executing Unapproved"]]], color="#e67e22"),
     "Sungas · Group Requests Pending": _card("Customer Group Change Request", [
         ["Customer Group Change Request", "status", "=", "Pending"]], color="#e67e22"),
     "Sungas · Commercial Accounts": _card("Customer", [
@@ -106,9 +113,13 @@ POS_APP = _sc("POS Awesome", "posapp", kind="Page", color="Green")
 LAYOUT = {
     "Sungas My Plant": {
         "cards": COMMON + ["Sungas · Receipts Awaiting Confirmation", "Sungas · Open POS Shifts",
-                           "Sungas · Open Variance Cases", "Sungas · Open Transit Loss Cases"],
+                           "Sungas · Open Variance Cases", "Sungas · Open Transit Loss Cases",
+                           # 0035: My Accounts
+                           "Sungas · My Accounts", "Sungas · My Open Engagement Plans"],
         "charts": ["Sungas Ops · Tank Volume by Outlet"],
         "shortcuts": [MY_TASKS, POS_APP,
+                      _sc("My Accounts Scorecard", "Commercial Accounts Performance", kind="Report", color="Blue"),
+                      _sc("My Engagement Plans", "Weekly Engagement Plan", color="Orange"),
                       _sc("Receipts to Confirm", "Stock Entry", stats='{"docstatus": 0}'),
                       _sc("Material Requests", "Material Request"),
                       _sc("Variance Cases", "Inter-Outlet Variance Case", color="Red"),
@@ -159,12 +170,14 @@ LAYOUT = {
     },
     "Sungas Commercial Desk": {
         "cards": COMMON + ["Sungas · Group Requests Pending", "Sungas · Commercial Accounts",
-                           "Sungas · Price Requests Open"],
+                           "Sungas · Plans Awaiting Approval", "Sungas · Price Requests Open"],
         "charts": ["Top Customers"],
         "shortcuts": [MY_TASKS,
                       _sc("Group Change Requests", "Customer Group Change Request", color="Orange",
                           stats='{"status": "Pending"}'),
                       _sc("Commercial Accounts", "Commercial Accounts Performance", kind="Report"),
+                      _sc("Engagement Plans", "Weekly Engagement Plan", color="Orange"),
+                      _sc("Engagement Settings", "Sungas Engagement Settings"),
                       _sc("Upgrade Prospects", "Group Upgrade Prospects", kind="Report", color="Green"),
                       _sc("Leakage Watch", "Account Leakage Watch", kind="Report", color="Red"),
                       _sc("Customer", "Customer"), _sc("Sales Invoice", "Sales Invoice")],
@@ -180,6 +193,7 @@ LAYOUT = {
                       _sc("Price Change Requests", "LPG Price Change Request", color="Orange"),
                       _sc("Bulk Price Upload", "LPG Bulk Price Upload", color="Orange"),
                       _sc("Group Change Requests", "Customer Group Change Request", color="Orange"),
+                      _sc("Engagement Plans", "Weekly Engagement Plan", color="Orange"),
                       _sc("Leakage Watch", "Account Leakage Watch", kind="Report", color="Red")],
     },
 }

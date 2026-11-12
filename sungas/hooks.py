@@ -123,12 +123,15 @@ permission_query_conditions = {
     "POS Opening Shift": "sungas.overrides.outlet_scope.pos_opening_shift_query",
     "POS Closing Shift": "sungas.overrides.outlet_scope.pos_closing_shift_query",
     "POS Invoice": "sungas.overrides.outlet_scope.pos_invoice_query",
+    # Patch 0035: plant managers see only their own engagement plans.
+    "Weekly Engagement Plan": "sungas.engagement.plan_query",
 }
 
 has_permission = {
     "POS Opening Shift": "sungas.overrides.outlet_scope.pos_opening_shift_has_perm",
     "POS Closing Shift": "sungas.overrides.outlet_scope.pos_closing_shift_has_perm",
     "POS Invoice": "sungas.overrides.outlet_scope.pos_invoice_has_perm",
+    "Weekly Engagement Plan": "sungas.engagement.plan_has_permission",
 }
 
 # (commented stub below kept intentionally for reference)
@@ -363,6 +366,8 @@ scheduler_events = {
         "30 7 * * 1": ["sungas.commercial_desk.weekly_digest"],
         # Patch 0034 -- Tuesday 23:00 behind-target nudge (owners + desk portfolio view).
         "0 23 * * 2": ["sungas.commercial_desk.target_nudge"],
+        # Patch 0035 -- engagement plan deadlines (configurable in Sungas Engagement Settings).
+        "0 * * * *": ["sungas.engagement.tick"],
         # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
         # 90 min after the open-shift cron. Single indexed query/day,
         # idempotent via variance_sla_escalation_level.

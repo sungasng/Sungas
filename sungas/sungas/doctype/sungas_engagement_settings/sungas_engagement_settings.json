@@ -1,0 +1,194 @@
+{
+ "actions": [],
+ "creation": "2026-06-22 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-06-22 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Sungas Engagement Settings",
+ "issingle": 1,
+ "fields": [
+  {
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled",
+   "default": "1"
+  },
+  {
+   "fieldname": "include_dormant",
+   "fieldtype": "Check",
+   "label": "Include dormant accounts in drafts",
+   "default": "1"
+  },
+  {
+   "fieldname": "sec_draft",
+   "fieldtype": "Section Break",
+   "label": "Draft"
+  },
+  {
+   "fieldname": "draft_day",
+   "fieldtype": "Select",
+   "label": "Create next week's draft on",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Thursday"
+  },
+  {
+   "fieldname": "draft_hour",
+   "fieldtype": "Int",
+   "label": "at hour (0-23)",
+   "default": "18",
+   "description": "24-hour clock, Africa/Lagos"
+  },
+  {
+   "fieldname": "default_action_day",
+   "fieldtype": "Select",
+   "label": "Default action due day",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Friday"
+  },
+  {
+   "fieldname": "sec_submit",
+   "fieldtype": "Section Break",
+   "label": "Owner submits"
+  },
+  {
+   "fieldname": "submit_reminder_day",
+   "fieldtype": "Select",
+   "label": "Reminder on",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Friday"
+  },
+  {
+   "fieldname": "submit_reminder_hour",
+   "fieldtype": "Int",
+   "label": "at hour",
+   "default": "12",
+   "description": "24-hour clock, Africa/Lagos"
+  },
+  {
+   "fieldname": "cb1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "submit_deadline_day",
+   "fieldtype": "Select",
+   "label": "Deadline",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Friday"
+  },
+  {
+   "fieldname": "submit_deadline_hour",
+   "fieldtype": "Int",
+   "label": "at hour",
+   "default": "17",
+   "description": "24-hour clock, Africa/Lagos"
+  },
+  {
+   "fieldname": "sec_approve",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "fieldname": "approve_deadline_day",
+   "fieldtype": "Select",
+   "label": "Approve by",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Monday"
+  },
+  {
+   "fieldname": "approve_deadline_hour",
+   "fieldtype": "Int",
+   "label": "at hour",
+   "default": "10",
+   "description": "24-hour clock, Africa/Lagos"
+  },
+  {
+   "fieldname": "sec_outcome",
+   "fieldtype": "Section Break",
+   "label": "Outcome report (after the plan week)"
+  },
+  {
+   "fieldname": "outcome_reminder_day",
+   "fieldtype": "Select",
+   "label": "Reminder on",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Tuesday"
+  },
+  {
+   "fieldname": "outcome_reminder_hour",
+   "fieldtype": "Int",
+   "label": "at hour",
+   "default": "12",
+   "description": "24-hour clock, Africa/Lagos"
+  },
+  {
+   "fieldname": "cb2",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "outcome_deadline_day",
+   "fieldtype": "Select",
+   "label": "Deadline",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "default": "Tuesday"
+  },
+  {
+   "fieldname": "outcome_deadline_hour",
+   "fieldtype": "Int",
+   "label": "at hour",
+   "default": "18",
+   "description": "24-hour clock, Africa/Lagos"
+  }
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "LPG Commercial Desk",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "LPG Head of Sales",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "field_order": [
+  "enabled",
+  "include_dormant",
+  "sec_draft",
+  "draft_day",
+  "draft_hour",
+  "default_action_day",
+  "sec_submit",
+  "submit_reminder_day",
+  "submit_reminder_hour",
+  "cb1",
+  "submit_deadline_day",
+  "submit_deadline_hour",
+  "sec_approve",
+  "approve_deadline_day",
+  "approve_deadline_hour",
+  "sec_outcome",
+  "outcome_reminder_day",
+  "outcome_reminder_hour",
+  "cb2",
+  "outcome_deadline_day",
+  "outcome_deadline_hour"
+ ]
+}

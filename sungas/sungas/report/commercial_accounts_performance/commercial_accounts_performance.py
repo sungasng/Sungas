@@ -1,12 +1,19 @@
 """Patch 0032 -- Commercial Desk report."""
+import frappe
 from frappe import _
 
+from sungas.commercial_desk import can_set_group
 from sungas.commercial_desk_data import DORMANT_DAYS, account_rows
 
 
 def execute(filters=None):
     f = filters or {}
     rows = account_rows(f.get("as_of"))
+    owner = f.get("account_owner")
+    if not can_set_group(frappe.get_roles()):
+        owner = frappe.session.user  # 0035: owners see only their own scorecard
+    if owner:
+        rows = [r for r in rows if r["account_owner"] == owner]
     if f.get("dormant_only"):
         rows = [r for r in rows if r["dormant"]]
     if f.get("behind_only"):

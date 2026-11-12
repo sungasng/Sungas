@@ -1,0 +1,133 @@
+{
+ "actions": [],
+ "creation": "2026-06-22 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "links": [],
+ "modified": "2026-06-22 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "owner": "Administrator",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "name": "Weekly Engagement Plan Line",
+ "istable": 1,
+ "fields": [
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Name",
+   "fetch_from": "customer.customer_name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Select",
+   "label": "Why",
+   "options": "Behind target\nDormant\nAdded by owner",
+   "default": "Added by owner",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "kg_mtd_at_plan",
+   "fieldtype": "Float",
+   "label": "kg MTD at plan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "target_to_date_at_plan",
+   "fieldtype": "Float",
+   "label": "Target to date at plan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "root_cause",
+   "fieldtype": "Select",
+   "label": "Root cause",
+   "options": "\nPrice\nCompetitor\nBusiness slow / seasonal\nSupply / delivery issue\nCylinder / quality\nCredit / payment\nUnreachable\nOther",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "action",
+   "fieldtype": "Select",
+   "label": "Action",
+   "options": "\nCall\nVisit\nWhatsApp\nOffer / promo\nFix delivery\nEscalate",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "action_due",
+   "fieldtype": "Date",
+   "label": "Due",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "expected_kg",
+   "fieldtype": "Float",
+   "label": "Expected kg",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "plan_note",
+   "fieldtype": "Small Text",
+   "label": "Plan note"
+  },
+  {
+   "fieldname": "sec_out",
+   "fieldtype": "Section Break",
+   "label": "Outcome"
+  },
+  {
+   "fieldname": "actual_kg",
+   "fieldtype": "Float",
+   "label": "Actual kg (from sales)",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "outcome",
+   "fieldtype": "Select",
+   "label": "Outcome",
+   "options": "\nDone\nPartly done\nNot done",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "outcome_note",
+   "fieldtype": "Small Text",
+   "label": "Outcome note"
+  }
+ ],
+ "permissions": [],
+ "field_order": [
+  "customer",
+  "customer_name",
+  "reason",
+  "kg_mtd_at_plan",
+  "target_to_date_at_plan",
+  "root_cause",
+  "action",
+  "action_due",
+  "expected_kg",
+  "plan_note",
+  "sec_out",
+  "actual_kg",
+  "outcome",
+  "outcome_note"
+ ]
+}
