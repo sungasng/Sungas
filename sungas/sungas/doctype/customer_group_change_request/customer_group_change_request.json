@@ -50,20 +50,22 @@
   },
   {
    "fieldname": "current_group",
-   "fieldtype": "Link",
+   "fieldtype": "Select",
    "label": "Current Group",
-   "options": "Customer Group",
+   "options": "",
    "read_only": 1,
-   "in_list_view": 1
+   "in_list_view": 1,
+   "description": "Plain text on purpose: ERPNext rewrites Customer Group links on every record of a customer when the group changes."
   },
   {
    "fieldname": "requested_group",
-   "fieldtype": "Link",
+   "fieldtype": "Select",
    "label": "Requested Group",
-   "options": "Customer Group",
+   "options": "",
    "reqd": 1,
    "in_list_view": 1,
-   "in_standard_filter": 1
+   "in_standard_filter": 1,
+   "description": "Plain text on purpose: ERPNext rewrites Customer Group links on every record of a customer when the group changes."
   },
   {
    "fieldname": "col_a",
@@ -183,7 +185,7 @@
   }
  ],
  "links": [],
- "modified": "2026-06-20 00:00:00.000000",
+ "modified": "2026-06-23 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Customer Group Change Request",

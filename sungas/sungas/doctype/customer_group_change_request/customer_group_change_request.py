@@ -15,7 +15,10 @@ class CustomerGroupChangeRequest(Document):
             frappe.throw(_("Only the Commercial Desk can change a group change request after it is raised."))
         if self.flags.sungas_internal:
             return
-        if frappe.db.get_value("Customer Group", self.requested_group, "is_group"):
+        is_group = frappe.db.get_value("Customer Group", self.requested_group, "is_group")
+        if is_group is None:
+            frappe.throw(_("{0} is not a customer group.").format(self.requested_group))
+        if is_group:
             frappe.throw(_("Pick a specific customer group, not {0}.").format(self.requested_group))
         if self.requested_group == self.current_group:
             frappe.throw(_("{0} is already in {1}.").format(self.customer_name or self.customer, self.current_group))
