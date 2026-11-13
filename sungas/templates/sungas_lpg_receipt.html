@@ -1,0 +1,77 @@
+{# Sungas patch 0038 -- LPG receipt + filler slip. One render = one print (counted). #}
+{%- set copy = receipt_copy(doc) -%}
+<style>
+  .sg { font-family: Arial, sans-serif; font-size: 12px; width: 72mm; margin: 0 auto; color: #000; }
+  .sg h3 { text-align: center; margin: 2px 0; font-size: 15px; }
+  .sg .c { text-align: center; } .sg .r { text-align: right; }
+  .sg table { width: 100%; border-collapse: collapse; } .sg td { padding: 2px 0; vertical-align: top; }
+  .sg .line { border-top: 1px dashed #000; margin: 5px 0; }
+  .sg .copy { text-align: center; font-weight: bold; font-size: 14px; border: 2px solid #000; padding: 3px; margin: 4px 0; }
+  .sg .big { font-size: 16px; font-weight: bold; }
+  .sg-break { page-break-before: always; }
+</style>
+{%- if copy.blocked %}
+<div class="sg">
+  <div class="copy">{{ copy.label }}</div>
+  <p class="c">Receipt {{ doc.name }} has already been printed.<br>Only a Plant Manager can print a duplicate.<br>This attempt by {{ copy.by }} at {{ copy.at }} has been recorded.</p>
+</div>
+{%- else %}
+{%- set cust = customer_info(doc) -%}
+{%- set lines = receipt_lines(doc) -%}
+{%- set ns = namespace(kg=0) -%}
+{%- for l in lines %}{% if l.kg %}{% set ns.kg = ns.kg + l.kg %}{% endif %}{% endfor -%}
+<div class="sg">
+  <h3>{{ doc.company }}</h3>
+  <div class="c">{{ doc.pos_profile }}</div>
+  <div class="copy">{{ copy.label }}</div>
+  <table>
+    <tr><td>Receipt</td><td class="r">{{ doc.name }}</td></tr>
+    <tr><td>Date</td><td class="r">{{ frappe.utils.format_date(doc.posting_date) }} {{ ((doc.posting_time or "")|string)[:5] }}</td></tr>
+    <tr><td>Cashier</td><td class="r">{{ frappe.db.get_value("User", doc.owner, "full_name") or doc.owner }}</td></tr>
+    <tr><td>Customer</td><td class="r">{{ cust.name }}</td></tr>
+    <tr><td>Group</td><td class="r">{{ cust.group }}</td></tr>
+    {%- if cust.phone %}<tr><td>Phone</td><td class="r">{{ cust.phone }}</td></tr>{% endif %}
+  </table>
+  <div class="line"></div>
+  <table>
+  {%- for l in lines %}
+    <tr><td colspan="2"><b>{{ l.name }}</b>{% if l.cyl %} &ndash; {{ l.uom }}{% elif l.kg is not none %} &ndash; by kg / amount, into {{ l.fill_into or "unknown cylinder" }}{% endif %}</td></tr>
+    <tr>
+      <td>{% if l.cyl %}{{ "%g"|format(l.qty) }} &times; {{ frappe.utils.fmt_money(l.rate, currency=doc.currency) }}{% if l.kg %} ({{ "%g"|format(l.kg) }} kg){% endif %}
+          {% elif l.kg is not none %}{{ "%g"|format(l.qty) }} kg &times; {{ frappe.utils.fmt_money(l.rate, currency=doc.currency) }}
+          {% else %}{{ "%g"|format(l.qty) }} &times; {{ frappe.utils.fmt_money(l.rate, currency=doc.currency) }}{% endif %}</td>
+      <td class="r">{{ frappe.utils.fmt_money(l.amount, currency=doc.currency) }}</td>
+    </tr>
+  {%- endfor %}
+  </table>
+  <div class="line"></div>
+  <table>
+    {%- if ns.kg %}<tr><td>Total LPG</td><td class="r">{{ "%g"|format(ns.kg) }} kg</td></tr>{% endif %}
+    <tr class="big"><td>TOTAL</td><td class="r">{{ frappe.utils.fmt_money(doc.rounded_total or doc.grand_total, currency=doc.currency) }}</td></tr>
+    {%- for p in doc.payments if p.amount %}<tr><td>{{ p.mode_of_payment }}</td><td class="r">{{ frappe.utils.fmt_money(p.amount, currency=doc.currency) }}</td></tr>{% endfor %}
+    {%- if doc.change_amount %}<tr><td>Change</td><td class="r">{{ frappe.utils.fmt_money(doc.change_amount, currency=doc.currency) }}</td></tr>{% endif %}
+  </table>
+  <div class="line"></div>
+  <div class="c">Thank you. Keep this receipt.</div>
+</div>
+
+{%- set fills = lines|selectattr("fill")|list %}
+{%- if fills %}
+<div class="sg sg-break">
+  <h3>FILLER SLIP</h3>
+  <div class="copy">{{ copy.label }}</div>
+  <table>
+    <tr><td>Receipt</td><td class="r">{{ doc.name }}</td></tr>
+    <tr><td>Time</td><td class="r">{{ frappe.utils.format_date(doc.posting_date) }} {{ ((doc.posting_time or "")|string)[:5] }}</td></tr>
+    <tr><td>Till</td><td class="r">{{ doc.pos_profile }}</td></tr>
+    <tr><td>Customer</td><td class="r">{{ cust.name }}</td></tr>
+    {%- if cust.phone %}<tr><td>Phone</td><td class="r">{{ cust.phone }}</td></tr>{% endif %}
+  </table>
+  <div class="line"></div>
+  {%- for l in fills %}<div class="big">&#9744; {{ l.fill }}</div>{% endfor %}
+  <div class="line"></div>
+  <div>Total to fill: <b>{{ "%g"|format(ns.kg) }} kg</b></div>
+  <p><br>Filled by: ______________________<br><br>Checked by: ____________________</p>
+</div>
+{%- endif %}
+{%- endif %}

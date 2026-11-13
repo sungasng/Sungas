@@ -86,6 +86,8 @@ after_migrate = [
     "sungas.workspaces.install",
     # Patch 0032: Commercial Desk role, customer fields, workflow emails.
     "sungas.commercial_desk.install",
+    # Patch 0038: cylinder refill units, receipt + filler slip print format.
+    "sungas.lpg_cylinders.install",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -226,6 +228,8 @@ doc_events = {
             'sungas.overrides.zero_price_guard.block_zero_price',
         ],
         'before_submit': [
+            # Patch 0038 -- whole cylinders; kg lines say which cylinder (POS only; drafts / holds may be incomplete).
+            'sungas.lpg_cylinders.validate_lines',
             'sungas.overrides.returns_approval_gate.require_manager_for_return',
             'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
         ],
@@ -965,3 +969,13 @@ fixtures = [
         ]
     }
 ]
+
+
+# Patch 0038 -- receipt print helpers (Sungas LPG Receipt print format).
+jinja = {
+    "methods": [
+        "sungas.lpg_cylinders.receipt_copy",
+        "sungas.lpg_cylinders.receipt_lines",
+        "sungas.lpg_cylinders.customer_info",
+    ],
+}
