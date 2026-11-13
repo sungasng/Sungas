@@ -28,5 +28,8 @@ class CustomerGroupChangeRequest(Document):
 
     def after_insert(self):
         if self.status == "Pending":
-            notify_new_request(self)
+            try:
+                notify_new_request(self)
+            except Exception:
+                frappe.log_error(frappe.get_traceback(), "sungas.commercial_desk notify_new_request")
 

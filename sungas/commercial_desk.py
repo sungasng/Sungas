@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, now_datetime
+from frappe.utils import add_to_date, flt, now_datetime
 
 DESK_ROLE = "LPG Commercial Desk"
 HOS_ROLES = ("LPG Head of Sales", "LPG Deputy Head of Sales")
@@ -111,7 +111,7 @@ def request_group_change(customer, requested_group, justification, business_type
     doc = frappe.get_doc({
         "doctype": CGCR, "customer": customer, "requested_group": requested_group,
         "justification": justification, "business_type": business_type,
-        "expected_monthly_kg": expected_monthly_kg, "location": location,
+        "expected_monthly_kg": flt(expected_monthly_kg), "location": location,
         "contact_phone": contact_phone, "requested_from": requested_from})
     doc.insert()
     return doc.name
@@ -122,14 +122,14 @@ def notify_new_request(doc):
     subj = f"Group change request {doc.name}: {doc.customer_name} {doc.current_group} -> {doc.requested_group}"
     body = (f"<p><b>{frappe.utils.escape_html(who)}</b> asks to move <b>{frappe.utils.escape_html(doc.customer_name)}</b> "
             f"from <b>{doc.current_group}</b> to <b>{doc.requested_group}</b>.</p>"
-            f"<p>Reason: {frappe.utils.escape_html(doc.justification or '')}<br>Expected: {doc.expected_monthly_kg or 0:g} kg/month</p>"
+            f"<p>Reason: {frappe.utils.escape_html(doc.justification or '')}<br>Expected: {flt(doc.expected_monthly_kg):g} kg/month</p>"
             f'<p><a href="{_link(doc.name)}">Open request</a></p>')
     for u in desk_users():
         _alert([u], subj, body, doc.name, "sungas_approval_needed", {
             "approver_name": frappe.db.get_value("User", u, "first_name") or "there",
             "doc_label": f"Group change {doc.name}",
             "summary": f"{doc.customer_name}: {doc.current_group} to {doc.requested_group}, "
-                       f"{doc.expected_monthly_kg or 0:g} kg/month, by {who}",
+                       f"{flt(doc.expected_monthly_kg):g} kg/month, by {who}",
             "state": "Pending Commercial Desk", "link": _link(doc.name)})
 
 
