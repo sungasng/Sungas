@@ -34,6 +34,31 @@ def before_submit(doc, method=None):
         frappe.throw(_("Part payment and credit sales are not allowed at the till. Amount due {0}, paid {1}.")
                      .format(frappe.format_value(due, {"fieldtype": "Currency"}), frappe.format_value(paid, {"fieldtype": "Currency"})),
                      title=_("Full payment required"))
+    check_cash_rounded(doc)
+
+
+CASH_STEP = 100
+
+
+def check_cash_rounded(doc):
+    """0041b: the cash part must be rounded UP to the next N100 (no coins change). Type from the Mode of Payment
+    master -- the till sends every row as 'Cash'."""
+    cash = non_cash = 0.0
+    for p in doc.payments or []:
+        if not flt(p.amount):
+            continue
+        if frappe.get_cached_value("Mode of Payment", p.mode_of_payment, "type") == "Cash":
+            cash += flt(p.amount)
+        else:
+            non_cash += flt(p.amount)
+    needed = flt(flt(doc.grand_total) - non_cash, 2)
+    if cash <= 0 or needed <= 0:
+        return
+    required = -(-needed // CASH_STEP) * CASH_STEP
+    if cash + 0.005 < required:
+        frappe.throw(_("Cash must be rounded up to the next N100: take {0} in cash (not {1}). No coins change is given.")
+                     .format(frappe.format_value(required, {"fieldtype": "Currency"}),
+                             frappe.format_value(cash, {"fieldtype": "Currency"})), title=_("Round the cash up"))
 
 
 @frappe.whitelist()
