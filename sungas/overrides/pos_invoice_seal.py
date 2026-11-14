@@ -59,27 +59,13 @@ def block_sale_on_sealed_shift(doc, method=None):
         _block_old_shift(opening_shift)
         return
 
+    # Patch 0044: plain words for the cashier.
     frappe.throw(
-        _(
-            "This opening shift is SEALED pending variance approval "
-            "(closing shift {0} is currently in workflow state '{1}', "
-            "severity '{2}'). No further sales can be rung up on this till "
-            "until the variance is approved (or rejected) by the relevant "
-            "manager.\n\n"
-            "Outlet continuity options:\n"
-            "  - Have a different cashier open a fresh shift under their "
-            "own login (preferred).\n"
-            "  - Use a regional backup POS profile (Phase 5.8 — not yet "
-            "deployed).\n"
-            "  - Fall back to the Manual Sales Book (Phase 5.9 — not yet "
-            "deployed).\n\n"
-            "Approvers can act on the draft at /app/pos-closing-shift/{0}"
-        ).format(
-            pending_close.name,
-            pending_close.workflow_state,
-            pending_close.variance_severity or "n/a",
-        ),
-        title=_("Shift Sealed — Variance Approval Pending"),
+        _("Your last shift close ({0}) has a cash difference that is waiting for approval ({1}). "
+          "You cannot sell until it is approved.<br><br>"
+          "Please tell your Plant Manager. To keep the outlet selling, another cashier can log in and open "
+          "their own shift.").format(pending_close.name, pending_close.workflow_state.replace("Pending ", "with ")),
+        title=_("Till locked - waiting for approval"),
     )
 
 

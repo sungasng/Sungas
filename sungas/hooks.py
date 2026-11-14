@@ -95,6 +95,8 @@ after_migrate = [
     "sungas.lpg_fill.install",
     # Patch 0043: blind count / recount fields on POS Closing Shift.
     "sungas.shift_controls.install",
+    # Patch 0044: alert approvers of closes already waiting.
+    "sungas.overrides.closing_approval_alerts.backfill",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -241,6 +243,8 @@ doc_events = {
             'sungas.overrides.pos_closing_shift.cancel_provisional_journal',
             'sungas.overrides.coo_notification.notify_coo_on_critical_approval',
             'sungas.overrides.pos_variance_investigation_integration.auto_create_variance_investigation',
+            # Patch 0044 -- bell + WhatsApp the next approver; tell the cashier the outcome.
+            'sungas.overrides.closing_approval_alerts.on_update',
         ],
     },
     "POS Invoice": {
