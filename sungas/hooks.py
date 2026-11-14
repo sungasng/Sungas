@@ -88,6 +88,7 @@ after_migrate = [
     "sungas.commercial_desk.install",
     # Patch 0038: cylinder refill units, receipt + filler slip print format.
     "sungas.lpg_cylinders.install",
+    "sungas.pos_sale_rules.install",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -229,8 +230,12 @@ doc_events = {
         'validate': [
             'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
             'sungas.overrides.zero_price_guard.block_zero_price',
+            # Patch 0040 -- no Bulk customers / Equipment at the till.
+            'sungas.pos_sale_rules.validate',
         ],
         'before_submit': [
+            # Patch 0040 -- no part payment / credit sale at the till.
+            'sungas.pos_sale_rules.before_submit',
             # Patch 0038 -- whole cylinders; kg lines say which cylinder (POS only; drafts / holds may be incomplete).
             'sungas.lpg_cylinders.validate_lines',
             'sungas.overrides.returns_approval_gate.require_manager_for_return',
