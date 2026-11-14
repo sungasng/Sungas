@@ -40,6 +40,8 @@ doctype_js = {
     "LPG Bulk Price Upload": "public/js/lpg_bulk_price_upload.js",
     # Patch 0032: customer group locked to the Commercial Desk
     "Customer": "public/js/customer.js",
+    # Patch 0041: Plant Manager extends / refunds unfilled gas receipts
+    "POS Invoice": "public/js/pos_invoice.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -89,6 +91,8 @@ after_migrate = [
     # Patch 0038: cylinder refill units, receipt + filler slip print format.
     "sungas.lpg_cylinders.install",
     "sungas.pos_sale_rules.install",
+    # Patch 0041: gas fill status on receipts, LPG Filler role.
+    "sungas.lpg_fill.install",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -230,7 +234,10 @@ doc_events = {
         'validate': [
             'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
             'sungas.overrides.zero_price_guard.block_zero_price',
-            # Patch 0040 -- no Bulk customers / Equipment at the till.
+        ],
+        # Patch 0040/0041 -- no Bulk customers / Equipment at the till; checked before pricing so the
+        # cashier sees the real reason (not "no tier" / "zero price").
+        'before_validate': [
             'sungas.pos_sale_rules.validate',
         ],
         'before_submit': [
@@ -241,6 +248,8 @@ doc_events = {
             'sungas.overrides.returns_approval_gate.require_manager_for_return',
             'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
         ],
+        # Patch 0041 -- LPG receipts start "Awaiting Fill"; a refund closes the original.
+        'on_submit': 'sungas.lpg_fill.on_submit',
     },
     "POS Opening Shift": {
         # Wave B-11: Cashier Lockout on Unresolved Variance.
@@ -299,6 +308,8 @@ scheduler_events = {
         # mismatch (plus ToDos the System Manager). Read-only -- never
         # fixes drift, only reports it.
         "sungas.scheduled_jobs.fixture_drift_audit.run",
+        # Patch 0041 -- unfilled receipts past 7 days expire -> Plant Manager; +2 days -> Heads + Internal Control.
+        "sungas.lpg_fill.sweep",
     ],
     # Wave P-2: GIT Ageing. Hourly. Opens ToDo on Draft Material Receipt
     # SEs that have been sitting in GIT past Sungas Procurement Policy
@@ -315,6 +326,8 @@ scheduler_events = {
     "monthly": [
         # Patch 0021 -- draft own-truck freight true-up for last month.
         "sungas.overrides.inbound_freight.month_end_fleet_true_up",
+        # Patch 0041 -- paid-not-filled LPG moved to customer deposits at month end (auto-reversed on the 1st).
+        "sungas.lpg_fill.month_end_reclass",
     ],
     "cron": {
         "0 7 * * *": [

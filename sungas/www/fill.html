@@ -1,0 +1,89 @@
+{% extends "templates/web.html" %}
+{% block title %}Sungas filler screen{% endblock %}
+{% block page_content %}
+<style>
+  .fl-wrap { max-width: 560px; margin: 24px auto; padding: 0 16px; font-size: 16px; }
+  .fl-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; background: #fff; margin-bottom: 14px; }
+  .fl-in { width: 100%; font-size: 20px; padding: 12px; border: 2px solid #94a3b8; border-radius: 10px; }
+  .fl-btn { display: block; width: 100%; padding: 14px; border: 0; border-radius: 10px; font-size: 18px; font-weight: 600; margin-top: 10px; background: #15803d; color: #fff; }
+  .fl-btn:disabled { background: #94a3b8; }
+  .fl-rows { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  .fl-rows td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; }
+  .fl-rows td:first-child { color: #64748b; width: 38%; }
+  .fl-msg { padding: 14px; border-radius: 10px; margin-top: 12px; display: none; font-weight: 600; }
+  .fl-big { font-size: 26px; font-weight: 700; }
+</style>
+<div class="fl-wrap">
+  <div class="fl-card">
+    <div style="color:#64748b">Filler: {{ user_name }}</div>
+    <h3 style="margin:4px 0 12px">Confirm a gas fill</h3>
+    <input class="fl-in" id="fl-code" data-testid="fill-receipt-input" autofocus autocomplete="off"
+           placeholder="Scan the receipt barcode or type the receipt number">
+    <button class="fl-btn" style="background:#1d4ed8" data-testid="fill-lookup-btn" onclick="flLookup()">Find receipt</button>
+    <div class="fl-msg" id="fl-msg" data-testid="fill-message"></div>
+  </div>
+  <div class="fl-card" id="fl-card" style="display:none" data-testid="fill-receipt-card">
+    <table class="fl-rows">
+      <tr><td>Receipt</td><td id="fl-name" data-testid="fill-receipt-name"></td></tr>
+      <tr><td>Customer</td><td id="fl-cust"></td></tr>
+      <tr><td>Paid</td><td id="fl-posted"></td></tr>
+      <tr><td>Fill by</td><td id="fl-due" data-testid="fill-due"></td></tr>
+      <tr><td>To fill</td><td id="fl-fills"></td></tr>
+      <tr><td>Total</td><td class="fl-big" id="fl-kg" data-testid="fill-kg-sold"></td></tr>
+    </table>
+    <div id="fl-form">
+      <label>kg shown on the dispenser</label>
+      <input class="fl-in" id="fl-filled" data-testid="fill-kg-input" type="number" step="0.01" min="0">
+      <label style="margin-top:10px;display:block">Note (required if the kg differs)</label>
+      <input class="fl-in" id="fl-note" data-testid="fill-note-input" autocomplete="off">
+      <button class="fl-btn" id="fl-confirm" data-testid="fill-confirm-btn" onclick="flConfirm()">Confirm fill</button>
+    </div>
+  </div>
+</div>
+<script>
+  const flEl = (id) => document.getElementById(id);
+  function flErr(d) {
+    try { return JSON.parse(JSON.parse(d._server_messages)[0]).message; } catch (e) { return d.exception || "Something went wrong."; }
+  }
+  function flShow(text, ok) {
+    const m = flEl("fl-msg"); m.style.display = "block";
+    m.style.background = ok ? "#dcfce7" : "#fee2e2"; m.innerHTML = text;
+  }
+  function flCall(method, args) {
+    return fetch("/api/method/sungas.lpg_fill." + method, {
+      method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json",
+                                 "X-Frappe-CSRF-Token": (window.frappe && frappe.csrf_token) || "" },
+      body: JSON.stringify(args),
+    }).then((r) => r.json().then((d) => ({ ok: r.ok, d })));
+  }
+  function flReset() { flEl("fl-card").style.display = "none"; flEl("fl-code").value = ""; flEl("fl-code").focus(); }
+  function flLookup() {
+    const code = flEl("fl-code").value.trim();
+    if (!code) return;
+    flEl("fl-msg").style.display = "none";
+    flCall("lookup", { code }).then(({ ok, d }) => {
+      if (!ok) { flEl("fl-card").style.display = "none"; flShow(flErr(d), false); return; }
+      const r = d.message;
+      flEl("fl-name").textContent = r.name; flEl("fl-cust").textContent = r.customer;
+      flEl("fl-posted").textContent = r.posted + " - " + (r.plant || "");
+      flEl("fl-due").textContent = r.due; flEl("fl-fills").innerHTML = r.fills.map((f) => "&#9744; " + f).join("<br>");
+      flEl("fl-kg").textContent = r.kg + " kg"; flEl("fl-filled").value = r.kg; flEl("fl-note").value = "";
+      flEl("fl-card").style.display = "block";
+      flEl("fl-form").style.display = r.problem ? "none" : "block";
+      if (r.problem) flShow(r.problem, false);
+      else flEl("fl-filled").focus();
+    });
+  }
+  function flConfirm() {
+    flEl("fl-confirm").disabled = true;
+    flCall("confirm", { code: flEl("fl-name").textContent, kg_filled: flEl("fl-filled").value, note: flEl("fl-note").value })
+      .then(({ ok, d }) => {
+        flEl("fl-confirm").disabled = false;
+        if (!ok) { flShow(flErr(d), false); return; }
+        flShow(d.message.message + (d.message.flagged ? " Variance reported to the Plant Manager." : ""), !d.message.flagged);
+        flReset();
+      });
+  }
+  flEl("fl-code").addEventListener("keydown", (e) => { if (e.key === "Enter") flLookup(); });
+</script>
+{% endblock %}

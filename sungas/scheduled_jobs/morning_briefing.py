@@ -14,7 +14,9 @@ from frappe.utils import add_days, escape_html, get_url, nowdate
 MANAGER_ROLES = ("LPG Head of Operations", "LPG Head of Finance", "LPG Plant Manager",
                  "Purchase Manager", "Accounts Manager", "Stock Manager", "COO",
                  # Patch 0032: sales heads + Commercial Desk.
-                 "LPG Head of Sales", "LPG Deputy Head of Sales", "LPG Commercial Desk")
+                 "LPG Head of Sales", "LPG Deputy Head of Sales", "LPG Commercial Desk",
+                 # Patch 0041: Internal Control sees the unfilled-receipts table.
+                 "Internal Control")
 TAG = "Morning briefing"
 MAX_ROWS = 15
 SKIP_FIELD = "sungas_no_morning_briefing"
@@ -114,6 +116,7 @@ def run() -> dict:
     from sungas.scheduled_jobs.policy_changes import recent_changes, section
     from sungas.utils.bell import ring
     from sungas.commercial_desk import briefing_rows
+    from sungas.lpg_fill import briefing_section
 
     summary = {"managers": 0, "briefed": 0}
     acts = _open_actions()
@@ -131,11 +134,12 @@ def run() -> dict:
         figline, has_figs = for_user(user, roles, day, figs, missing, policy_log)
         group_pending, group_changes = briefing_rows(user, roles, day)
         approvals += group_pending
-        if not approvals and not tasks and not has_figs and not group_changes:
+        unfilled = briefing_section(user, roles, day)
+        if not approvals and not tasks and not has_figs and not group_changes and not unfilled:
             continue
         subj = subject(len(approvals), len(tasks))
         body = (f"<p>Good morning. Here is what is waiting for you today.</p>"
-                f"{figline or ''}"
+                f"{figline or ''}{unfilled}"
                 f"{_section('Approvals waiting on you', approvals)}{_section('Your open tasks', tasks)}"
                 f"{_section('Customer group changes yesterday', group_changes)}")
         ring([user], subj, body)

@@ -113,7 +113,11 @@ LAYOUT = {
                       _sc("Material Requests", "Material Request"),
                       _sc("Variance Cases", "Inter-Outlet Variance Case", color="Red"),
                       _sc("Transit Loss Cases", "Transit Loss Variance Case", color="Red"),
-                      _sc("Shift Closings", "POS Closing Shift")],
+                      _sc("Shift Closings", "POS Closing Shift"),
+                      # 0041: unfilled gas receipts + fill variance
+                      _sc("Filler Screen", None, kind="URL", color="Green", url="/fill"),
+                      _sc("Unfilled Receipts", "Unfilled LPG Receipts", kind="Report", color="Red"),
+                      _sc("Fill Variance", "LPG Fill Variance", kind="Report", color="Red")],
     },
     "Sungas Ops Command": {
         "cards": COMMON + ["Sungas Ops · Pending HoO Approvals", "Sungas Ops · Draft Loading Schedules",
@@ -138,7 +142,9 @@ LAYOUT = {
                       _sc("Journal Entry", "Journal Entry"), _sc("Payment Entry", "Payment Entry"),
                       _sc("Purchase Invoice", "Purchase Invoice"), _sc("Sales Invoice", "Sales Invoice"),
                       _sc("Trips to Settle", "Daily Loading Schedule", color="Purple"),
-                      _sc("General Ledger", "General Ledger", kind="Report", color="Grey")],
+                      _sc("General Ledger", "General Ledger", kind="Report", color="Grey"),
+                      _sc("Unfilled Receipts", "Unfilled LPG Receipts", kind="Report", color="Red"),
+                      _sc("Fill Variance", "LPG Fill Variance", kind="Report", color="Red")],
     },
     "Sungas HR Desk": {
         "cards": COMMON + ["Sungas · Leave Applications Open", "Total Employees", "New Hires (This Year)",
@@ -257,8 +263,8 @@ def _install_workspaces():
         cards = [c for c in layout["cards"] if frappe.db.exists("Number Card", c)]
         charts = [c for c in layout["charts"] if frappe.db.exists("Dashboard Chart", c)]
         shortcuts = [s for s in layout["shortcuts"]
-                     if frappe.db.exists({"DocType": "DocType", "Page": "Page", "Report": "Report"}[s["type"]],
-                                         s["link_to"])]
+                     if s["type"] == "URL" or frappe.db.exists(
+                         {"DocType": "DocType", "Page": "Page", "Report": "Report"}[s["type"]], s["link_to"])]
         _upsert("Workspace", p["workspace"], {
             "label": p["workspace"], "title": p["workspace"], "module": p["module"], "icon": p["icon"],
             "public": 1, "is_hidden": 0, "sequence_id": 0.1 + seq / 10,
