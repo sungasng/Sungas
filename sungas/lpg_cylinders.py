@@ -54,21 +54,50 @@ def validate_lines(doc, method=None):
 
 # -- Receipt print control (Jinja) -----------------------------------------
 
-def receipt_copy(doc) -> dict:
-    """Called once per render of the receipt print format."""
+RECEIPT_FORMATS = ("Sungas Thermal 58mm", PRINT_FORMAT)
+
+
+def before_print(doc, method=None, *args, **kwargs):
+    """Count receipt prints here: Frappe renders print formats read-only (no writes inside Jinja)."""
+    fmt = frappe.form_dict.get("format") or frappe.form_dict.get("print_format")
+    if fmt not in RECEIPT_FORMATS:
+        return
     if cint(doc.docstatus) != 1:
-        return {"blocked": False, "label": _("NOT SUBMITTED - NOT A RECEIPT")}
+        doc._sungas_copy = {"blocked": False, "label": _("NOT SUBMITTED - NOT A RECEIPT")}
+        return
     n = cint(frappe.db.get_value(doc.doctype, doc.name, "sungas_print_count")) + 1
     user = frappe.session.user
     who = frappe.db.get_value("User", user, "full_name") or user
     at = now_datetime().strftime("%d-%m-%Y %H:%M")
     if n > 1 and not (REPRINT_ROLES & set(frappe.get_roles(user))):
         _log(doc, _("Reprint REFUSED for {0} at {1}").format(who, at))
-        return {"blocked": True, "label": _("DUPLICATE NOT ALLOWED"), "by": who, "at": at}
+        doc._sungas_copy = {"blocked": True, "label": _("DUPLICATE NOT ALLOWED"), "by": who, "at": at}
+        return
     frappe.db.set_value(doc.doctype, doc.name, "sungas_print_count", n, update_modified=False)
     label = _("ORIGINAL") if n == 1 else _("DUPLICATE COPY #{0}").format(n - 1)
     _log(doc, _("Receipt printed: {0} by {1} at {2}").format(label, who, at))
-    return {"blocked": False, "label": label, "copy": n, "by": who, "at": at}
+    doc._sungas_copy = {"blocked": False, "label": label, "copy": n, "by": who, "at": at}
+
+
+def receipt_copy(doc) -> dict:
+    """Read-only (used inside the print template)."""
+    info = getattr(doc, "_sungas_copy", None)
+    if info:
+        return info
+    if cint(doc.docstatus) != 1:
+        return {"blocked": False, "label": _("NOT SUBMITTED - NOT A RECEIPT")}
+    return {"blocked": False, "label": _("COPY") if cint(doc.get("sungas_print_count")) else _("ORIGINAL")}
+
+
+def lpg_kg(doc) -> float:
+    """Total LPG kg on the receipt (cylinder lines count qty x size) -- carried in the dispenser barcode."""
+    kg = sum(flt(it.stock_qty) or flt(it.qty) * (flt(it.conversion_factor) or 1)
+             for it in doc.items if it.item_code in REFILL_ITEMS)
+    return flt(kg, 2)
+
+
+def cash_rounding(doc) -> float:
+    return flt(doc.get("rounding_adjustment"), 2) if flt(doc.get("rounding_adjustment")) > 0 else 0.0
 
 
 def _log(doc, text):
@@ -136,12 +165,15 @@ def install():
 def _install_print_format():
     html = frappe.read_file(frappe.get_app_path("sungas", "templates", "sungas_lpg_receipt.html"))
     vals = {"doc_type": "POS Invoice", "module": "Sungas", "print_format_type": "Jinja", "custom_format": 1,
-            "standard": "No", "html": html, "disabled": 0, "css": ""}
+            "standard": "No", "html": html, "disabled": 1, "css": ""}
     if frappe.db.exists("Print Format", PRINT_FORMAT):
         frappe.db.set_value("Print Format", PRINT_FORMAT, vals)
     else:
         frappe.get_doc(dict(vals, doctype="Print Format", name=PRINT_FORMAT)).insert(ignore_permissions=True)
-    if not frappe.db.get_default("sungas_0038_receipt_set"):
-        for p in frappe.get_all("POS Profile", filters={"disabled": 0}, pluck="name"):
-            frappe.db.set_value("POS Profile", p, "print_format", PRINT_FORMAT, update_modified=False)
-        frappe.db.set_default("sungas_0038_receipt_set", "1")
+    # Sungas 0039: tills go back to the compliant "Sungas Thermal 58mm" (now carries cylinder sizes,
+    # ORIGINAL/DUPLICATE stamp and the filler slip); the separate 0038 receipt is retired.
+    if not frappe.db.get_default("sungas_0039_thermal_back"):
+        for p in frappe.get_all("POS Profile", filters={"print_format": PRINT_FORMAT}, pluck="name"):
+            frappe.db.set_value("POS Profile", p, "print_format", "Sungas Thermal 58mm", update_modified=False)
+        frappe.db.set_value("Print Format", PRINT_FORMAT, "disabled", 1)
+        frappe.db.set_default("sungas_0039_thermal_back", "1")

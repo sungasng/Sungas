@@ -182,6 +182,7 @@ doc_events = {
     },
     "Sales Invoice": {
         'autoname': 'sungas.controllers.sales_invoice.autoname_sales_invoice',
+        'before_print': 'sungas.lpg_cylinders.before_print',
         'on_submit': 'sungas.controllers.sales_invoice.validate_sales_invoice',
         # Patch 0025 -- hard zero-price block on till (is_pos) invoices.
         'validate': 'sungas.overrides.zero_price_guard.block_zero_price',
@@ -222,6 +223,8 @@ doc_events = {
     },
     "POS Invoice": {
         'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
+        # Patch 0039 -- receipt ORIGINAL / DUPLICATE counted before rendering (print templates are read-only).
+        'before_print': 'sungas.lpg_cylinders.before_print',
         # Patch 0025 -- hard zero-price block at the till.
         'validate': [
             'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
@@ -977,5 +980,7 @@ jinja = {
         "sungas.lpg_cylinders.receipt_copy",
         "sungas.lpg_cylinders.receipt_lines",
         "sungas.lpg_cylinders.customer_info",
+        "sungas.lpg_cylinders.lpg_kg",
+        "sungas.lpg_cylinders.cash_rounding",
     ],
 }
