@@ -191,3 +191,31 @@ def pvi_has_permission(doc, ptype=None, user=None):
     if user == "Administrator" or not _cashier_only(user):
         return True
     return doc.cashier == user
+
+
+@frappe.whitelist(methods=["POST"])
+def send_for_review(closing: str) -> dict:
+    """Patch 0047: a submitted close whose difference was never posted goes to the Plant Manager first;
+    its entry posts when the investigation is submitted."""
+    frappe.only_for(("System Manager", "LPG Head of Finance", "LPG Head of Operations"))
+    from sungas.overrides.pos_closing_shift import _diff_lines, _mode_differences
+
+    doc = frappe.get_doc("POS Closing Shift", closing)
+    if doc.docstatus != 1 or doc.get("variance_je") or not _mode_differences(doc):
+        frappe.throw(_("{0} is not a submitted close with an unposted difference.").format(closing))
+    dt = DT
+    pvi = doc.get("pos_variance_investigation") or frappe.db.get_value(dt, {"shift": closing, "docstatus": ["!=", 2]}, "name")
+    if not pvi:
+        pvi = frappe.get_doc({
+            "doctype": dt, "shift": closing, "variance_severity": "review",
+            "variance_amount": doc.get("variance_amount"), "pos_profile": doc.pos_profile,
+            "cashier": doc.user, "period_end_date": doc.get("period_end_date"),
+        }).insert(ignore_permissions=True, ignore_mandatory=True).name
+        frappe.db.set_value("POS Closing Shift", closing, "pos_variance_investigation", pvi, update_modified=False)
+    from sungas.utils.bell import ring
+
+    detail = "<br>".join(_diff_lines(doc))
+    ring([doc.user], _("Write your statement on {0} for close {1}").format(pvi, closing),
+         f"<p>{detail}</p>", dt, pvi)
+    _tell_pm(frappe.get_doc(dt, pvi), _("Review close {0} ({1}) - investigate and submit").format(closing, pvi))
+    return {"pvi": pvi}

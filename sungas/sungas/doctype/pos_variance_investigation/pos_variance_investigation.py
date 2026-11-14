@@ -53,6 +53,11 @@ class POSVarianceInvestigation(Document):
                 "pos_variance_investigation", self.name,
                 update_modified=False,
             )
+        # Patch 0047: a close sent for review after it was submitted posts its difference entry now.
+        if self.shift and frappe.db.get_value("POS Closing Shift", self.shift, "docstatus") == 1:
+            from sungas.overrides.pos_closing_shift import post_variance_journal
+
+            post_variance_journal(frappe.get_doc("POS Closing Shift", self.shift))
 
     # ---------------------- internal helpers --------------------------
 

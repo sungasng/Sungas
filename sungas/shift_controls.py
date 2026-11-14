@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, escape_html, flt, getdate, nowdate
+from frappe.utils import add_days, escape_html, flt, getdate, now_datetime, nowdate
 
 LODGEMENT = "Sungas Cash Lodgement"
 TRANSIT_ACCOUNT = "Cash in Transit"
@@ -60,7 +60,45 @@ def _plant_manager(profile, wh):
 
 # -- Closing count --------------------------------------------------------------
 
+def _count_log(raw):
+    return frappe.parse_json(raw) if raw else []
+
+
+def _shift_for_cashier(opening_shift):
+    shift = frappe.get_doc("POS Opening Shift", opening_shift)
+    if shift.user != frappe.session.user:
+        frappe.throw(_("Only the cashier of this shift can count it."))
+    return shift
+
+
+@frappe.whitelist(methods=["POST"])
+def record_count(opening_shift: str, counts) -> dict:
+    """Patch 0047: every 'Submit count' is saved on the shift -- closing the screen can no longer wipe the first count."""
+    shift = _shift_for_cashier(opening_shift)
+    if shift.status != "Open":
+        frappe.throw(_("This shift is already closed."))
+    log = _count_log(shift.get("sungas_count_log"))
+    log.append({"at": str(now_datetime()), "counts": [
+        {"mode_of_payment": c.get("mode_of_payment"), "closing_amount": flt(c.get("closing_amount"))}
+        for c in (frappe.parse_json(counts) or [])]})
+    shift.db_set("sungas_count_log", frappe.as_json(log, indent=None), update_modified=False)
+    return {"counts": len(log), "first": log[0]["counts"]}
+
+
+@frappe.whitelist()
+def get_counts(opening_shift: str) -> dict:
+    log = _count_log(_shift_for_cashier(opening_shift).get("sungas_count_log"))
+    return {"counts": len(log), "first": log[0]["counts"] if log else []}
+
+
 def validate_count(doc, method=None):
+    # Patch 0047: the counts saved on the shift decide whether this was a recount, not the screen.
+    log = _count_log(frappe.db.get_value("POS Opening Shift", doc.pos_opening_shift, "sungas_count_log")) \
+        if doc.get("pos_opening_shift") else []
+    if len(log) > 1:
+        doc.sungas_recounted = 1
+        doc.sungas_first_count = ", ".join(
+            f"{c['mode_of_payment']}: {flt(c['closing_amount']):,.2f}" for c in log[0]["counts"])
     if doc.get("sungas_recounted") and (doc.get("variance_severity") or "") in ("block", "critical") \
             and not (doc.get("sungas_count_witness") or "").strip():
         frappe.throw(_("This recount still shows a large difference. The Plant Manager must witness it - "
@@ -301,6 +339,9 @@ def install():
              "insert_after": "sungas_recounted", **ro},
             {"fieldname": "sungas_cash_lodgement", "fieldtype": "Link", "options": LODGEMENT, "label": "Cash Lodgement",
              "insert_after": "sungas_count_witness", "allow_on_submit": 1, **ro},
+        ], "POS Opening Shift": [
+            {"fieldname": "sungas_count_log", "fieldtype": "Long Text", "label": "Cash Counts (each Submit count)",
+             "allow_on_submit": 1, **ro},
         ]}, update=True)
         frappe.db.commit()
     except Exception:
