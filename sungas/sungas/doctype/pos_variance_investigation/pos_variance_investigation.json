@@ -27,6 +27,9 @@
   "signoff_section",
   "cashier_signed_by",
   "cashier_signed_on",
+  "cashier_unavailable",
+  "unavailable_witness",
+  "unavailable_reason",
   "column_break_signoff_1",
   "plant_manager_notes",
   "plant_manager_signed_by",
@@ -164,12 +167,32 @@
    "fieldtype": "Link",
    "label": "Cashier Signed By",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "cashier_signed_on",
    "fieldtype": "Datetime",
    "label": "Cashier Signed On",
+   "read_only": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "cashier_unavailable",
+   "fieldtype": "Check",
+   "label": "Cashier unavailable / refused (recorded by Plant Manager)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unavailable_witness",
+   "fieldtype": "Data",
+   "label": "Witness",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unavailable_reason",
+   "fieldtype": "Small Text",
+   "label": "Why the cashier could not give a statement",
    "read_only": 1
   },
   {
@@ -186,13 +209,15 @@
    "fieldtype": "Link",
    "label": "Plant Manager Signed By",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "plant_manager_signed_on",
    "fieldtype": "Datetime",
    "label": "Plant Manager Signed On",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "signoff_section_2",
@@ -202,20 +227,23 @@
   {
    "fieldname": "hod_ops_notes",
    "fieldtype": "Small Text",
-   "label": "HOD Operations Notes"
+   "label": "HOD Operations Notes",
+   "allow_on_submit": 1
   },
   {
    "fieldname": "hod_ops_signed_by",
    "fieldtype": "Link",
    "label": "HOD Ops Signed By",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "hod_ops_signed_on",
    "fieldtype": "Datetime",
    "label": "HOD Ops Signed On",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "column_break_signoff_2",
@@ -224,20 +252,23 @@
   {
    "fieldname": "hod_finance_notes",
    "fieldtype": "Small Text",
-   "label": "HOD Finance Notes"
+   "label": "HOD Finance Notes",
+   "allow_on_submit": 1
   },
   {
    "fieldname": "hod_finance_signed_by",
    "fieldtype": "Link",
    "label": "HOD Finance Signed By",
    "options": "User",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "hod_finance_signed_on",
    "fieldtype": "Datetime",
    "label": "HOD Finance Signed On",
-   "read_only": 1
+   "read_only": 1,
+   "allow_on_submit": 1
   },
   {
    "fieldname": "amended_from",
@@ -251,7 +282,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-17 00:00:00.000000",
+ "modified": "2026-11-15 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "POS Variance Investigation",
@@ -280,7 +311,7 @@
    "read": 1,
    "report": 1,
    "role": "Accounts User",
-   "submit": 1,
+   "submit": 0,
    "write": 1
   },
   {
@@ -308,7 +339,21 @@
    "print": 1,
    "read": 1,
    "report": 1,
-   "role": "LPG Head of Finance"
+   "role": "LPG Head of Finance",
+   "write": 1
+  },
+  {
+   "role": "LPG POS User",
+   "read": 1,
+   "write": 1,
+   "print": 1
+  },
+  {
+   "role": "Internal Control",
+   "read": 1,
+   "report": 1,
+   "print": 1,
+   "export": 1
   }
  ],
  "sort_field": "modified",

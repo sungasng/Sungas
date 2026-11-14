@@ -96,6 +96,7 @@ after_migrate = [
     # Patch 0043: blind count / recount fields on POS Closing Shift.
     "sungas.shift_controls.install",
     # Patch 0044: alert approvers of closes already waiting.
+    "sungas.overrides.closing_approval_alerts.ensure_perms",
     "sungas.overrides.closing_approval_alerts.backfill",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
@@ -125,6 +126,8 @@ permission_query_conditions = {
     "POS Invoice": "sungas.overrides.outlet_scope.pos_invoice_query",
     # Patch 0035: plant managers see only their own engagement plans.
     "Weekly Engagement Plan": "sungas.engagement.plan_query",
+    # Patch 0045: a cashier sees only her own variance investigations.
+    "POS Variance Investigation": "sungas.overrides.pvi_rules.pvi_query",
 }
 
 has_permission = {
@@ -132,6 +135,7 @@ has_permission = {
     "POS Closing Shift": "sungas.overrides.outlet_scope.pos_closing_shift_has_perm",
     "POS Invoice": "sungas.overrides.outlet_scope.pos_invoice_has_perm",
     "Weekly Engagement Plan": "sungas.engagement.plan_has_permission",
+    "POS Variance Investigation": "sungas.overrides.pvi_rules.pvi_has_permission",
 }
 
 # (commented stub below kept intentionally for reference)
@@ -230,6 +234,8 @@ doc_events = {
             'sungas.overrides.pos_closing_shift.compute_variance_severity',
             # Patch 0043 -- a recount on a big difference must name the witnessing Plant Manager.
             'sungas.shift_controls.validate_count',
+            # Patch 0045 -- an approver may not sign two boxes of the same case; HoO / HoF boxes stamped.
+            'sungas.overrides.pvi_rules.check_closing_approver',
         ],
         'before_submit': [
             'sungas.overrides.pos_closing_shift.validate_variance',
@@ -336,6 +342,8 @@ scheduler_events = {
         "sungas.lpg_fill.sweep",
         # Patch 0043 -- cash not lodged by next working day -> PM; +1 -> Heads + IC; bank match > 3 days -> Finance.
         "sungas.shift_controls.sweep",
+        # Patch 0045 -- cashier statement reminders (24 h) / PM may record unavailable (48 h).
+        "sungas.overrides.pvi_rules.sweep",
     ],
     # Wave P-2: GIT Ageing. Hourly. Opens ToDo on Draft Material Receipt
     # SEs that have been sitting in GIT past Sungas Procurement Policy

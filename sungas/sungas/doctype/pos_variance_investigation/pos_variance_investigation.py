@@ -31,10 +31,16 @@ class POSVarianceInvestigation(Document):
 
     def validate(self):
         self._enforce_severity_eligibility()
+        from sungas.overrides import pvi_rules
+
+        pvi_rules.validate(self)
 
     def before_submit(self):
         self._require_complete_narrative()
-        self._stamp_cashier_signature()
+        from sungas.overrides import pvi_rules
+
+        # Patch 0045: the Plant Manager submits; the cashier's box is never stamped with someone else's name.
+        pvi_rules.before_submit(self)
 
     def on_submit(self):
         # Keep the linked shift pointing at us in case it was created
@@ -115,6 +121,7 @@ def stamp_role_signoff(
             "hod_finance_notes",
         ),
     }
+    frappe.only_for("System Manager")  # Patch 0045: boxes are stamped by the approval itself
     if role_key not in field_map:
         frappe.throw(_("Unknown role_key {0}").format(role_key))
     by_field, on_field, notes_field = field_map[role_key]

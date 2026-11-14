@@ -82,3 +82,57 @@ def backfill():
         frappe.db.commit()
     except Exception:
         frappe.log_error(frappe.get_traceback(), "sungas.closing_approval_alerts.backfill")
+
+
+# Patch 0044b -- approvers could not open the closing shift ("Page pos-closing-shift not found"): the Custom DocPerm
+# set only gave level-0 access to cashiers and the Head of Operations. Final approval submits, so it needs submit.
+PERMS = [
+    ("LPG Head of Finance", 0, dict(read=1, write=1, submit=1, report=1, print=1)),
+    ("LPG Head of Finance", 1, dict(read=1, write=1)),
+    ("LPG Head of Operations", 0, dict(read=1, write=1, submit=1, report=1, print=1)),
+    ("System Manager", 0, dict(read=1, write=1, submit=1, cancel=1, report=1, print=1, export=1)),
+    ("COO", 0, dict(read=1, write=1, submit=1, report=1, print=1)),
+    ("LPG Plant Manager", 0, dict(read=1, write=1, report=1, print=1)),
+    ("Accounts Manager", 0, dict(read=1, report=1, print=1, export=1)),
+    ("Internal Control", 0, dict(read=1, report=1, print=1, export=1)),
+]
+
+
+# Patch 0044c -- final approval submits the close, which also updates the POS Opening Shift and its receipts:
+# Ismail got "No permission for POS Opening Shift". Updating a submitted record needs submit, so approvers get
+# read/write/submit on both.
+LINKED_PERMS = {
+    "POS Opening Shift": [(r, 0, dict(read=1, write=1, submit=1)) for r in
+                          ("LPG Head of Finance", "LPG Head of Operations", "COO", "System Manager")]
+    + [(r, 0, dict(read=1)) for r in ("LPG Plant Manager", "Accounts Manager", "Internal Control")],
+    "POS Invoice": [(r, 0, dict(read=1, write=1, submit=1)) for r in
+                    ("LPG Head of Finance", "LPG Head of Operations", "COO", "System Manager")]
+    + [(r, 0, dict(read=1)) for r in ("LPG Plant Manager", "Accounts Manager", "Internal Control")],
+}
+
+
+def ensure_perms():
+    for dt, rows in LINKED_PERMS.items():
+        _ensure(dt, rows)
+    _ensure("POS Closing Shift", PERMS)
+
+
+def _ensure(dt, perms):
+    try:
+        for role, level, rights in perms:
+            if not frappe.db.exists("Role", role):
+                continue
+            name = frappe.db.get_value("Custom DocPerm", {"parent": dt, "role": role,
+                                                          "permlevel": level, "if_owner": 0})
+            if name:
+                for k, v in rights.items():
+                    if not frappe.db.get_value("Custom DocPerm", name, k):
+                        frappe.db.set_value("Custom DocPerm", name, k, v)
+            else:
+                frappe.get_doc({"doctype": "Custom DocPerm", "parent": dt, "parenttype": "DocType",
+                                "parentfield": "permissions", "role": role, "permlevel": level, **rights}
+                               ).insert(ignore_permissions=True)
+        frappe.clear_cache(doctype=dt)
+        frappe.db.commit()
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "sungas.closing_approval_alerts.ensure_perms")
