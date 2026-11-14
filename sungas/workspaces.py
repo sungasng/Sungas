@@ -116,6 +116,7 @@ LAYOUT = {
                       _sc("Shift Closings", "POS Closing Shift"),
                       # 0041: unfilled gas receipts + fill variance
                       _sc("Filler Screen", None, kind="URL", color="Green", url="/fill"),
+                      _sc("Cash Lodgements", "Sungas Cash Lodgement", color="Orange"),
                       _sc("Unfilled Receipts", "Unfilled LPG Receipts", kind="Report", color="Red"),
                       _sc("Fill Variance", "LPG Fill Variance", kind="Report", color="Red")],
     },
@@ -144,6 +145,7 @@ LAYOUT = {
                       _sc("Trips to Settle", "Daily Loading Schedule", color="Purple"),
                       _sc("General Ledger", "General Ledger", kind="Report", color="Grey"),
                       _sc("Unfilled Receipts", "Unfilled LPG Receipts", kind="Report", color="Red"),
+                      _sc("Cash Lodgements", "Sungas Cash Lodgement", color="Orange"),
                       _sc("Fill Variance", "LPG Fill Variance", kind="Report", color="Red")],
     },
     "Sungas HR Desk": {

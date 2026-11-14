@@ -1,0 +1,319 @@
+{
+ "actions": [],
+ "autoname": "CL-.YY.-.#####",
+ "creation": "2026-11-15 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "closing_shift",
+  "pos_profile",
+  "plant",
+  "company",
+  "col_a",
+  "cashier",
+  "shift_date",
+  "plant_manager",
+  "status",
+  "section_cash",
+  "counted_cash",
+  "opening_float",
+  "col_b",
+  "cash_to_lodge",
+  "section_lodge",
+  "lodged_amount",
+  "bank_account",
+  "lodgement_date",
+  "col_c",
+  "teller_no",
+  "deposit_slip",
+  "difference",
+  "remarks",
+  "section_acc",
+  "transit_journal",
+  "bank_journal",
+  "col_d",
+  "banked_on",
+  "banked_by",
+  "escalation",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "closing_shift",
+   "fieldtype": "Link",
+   "label": "Closing Shift",
+   "options": "POS Closing Shift",
+   "reqd": 1,
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "pos_profile",
+   "fieldtype": "Link",
+   "label": "Till",
+   "options": "POS Profile",
+   "read_only": 1
+  },
+  {
+   "fieldname": "plant",
+   "fieldtype": "Link",
+   "label": "Plant",
+   "options": "Warehouse",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cashier",
+   "fieldtype": "Link",
+   "label": "Cashier",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "shift_date",
+   "fieldtype": "Date",
+   "label": "Shift Date",
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "plant_manager",
+   "fieldtype": "Link",
+   "label": "Plant Manager",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Awaiting Lodgement\nIn Transit\nBanked\nCancelled",
+   "default": "Awaiting Lodgement",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "allow_on_submit": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_cash",
+   "fieldtype": "Section Break",
+   "label": "Cash from the shift"
+  },
+  {
+   "fieldname": "counted_cash",
+   "fieldtype": "Currency",
+   "label": "Cash Counted at Close",
+   "read_only": 1
+  },
+  {
+   "fieldname": "opening_float",
+   "fieldtype": "Currency",
+   "label": "Less Opening Float (stays in the drawer)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_b",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cash_to_lodge",
+   "fieldtype": "Currency",
+   "label": "Cash to Lodge",
+   "bold": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_lodge",
+   "fieldtype": "Section Break",
+   "label": "Bank deposit (Plant Manager)"
+  },
+  {
+   "fieldname": "lodged_amount",
+   "fieldtype": "Currency",
+   "label": "Amount Lodged",
+   "reqd": 1
+  },
+  {
+   "fieldname": "bank_account",
+   "fieldtype": "Link",
+   "label": "Bank Account",
+   "options": "Account",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lodgement_date",
+   "fieldtype": "Date",
+   "label": "Date Lodged",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "teller_no",
+   "fieldtype": "Data",
+   "label": "Teller / Deposit Slip No.",
+   "reqd": 1
+  },
+  {
+   "fieldname": "deposit_slip",
+   "fieldtype": "Attach Image",
+   "label": "Photo of Deposit Slip",
+   "reqd": 1
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Currency",
+   "label": "Difference (Lodged - To Lodge)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks (required if there is a difference)"
+  },
+  {
+   "fieldname": "section_acc",
+   "fieldtype": "Section Break",
+   "label": "Accounting (Finance)"
+  },
+  {
+   "fieldname": "transit_journal",
+   "fieldtype": "Link",
+   "label": "Cash in Transit Journal",
+   "options": "Journal Entry",
+   "allow_on_submit": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "bank_journal",
+   "fieldtype": "Link",
+   "label": "Draft Bank Posting",
+   "options": "Journal Entry",
+   "allow_on_submit": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_d",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "banked_on",
+   "fieldtype": "Date",
+   "label": "Matched to Bank Statement On",
+   "allow_on_submit": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "banked_by",
+   "fieldtype": "Link",
+   "label": "Matched By",
+   "options": "User",
+   "allow_on_submit": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "escalation",
+   "fieldtype": "Int",
+   "label": "Escalation Level",
+   "hidden": 1,
+   "allow_on_submit": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Sungas Cash Lodgement",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-15 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Cash Lodgement",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "delete": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "LPG Plant Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "report": 1
+  },
+  {
+   "role": "Accounts Manager",
+   "read": 1,
+   "write": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "LPG Head of Finance",
+   "read": 1,
+   "write": 1,
+   "submit": 1,
+   "cancel": 1,
+   "amend": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "LPG Head of Operations",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "Internal Control",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  },
+  {
+   "role": "COO",
+   "read": 1,
+   "report": 1,
+   "export": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "title_field": "plant"
+}

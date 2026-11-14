@@ -184,6 +184,19 @@ def _send_escalation(
         ref_name=opening_shift.name,
     )
 
+    # Patch 0043 -- WhatsApp the Plant Manager too (bell already rung by send_transactional_email).
+    try:
+        from sungas.utils import whatsapp
+
+        pm = frappe.db.get_value("POS Profile", pos_profile, "outlet_manager")
+        cashier = frappe.db.get_value("User", opening_shift.user, "full_name") or opening_shift.user
+        whatsapp.send([pm] if pm else [], "sungas_approval_overdue", {
+            "approver_name": whatsapp.first_name(pm), "doc_label": f"{cashier}'s shift {opening_shift.name} ({pos_profile})",
+            "hours": f"{age_hours:.0f}", "waiting_on": "closing - the till cannot sell on it after its day",
+            "link": whatsapp.doc_url("POS Opening Shift", opening_shift.name)}, ref=f"SHIFT:{opening_shift.name}:{level_hours}")
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "shift_age_escalation whatsapp")
+
     # Mark sent regardless of Brevo outcome — failures are already logged and
     # we don't want a flaky email provider to spam users on the next cron pass.
     _mark_sent(opening_shift.name, level_hours)

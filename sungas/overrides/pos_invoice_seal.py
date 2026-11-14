@@ -35,8 +35,10 @@ def block_sale_on_sealed_shift(doc, method=None):
     Reject the new invoice if its linked opening shift has a draft closing
     shift in a Pending workflow state.
     """
+    # Patch 0043: POS Awesome stores the shift in posa_pos_opening_shift -- the seal never fired before.
     opening_shift = (
-        doc.get("pos_opening_entry")
+        doc.get("posa_pos_opening_shift")
+        or doc.get("pos_opening_entry")
         or doc.get("opening_entry")
         or doc.get("pos_opening_shift")
     )
@@ -54,6 +56,7 @@ def block_sale_on_sealed_shift(doc, method=None):
         as_dict=True,
     )
     if not pending_close:
+        _block_old_shift(opening_shift)
         return
 
     frappe.throw(
@@ -78,3 +81,15 @@ def block_sale_on_sealed_shift(doc, method=None):
         ),
         title=_("Shift Sealed — Variance Approval Pending"),
     )
+
+
+def _block_old_shift(opening_shift):
+    """Patch 0043: a shift sells only on the business day it was opened."""
+    start = frappe.db.get_value("POS Opening Shift", opening_shift, "period_start_date")
+    if start and frappe.utils.getdate(start) < frappe.utils.getdate(frappe.utils.nowdate()):
+        frappe.throw(
+            _("This shift ({0}) was opened on {1}. A shift can only sell on the day it was opened - close it "
+              "(Menu > Close Shift) and open today's shift.").format(
+                opening_shift, frappe.utils.formatdate(start)),
+            title=_("Close yesterday's shift first"),
+        )

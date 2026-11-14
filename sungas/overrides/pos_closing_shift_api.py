@@ -64,6 +64,10 @@ def submit_closing_shift(closing_shift):
             "net_total",
             "total_quantity",
             "variance_remarks",
+            # Patch 0043 -- blind count / recount trail.
+            "sungas_first_count",
+            "sungas_recounted",
+            "sungas_count_witness",
         ):
             if f in payload:
                 doc.set(f, payload.get(f))

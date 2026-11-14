@@ -117,6 +117,7 @@ def run() -> dict:
     from sungas.utils.bell import ring
     from sungas.commercial_desk import briefing_rows
     from sungas.lpg_fill import briefing_section
+    from sungas.shift_controls import briefing_section as cash_section
 
     summary = {"managers": 0, "briefed": 0}
     acts = _open_actions()
@@ -134,7 +135,7 @@ def run() -> dict:
         figline, has_figs = for_user(user, roles, day, figs, missing, policy_log)
         group_pending, group_changes = briefing_rows(user, roles, day)
         approvals += group_pending
-        unfilled = briefing_section(user, roles, day)
+        unfilled = briefing_section(user, roles, day) + cash_section(user, roles)
         if not approvals and not tasks and not has_figs and not group_changes and not unfilled:
             continue
         subj = subject(len(approvals), len(tasks))

@@ -93,6 +93,8 @@ after_migrate = [
     "sungas.pos_sale_rules.install",
     # Patch 0041: gas fill status on receipts, LPG Filler role.
     "sungas.lpg_fill.install",
+    # Patch 0043: blind count / recount fields on POS Closing Shift.
+    "sungas.shift_controls.install",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -197,9 +199,16 @@ doc_events = {
         ],
     },
     "Journal Entry": {
-        'on_submit': 'sungas.controllers.journal_entry.submit_journal_entry',
+        'on_submit': [
+            'sungas.controllers.journal_entry.submit_journal_entry',
+            # Patch 0043 -- Finance submitting the draft bank posting marks the lodgement Banked.
+            'sungas.shift_controls.journal_submitted',
+        ],
         # Patch 0016 -- cancelling a trip settlement JE re-opens the DLS.
-        'on_cancel': 'sungas.overrides.haulage_costing.on_settlement_je_cancel',
+        'on_cancel': [
+            'sungas.overrides.haulage_costing.on_settlement_je_cancel',
+            'sungas.shift_controls.journal_cancelled',
+        ],
     },
     # Patch 0016 -- IAS 2 standard haulage on GIT -> outlet receipt legs.
     "Stock Entry": {
@@ -212,12 +221,20 @@ doc_events = {
         'on_update': 'sungas.overrides.trip_auto_close.on_dls_update',
     },
     "POS Closing Shift": {
-        'validate': 'sungas.overrides.pos_closing_shift.compute_variance_severity',
+        'validate': [
+            'sungas.overrides.pos_closing_shift.compute_variance_severity',
+            # Patch 0043 -- a recount on a big difference must name the witnessing Plant Manager.
+            'sungas.shift_controls.validate_count',
+        ],
         'before_submit': [
             'sungas.overrides.pos_closing_shift.validate_variance',
             'sungas.overrides.pos_variance_investigation_integration.require_investigation_for_hard_variance',
         ],
-        'on_submit': 'sungas.overrides.pos_closing_shift.post_variance_journal',
+        'on_submit': [
+            'sungas.overrides.pos_closing_shift.post_variance_journal',
+            # Patch 0043 -- draft Cash Lodgement for the Plant Manager.
+            'sungas.shift_controls.create_lodgement',
+        ],
         'on_update': [
             'sungas.overrides.variance_sla.track_state_entry',
             'sungas.overrides.pos_closing_shift.post_provisional_journal',
@@ -310,6 +327,8 @@ scheduler_events = {
         "sungas.scheduled_jobs.fixture_drift_audit.run",
         # Patch 0041 -- unfilled receipts past 7 days expire -> Plant Manager; +2 days -> Heads + Internal Control.
         "sungas.lpg_fill.sweep",
+        # Patch 0043 -- cash not lodged by next working day -> PM; +1 -> Heads + IC; bank match > 3 days -> Finance.
+        "sungas.shift_controls.sweep",
     ],
     # Wave P-2: GIT Ageing. Hourly. Opens ToDo on Draft Material Receipt
     # SEs that have been sitting in GIT past Sungas Procurement Policy
