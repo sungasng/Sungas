@@ -56,6 +56,7 @@ def block_sale_on_sealed_shift(doc, method=None):
         as_dict=True,
     )
     if not pending_close:
+        _block_closed_shift(opening_shift)
         _block_old_shift(opening_shift)
         return
 
@@ -67,6 +68,16 @@ def block_sale_on_sealed_shift(doc, method=None):
           "their own shift.").format(pending_close.name, pending_close.workflow_state.replace("Pending ", "with ")),
         title=_("Till locked - waiting for approval"),
     )
+
+
+def _block_closed_shift(opening_shift):
+    """Patch 0046: the till was still holding a shift that has since been closed and approved."""
+    if frappe.db.get_value("POS Opening Shift", opening_shift, "status") == "Closed":
+        frappe.throw(
+            _("Shift {0} is already closed. Reload this page (press F5) and open a new shift to "
+              "continue selling.").format(opening_shift),
+            title=_("This shift is closed - open a new one"),
+        )
 
 
 def _block_old_shift(opening_shift):
