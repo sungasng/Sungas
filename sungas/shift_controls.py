@@ -88,8 +88,10 @@ def record_count(opening_shift: str, counts) -> dict:
 @frappe.whitelist()
 def approver_roles() -> list:
     """Patch 0048: the closing form reads the approver roles here -- approvers cannot read the Close Policy itself."""
-    raw = frappe.db.get_single_value("Sungas Close Policy", "approver_roles") or ""
-    return [r.strip() for r in raw.split("\n") if r.strip()]
+    # Patch 0051: the policy holds a primary and a secondary approver role (there is no 'approver_roles' field).
+    vals = frappe.db.get_value("Sungas Close Policy", "Sungas Close Policy",
+                               ["approver_role_primary", "approver_role_secondary"]) or ()
+    return [r for r in vals if r]
 
 
 @frappe.whitelist()

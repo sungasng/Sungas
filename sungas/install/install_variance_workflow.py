@@ -27,7 +27,7 @@ Transitions (action / from -> to / role / condition):
 
   4. Approve / Pending HOD Operations -> Approved  /
         LPG Head of Operations  /
-        cond: doc.variance_severity == 'block'
+        cond: doc.variance_severity != 'critical'
 
   5. Escalate to Finance / Pending HOD Operations -> Pending HOD Finance  /
         LPG Head of Operations  /
@@ -106,7 +106,7 @@ TRANSITIONS = [
     # 4 / 5 / 6. HOD Ops review
     ("Approve", "Pending HOD Operations", "Approved",
      "LPG Head of Operations,System Manager",
-     "doc.variance_severity == 'block'"),
+     "doc.variance_severity != 'critical'"),
     ("Escalate to Finance", "Pending HOD Operations", "Pending HOD Finance",
      "LPG Head of Operations,System Manager",
      "doc.variance_severity == 'critical'"),
