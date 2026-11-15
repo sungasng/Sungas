@@ -71,6 +71,16 @@ def auto_create_variance_investigation(doc, method=None) -> None:
             "POS Closing Shift", doc.name, LINK_FIELD,
             investigation.name, update_modified=False,
         )
+        # Patch 0050: tell the cashier now -- on the till screen and by bell / WhatsApp.
+        from sungas.overrides.pvi_rules import tell_cashier
+
+        tell_cashier(investigation.name)
+        if frappe.session.user == doc.get("user"):
+            frappe.msgprint(
+                _("Your close has a large cash difference, so investigation <b>{0}</b> has been opened and your till "
+                  "is locked.<br><br>Open it from the bell (top right) or the link we sent you, write what happened, "
+                  "press <b>Save</b>, then <b>Sign my statement</b>.").format(investigation.name),
+                title=_("Write your statement"), indicator="orange")
     except Exception as exc:
         frappe.log_error(
             title="Sungas POS Variance Investigation",

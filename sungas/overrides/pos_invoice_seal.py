@@ -52,7 +52,7 @@ def block_sale_on_sealed_shift(doc, method=None):
             "docstatus": 0,
             "workflow_state": ["in", list(_SEALED_WORKFLOW_STATES)],
         },
-        ["name", "workflow_state", "variance_severity"],
+        ["name", "workflow_state", "variance_severity", "pos_variance_investigation"],
         as_dict=True,
     )
     if not pending_close:
@@ -61,12 +61,18 @@ def block_sale_on_sealed_shift(doc, method=None):
         _block_old_shift(opening_shift)
         return
 
+    # Patch 0050: point the cashier at her investigation while it still needs her statement.
+    pvi = pending_close.pos_variance_investigation
+    todo = ""
+    if pvi and not frappe.db.get_value("POS Variance Investigation", pvi, "cashier_signed_by"):
+        todo = _("<br><br><b>Your statement is needed:</b> open <a href=\"/app/pos-variance-investigation/{0}\" "
+                 "target=\"_blank\">{0}</a>, write what happened, Save, then Sign my statement.").format(pvi)
     # Patch 0044: plain words for the cashier.
     frappe.throw(
         _("Your last shift close ({0}) has a cash difference that is waiting for approval ({1}). "
           "You cannot sell until it is approved.<br><br>"
           "Please tell your Plant Manager. To keep the outlet selling, another cashier can log in and open "
-          "their own shift.").format(pending_close.name, pending_close.workflow_state.replace("Pending ", "with ")),
+          "their own shift.").format(pending_close.name, pending_close.workflow_state.replace("Pending ", "with ")) + todo,
         title=_("Till locked - waiting for approval"),
     )
 

@@ -350,6 +350,8 @@ scheduler_events = {
     # git_stale_hours (default 72). Idempotent via existing-Open-ToDo
     # check so re-runs are safe.
     "hourly": [
+        # Patch 0050 -- cashier silent 4 hours on her investigation -> Plant Manager.
+        "sungas.overrides.pvi_rules.nudge",
         "sungas.scheduled_jobs.git_ageing.run",
         # Patch 0019 -- close reconciled trips, flag trips open > 24h to HoO.
         "sungas.overrides.trip_auto_close.sweep",

@@ -150,12 +150,58 @@ def check_closing_approver(closing, method=None):
     if user == "Administrator":
         return
     pvi = frappe.get_doc(DT, closing.pos_variance_investigation)
+    # Patch 0050: nobody approves a close (Plant Manager included) until its investigation is finished.
+    if closing.workflow_state != "Rejected" and pvi.docstatus != 1:
+        frappe.throw(_("Investigation {0} is not finished yet. The cashier writes and signs her statement, then the "
+                       "Plant Manager fills the cause and corrective action and submits it. Approve this close after "
+                       "that.").format(pvi.name), title=_("Investigation not finished"))
     mine = {"Pending Plant Manager": pvi.plant_manager_signed_by}.get(old.workflow_state)
     if user == closing.user or (user in signers(pvi) and user != mine):
         frappe.throw(_("You already signed this case in another role (or it is your own shift). "
                        "Another approver must take this step."), title=_("Separation of duties"))
     if old.workflow_state in ("Pending HOD Operations", "Pending HOD Finance") and closing.workflow_state != "Rejected":
         stamp_from_closing(closing, old.workflow_state, user)
+
+
+def tell_cashier(pvi_name):
+    """Patch 0050: the cashier is told (bell + WhatsApp) the moment her investigation opens."""
+    from frappe.utils import flt
+
+    from sungas.utils import whatsapp
+    from sungas.utils.bell import ring
+
+    d = frappe.get_doc(DT, pvi_name)
+    if not d.cashier or d.cashier_signed_by:
+        return
+    link = whatsapp.doc_url(DT, d.name)
+    amt = abs(flt(d.variance_amount))
+    ring([d.cashier], _("Write and sign your statement on {0}").format(d.name),
+         f"<p>Your shift close {d.shift} has a cash difference of NGN {amt:,.2f}. Open <a href=\"{link}\">{d.name}</a>, "
+         "write what happened in your own words, press <b>Save</b>, then <b>Sign my statement</b>. "
+         "Your till stays locked until the case is approved.</p>", DT, d.name)
+    whatsapp.send([d.cashier], "sungas_approval_needed", {
+        "approver_name": whatsapp.first_name(d.cashier), "doc_label": f"Variance investigation {d.name}",
+        "summary": f"Shift close {d.shift}, difference NGN {amt:,.0f}",
+        "state": "Write and sign your statement - tap the link", "link": link}, ref=f"PVI:{d.name}:cashier")
+
+
+def nudge() -> int:
+    """Patch 0050 (hourly): cashier has not signed 4 hours after the investigation opened -> her Plant Manager."""
+    from sungas.overrides.closing_approval_alerts import approvers
+    from sungas.utils.bell import ring
+
+    n = 0
+    for r in frappe.get_all(DT, filters={"docstatus": 0, "cashier_signed_by": ["is", "not set"], "cashier_unavailable": 0,
+                                         "creation": ["<", add_to_date(now_datetime(), hours=-4)]},
+                            fields=["name", "cashier", "pos_profile", "shift"]):
+        subject = f"{r.name}: {r.cashier} has not signed her statement after 4 hours"
+        for u in approvers(frappe._dict(pos_profile=r.pos_profile), "Pending Plant Manager"):
+            if not frappe.db.exists("Notification Log", {"for_user": u, "subject": subject}):
+                ring([u], subject, f"<p>Shift close {r.shift} is waiting on the cashier's statement. Please follow up "
+                                   "with her today.</p>", DT, r.name)
+                n += 1
+    frappe.db.commit()
+    return n
 
 
 def sweep() -> dict:
