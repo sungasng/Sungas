@@ -1,6 +1,11 @@
 // Patch 0045 -- cashier signs her own statement; Plant Manager records an unavailable cashier.
 frappe.ui.form.on("POS Variance Investigation", {
 	refresh(frm) {
+		// Patch 0048: the cashier writes only her statement; the cause and corrective action are the Plant Manager's.
+		const isCashier = frappe.session.user === frm.doc.cashier;
+		["primary_cause", "other_cause_detail", "contributing_factors", "corrective_action", "plant_manager_notes"]
+			.forEach((f) => frm.set_df_property(f, "read_only", isCashier ? 1 : 0));
+		frm.set_df_property("cashier_statement", "read_only", isCashier && !frm.doc.cashier_signed_by ? 0 : 1);
 		if (frm.doc.docstatus !== 0 || frm.doc.cashier_signed_by) return;
 		if (frappe.session.user === frm.doc.cashier) {
 			frm.add_custom_button(__("Sign my statement"), () => {

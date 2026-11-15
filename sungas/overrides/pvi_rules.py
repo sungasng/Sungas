@@ -37,6 +37,9 @@ def signers(doc) -> set:
 
 
 def validate(doc):
+    # Patch 0048: the amount follows the close (a corrected close used to leave the old figure here).
+    if doc.shift:
+        doc.variance_amount = frappe.db.get_value("POS Closing Shift", doc.shift, "variance_amount")
     if doc.flags.sungas_internal or frappe.flags.in_install or frappe.flags.in_migrate:
         return
     user = frappe.session.user
@@ -66,6 +69,11 @@ def before_submit(doc):
                        "use 'Record cashier unavailable'.").format(UNAVAILABLE_HOURS), title=_("Cashier statement missing"))
     if user == doc.cashier:
         frappe.throw(_("The Plant Manager submits the investigation, not the cashier."))
+    # Patch 0048: cause and corrective action are the Plant Manager's -- required at submit, not when the cashier saves.
+    if not doc.primary_cause or not (doc.corrective_action or "").strip():
+        frappe.throw(_("Fill the Primary Cause and the Corrective Action before submitting."))
+    if doc.primary_cause == "Other" and not (doc.get("other_cause_detail") or "").strip():
+        frappe.throw(_("Describe the cause (Primary Cause is 'Other')."))
     if user != "Administrator" and not (is_plant_manager(doc, user) or "LPG Head of Operations" in frappe.get_roles(user)):
         frappe.throw(_("Only the Plant Manager of this till submits the investigation."))
     if user in signers(doc):

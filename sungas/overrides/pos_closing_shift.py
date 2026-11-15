@@ -394,11 +394,15 @@ def cancel_provisional_journal(doc, method=None):
     if not je_name:
         return
     try:
+        # Patch 0048: approvers have no Journal Entry rights -- the system cancels it, then a resubmit posts a fresh one.
         je = frappe.get_doc("Journal Entry", je_name)
         if je.docstatus == 1:
+            je.flags.ignore_permissions = True
             je.cancel()
-            frappe.db.commit()
+        doc.db_set("variance_provisional_je", None, update_modified=False)
+        frappe.db.commit()
     except Exception as e:
+        frappe.clear_last_message()
         frappe.log_error(
             f"cancel_provisional_journal failed for {doc.name} ({je_name}): {e}",
             "Sungas variance hook",

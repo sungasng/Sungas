@@ -57,6 +57,7 @@ def block_sale_on_sealed_shift(doc, method=None):
     )
     if not pending_close:
         _block_closed_shift(opening_shift)
+        _block_counted_shift(opening_shift)
         _block_old_shift(opening_shift)
         return
 
@@ -77,6 +78,17 @@ def _block_closed_shift(opening_shift):
             _("Shift {0} is already closed. Reload this page (press F5) and open a new shift to "
               "continue selling.").format(opening_shift),
             title=_("This shift is closed - open a new one"),
+        )
+
+
+def _block_counted_shift(opening_shift):
+    """Patch 0048: once the till has been counted for closing, no new receipts -- finish the close first."""
+    if frappe.db.get_value("POS Opening Shift", opening_shift, "sungas_count_log"):
+        frappe.throw(
+            _("You have already counted this till for closing ({0}). No more sales can be made on this shift.<br><br>"
+              "Open <b>Close Shift</b> and finish the close. To keep the outlet selling, another cashier can log in "
+              "and open their own shift.").format(opening_shift),
+            title=_("Till counted - finish closing"),
         )
 
 

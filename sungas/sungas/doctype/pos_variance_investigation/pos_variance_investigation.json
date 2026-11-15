@@ -117,7 +117,7 @@
    "in_standard_filter": 1,
    "label": "Primary Cause",
    "options": "\nWrong change given\nCustomer dispute (refund pending)\nTheft (suspected)\nCash drop missing / unaccounted\nCounterfeit notes accepted\nSystem error (POS / cash float misconfig)\nDeposit mis-counted at bank\nFloat handover error\nOther",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "depends_on": "eval:doc.primary_cause === 'Other'",
@@ -139,7 +139,7 @@
    "fieldname": "corrective_action",
    "fieldtype": "Small Text",
    "label": "Corrective Action Required",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "fieldname": "evidence_section",
@@ -150,7 +150,7 @@
    "fieldname": "cashier_statement",
    "fieldtype": "Long Text",
    "label": "Cashier Statement",
-   "reqd": 1
+   "reqd": 0
   },
   {
    "fieldname": "evidence_help",
@@ -282,7 +282,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-15 12:00:00.000000",
+ "modified": "2026-11-15 12:30:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "POS Variance Investigation",

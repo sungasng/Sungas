@@ -86,6 +86,13 @@ def record_count(opening_shift: str, counts) -> dict:
 
 
 @frappe.whitelist()
+def approver_roles() -> list:
+    """Patch 0048: the closing form reads the approver roles here -- approvers cannot read the Close Policy itself."""
+    raw = frappe.db.get_single_value("Sungas Close Policy", "approver_roles") or ""
+    return [r.strip() for r in raw.split("\n") if r.strip()]
+
+
+@frappe.whitelist()
 def get_counts(opening_shift: str) -> dict:
     log = _count_log(_shift_for_cashier(opening_shift).get("sungas_count_log"))
     return {"counts": len(log), "first": log[0]["counts"] if log else []}

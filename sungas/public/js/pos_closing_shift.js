@@ -23,16 +23,10 @@ let _approver_roles_cache = null;
 async function get_approver_roles(frm) {
     if (_approver_roles_cache) return _approver_roles_cache;
     try {
-        const { message } = await frappe.db.get_value(
-            "Sungas Close Policy",
-            "Sungas Close Policy",
-            ["approver_roles"]
-        );
-        if (message && message.approver_roles) {
-            const roles = message.approver_roles
-                .split("\n")
-                .map((r) => r.trim())
-                .filter(Boolean);
+        // Patch 0048: approvers cannot read Sungas Close Policy -- ask the server instead.
+        const { message } = await frappe.call({ method: "sungas.shift_controls.approver_roles" });
+        if (Array.isArray(message)) {
+            const roles = message;
             if (roles.length) {
                 _approver_roles_cache = roles;
                 return roles;
