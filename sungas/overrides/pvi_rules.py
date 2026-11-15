@@ -39,7 +39,7 @@ def signers(doc) -> set:
 def validate(doc):
     # Patch 0048: the amount follows the close (a corrected close used to leave the old figure here).
     if doc.shift:
-        doc.variance_amount = frappe.db.get_value("POS Closing Shift", doc.shift, "variance_amount")
+        doc.set("variance_amount", frappe.db.get_value("POS Closing Shift", doc.shift, "variance_amount"))
     if doc.flags.sungas_internal or frappe.flags.in_install or frappe.flags.in_migrate:
         return
     user = frappe.session.user
@@ -47,8 +47,15 @@ def validate(doc):
         return
     old = doc.get_doc_before_save()
     changed = (lambda f: (old.get(f) if old else None) != doc.get(f)) if old else (lambda f: bool(doc.get(f)))
-    if any(changed(f) for f in LOCKED):
-        frappe.throw(_("Signatures are added by the system. Use 'Sign my statement' or the approval actions."))
+    # Patch 0049: signatures are only ever set by the system -- a page opened before an approver signed
+    # (stale form) used to block the save; now the stored signatures are simply kept.
+    for f in LOCKED:
+        doc.set(f, old.get(f) if old else None)
+    if user == doc.cashier and any(changed(f) for f in PM_FIELDS):
+        for f in PM_FIELDS:
+            doc.set(f, old.get(f) if old else None)
+        frappe.msgprint(_("Your statement is saved. The cause and corrective action are filled by the Plant Manager, "
+                          "so what you typed there was not kept."), indicator="orange", alert=True)
     if changed("cashier_statement"):
         if old and old.cashier_signed_by:
             frappe.throw(_("The cashier's statement is signed and can no longer be changed."))
@@ -56,8 +63,6 @@ def validate(doc):
             frappe.throw(_("Only the cashier of this shift ({0}) can write her statement. If she is unavailable "
                            "for {1} hours, the Plant Manager records that instead.").format(doc.cashier, UNAVAILABLE_HOURS))
     if any(changed(f) for f in PM_FIELDS):
-        if user == doc.cashier:
-            frappe.throw(_("The cause and corrective action are filled by the Plant Manager. Put your side in your statement."))
         if not (is_plant_manager(doc, user) or HEADS & set(frappe.get_roles(user))):
             frappe.throw(_("Only the Plant Manager of this till can fill the investigation."))
 
