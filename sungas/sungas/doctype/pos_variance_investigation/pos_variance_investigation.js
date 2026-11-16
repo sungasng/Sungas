@@ -28,7 +28,18 @@ function statusBar(frm) {
 	const closed = d.case_status === "Closed" ? `<span class="indicator-pill green">${__("Closed")} &middot; ${d.clearing_je || ""}</span>` : "";
 	const back = d.send_back_reason && d.case_status === "Waiting for Plant Manager"
 		? `<div style="margin-top:6px;color:var(--red-600)"><b>${__("Sent back")}:</b> ${frappe.utils.escape_html(d.send_back_reason)}</div>` : "";
-	frm.set_intro(`<div data-testid="variance-case-status-bar">${closed || html}${back}</div>`, false);
+	// Patch 0054: one plain sentence telling the person looking at the case what to do now.
+	const me = frappe.session.user;
+	const role = (r) => frappe.user.has_role(r) || frappe.user.has_role("System Manager");
+	const todo = {
+		"Waiting for Cashier": me === d.cashier ? __("Your turn: write your statement, press Save, then Sign my statement (top right).") : "",
+		"Waiting for Plant Manager": role("LPG Plant Manager") && me !== d.cashier
+			? __("Your turn: fill the Cause, Corrective Action and Outcome rows (they must add up to the shortage and overage), press Save, then Send for approval (top right).") : "",
+		"Waiting for Head of Operations": role("LPG Head of Operations") ? __("Your turn: read the case, then Approve or Send back to Plant Manager (top right).") : "",
+		"Waiting for Head of Finance": role("LPG Head of Finance") ? __("Your turn: read the case, then Approve or Send back to Plant Manager (top right).") : "",
+	}[d.case_status];
+	const hint = todo ? `<div style="margin-top:6px;font-weight:600" data-testid="variance-case-your-turn">${todo}</div>` : "";
+	frm.set_intro(`<div data-testid="variance-case-status-bar">${closed || html}${back}${hint}</div>`, false);
 }
 
 function call(frm, method, args) {

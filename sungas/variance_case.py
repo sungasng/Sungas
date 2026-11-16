@@ -64,6 +64,9 @@ def open_case(closing):
         "period_end_date": getdate(closing.period_end_date), "variance_severity": closing.variance_severity,
         "variance_amount": closing.variance_amount, "shortage_total": short, "overage_total": over,
         "holding_je": holding, "case_status": W_CASHIER, "waiting_since": now_datetime(),
+        # Patch 0054: a starting outcome the Plant Manager edits (he can split or change it).
+        "outcomes": ([{"outcome": "Charge the cashier", "amount": short}] if short else [])
+                    + ([{"outcome": "Keep as overage", "amount": over}] if over else []),
     })
     case.flags.sungas_internal = True
     case.insert(ignore_permissions=True, ignore_mandatory=True)

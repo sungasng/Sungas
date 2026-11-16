@@ -24,14 +24,14 @@
   "overage_total",
   "holding_je",
   "clearing_je",
+  "outcome_section",
+  "outcomes",
   "cause_section",
   "primary_cause",
   "other_cause_detail",
   "column_break_cause",
   "contributing_factors",
   "corrective_action",
-  "outcome_section",
-  "outcomes",
   "evidence_section",
   "cashier_statement",
   "evidence_help",
@@ -188,6 +188,18 @@
    "no_copy": 1
   },
   {
+   "fieldname": "outcome_section",
+   "fieldtype": "Section Break",
+   "label": "Outcome (Plant Manager)",
+   "description": "What happened to the money. Shortage outcomes must add up to the shortage, overage outcomes to the overage."
+  },
+  {
+   "fieldname": "outcomes",
+   "fieldtype": "Table",
+   "label": "Outcomes",
+   "options": "Sungas Variance Outcome"
+  },
+  {
    "fieldname": "cause_section",
    "fieldtype": "Section Break",
    "label": "Cause Taxonomy"
@@ -222,18 +234,6 @@
    "fieldtype": "Small Text",
    "label": "Corrective Action Required",
    "reqd": 0
-  },
-  {
-   "fieldname": "outcome_section",
-   "fieldtype": "Section Break",
-   "label": "Outcome (Plant Manager)",
-   "description": "What happened to the money. Shortage outcomes must add up to the shortage, overage outcomes to the overage."
-  },
-  {
-   "fieldname": "outcomes",
-   "fieldtype": "Table",
-   "label": "Outcomes",
-   "options": "Sungas Variance Outcome"
   },
   {
    "fieldname": "evidence_section",
@@ -376,7 +376,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-16 12:00:00.000000",
+ "modified": "2026-11-16 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "POS Variance Investigation",
@@ -393,10 +393,10 @@
    "report": 1,
    "role": "System Manager",
    "share": 1,
-   "submit": 1,
+   "submit": 0,
    "write": 1,
-   "cancel": 1,
-   "amend": 1
+   "cancel": 0,
+   "amend": 0
   },
   {
    "create": 1,
@@ -406,7 +406,9 @@
    "report": 1,
    "role": "Accounts User",
    "submit": 0,
-   "write": 1
+   "write": 1,
+   "cancel": 0,
+   "amend": 0
   },
   {
    "create": 1,
@@ -416,7 +418,9 @@
    "report": 1,
    "role": "LPG Plant Manager",
    "submit": 0,
-   "write": 1
+   "write": 1,
+   "cancel": 0,
+   "amend": 0
   },
   {
    "create": 1,
@@ -426,7 +430,9 @@
    "report": 1,
    "role": "LPG Head of Operations",
    "submit": 0,
-   "write": 1
+   "write": 1,
+   "cancel": 0,
+   "amend": 0
   },
   {
    "email": 1,
@@ -434,20 +440,29 @@
    "read": 1,
    "report": 1,
    "role": "LPG Head of Finance",
-   "write": 1
+   "write": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0
   },
   {
    "role": "LPG POS User",
    "read": 1,
    "write": 1,
-   "print": 1
+   "print": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0
   },
   {
    "role": "Internal Control",
    "read": 1,
    "report": 1,
    "print": 1,
-   "export": 1
+   "export": 1,
+   "submit": 0,
+   "cancel": 0,
+   "amend": 0
   }
  ],
  "sort_field": "modified",
