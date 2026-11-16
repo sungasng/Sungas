@@ -63,6 +63,13 @@ frappe.ui.form.on("POS Variance Investigation", {
 			.forEach((f) => frm.set_df_property(f, "read_only", isCashier || d.case_status !== "Waiting for Plant Manager" && d.case_status !== "Waiting for Cashier" ? 1 : 0));
 		frm.set_df_property("cashier_statement", "read_only", isCashier && !d.cashier_signed_by ? 0 : 1);
 		statusBar(frm);
+		// Patch 0056: a Head can add a watcher (e.g. HR) who reads the case and gets its alerts.
+		if (["LPG Head of Operations", "LPG Head of Finance", "COO", "System Manager"].some((r) => frappe.user.has_role(r))) {
+			frm.add_custom_button(__("Add watcher (e.g. HR)"), () =>
+				frappe.prompt([{ fieldname: "user", fieldtype: "Link", options: "User", label: __("User"), reqd: 1,
+					get_query: () => ({ filters: { enabled: 1, user_type: "System User" } }) }],
+				(v) => call(frm, "add_watcher", { user: v.user }), __("Add watcher")));
+		}
 		if (d.docstatus !== 0) return;
 
 		if (isCashier && !d.cashier_signed_by) {

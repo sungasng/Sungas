@@ -19,6 +19,7 @@
   "case_status",
   "waiting_since",
   "send_back_reason",
+  "watchers",
   "column_break_case",
   "shortage_total",
   "overage_total",
@@ -145,6 +146,14 @@
    "fieldname": "send_back_reason",
    "fieldtype": "Small Text",
    "label": "Last Sent Back",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "watchers",
+   "fieldtype": "Small Text",
+   "label": "Watchers (read only, get alerts)",
    "read_only": 1,
    "allow_on_submit": 1,
    "no_copy": 1
@@ -376,7 +385,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-16 14:00:00.000000",
+ "modified": "2026-11-16 16:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "POS Variance Investigation",

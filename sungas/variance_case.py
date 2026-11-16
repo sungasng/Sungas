@@ -72,12 +72,7 @@ def open_case(closing):
     case.insert(ignore_permissions=True, ignore_mandatory=True)
     closing.db_set("pos_variance_investigation", case.name, update_modified=False)
     notify(case)
-    if frappe.session.user == closing.user:
-        frappe.msgprint(
-            _("Your shift is closed. It has a cash difference (Short NGN {0:,.2f} / Over NGN {1:,.2f}), so variance case "
-              "<b>{2}</b> has been opened.<br><br>Open it from the bell (top right) or the link we sent you, write what "
-              "happened, press <b>Save</b>, then <b>Sign my statement</b>. You can open your next shift now.")
-            .format(short, over, case.name), title=_("Write your statement"), indicator="orange")
+    # The till shows the case notice itself (posa-0043) and waits for the cashier.
     return case.name
 
 
@@ -262,7 +257,7 @@ def actors(case, status=None):
     return approvers(frappe._dict(pos_profile=case.pos_profile), state) if state.startswith("Pending") else []
 
 
-def _send(users, subject, line, case):
+def _send(users, subject, line, case, wa=True):
     from sungas.utils import brevo, whatsapp
 
     users = [u for u in dict.fromkeys(users) if u and u not in ("Administrator", "lmd-bot@sungas.org")]
@@ -272,7 +267,7 @@ def _send(users, subject, line, case):
     html = f"<p>{line}</p><p><a href=\"{link}\">Open {case.name}</a></p>"
     to = [{"email": u, "name": frappe.db.get_value("User", u, "full_name") or u} for u in users]
     brevo.send_transactional_email(to, subject, html, tags=["variance-case"], ref_doctype=DT, ref_name=case.name)
-    for u in users:
+    for u in users if wa else []:
         whatsapp.send([u], "sungas_approval_needed", {
             "approver_name": whatsapp.first_name(u), "doc_label": f"Variance case {case.name}",
             "summary": f"{case.pos_profile} - short NGN {flt(case.shortage_total):,.0f} / over NGN "
@@ -280,7 +275,31 @@ def _send(users, subject, line, case):
             ref=f"VC:{case.name}:{case.case_status}:{u}")
 
 
+def watchers(case) -> list:
+    return [u for u in (case.get("watchers") or "").split("\n") if u.strip()]
+
+
+@frappe.whitelist(methods=["POST"])
+def add_watcher(name: str, user: str) -> dict:
+    """Patch 0056: a Head adds someone (e.g. HR) who can read the case and gets its alerts, but cannot edit it."""
+    frappe.only_for(("LPG Head of Operations", "LPG Head of Finance", "COO", "System Manager"))
+    case = frappe.get_doc(DT, name)
+    if user in watchers(case):
+        return {"watchers": watchers(case)}
+    frappe.share.add_docshare(DT, name, user, read=1, write=0, share=0, notify=0, flags={"ignore_share_permission": 1})
+    case.db_set("watchers", "\n".join(watchers(case) + [user]), update_modified=False)
+    by = frappe.db.get_value("User", frappe.session.user, "full_name") or frappe.session.user
+    case.add_comment("Comment", _("{0} added {1} as a watcher.").format(by, user))
+    _send([user], f"{case.name}: you were added to a variance case",
+          f"{by} added you to variance case {case.name} ({case.case_status}). You can read it and will be told "
+          "of each step; you cannot edit it.", case, wa=False)
+    return {"watchers": watchers(case) + [user]}
+
+
 def notify(case):
+    if watchers(case):
+        _send(watchers(case), f"{case.name}: {case.case_status} (for your information)",
+              f"Variance case {case.name} is now '{case.case_status}'.", case, wa=False)
     who = frappe.db.get_value("User", case.cashier, "full_name") or case.cashier
     amounts = f"short NGN {flt(case.shortage_total):,.2f} / over NGN {flt(case.overage_total):,.2f}"
     s = case.case_status
@@ -325,6 +344,36 @@ def nudge() -> int:
         n += 1
     frappe.db.commit()
     return n
+
+
+def morning_digest():
+    """Patch 0056 (08:00 WAT): open cases, whose turn, how long, amounts held -> Heads and COO (email + bell)."""
+    from sungas.utils import brevo
+
+    rows = frappe.get_all(DT, filters={"docstatus": 0, "case_status": ["in", list(SLA_FIELDS)]}, order_by="waiting_since",
+                          fields=["name", "pos_profile", "cashier", "case_status", "waiting_since", "shortage_total",
+                                  "overage_total", "variance_severity"])
+    heads = frappe.get_all("Has Role", filters={"role": ["in", ["LPG Head of Operations", "LPG Head of Finance", "COO"]],
+                                                "parenttype": "User"}, pluck="parent", distinct=True)
+    heads = [u for u in heads if frappe.db.get_value("User", u, "enabled") and u not in ("Administrator", "lmd-bot@sungas.org")]
+    if not heads:
+        return 0
+    now = now_datetime()
+    held = sum(flt(r.shortage_total) - flt(r.overage_total) for r in rows)
+    trs = "".join(
+        f"<tr><td><a href=\"{frappe.utils.get_url_to_form(DT, r.name)}\">{r.name}</a></td><td>{(r.pos_profile or '').replace('POS - ', '')}</td>"
+        f"<td>{frappe.db.get_value('User', r.cashier, 'full_name') or r.cashier}</td><td>{r.case_status.replace('Waiting for ', '')}</td>"
+        f"<td>{int((now - get_datetime(r.waiting_since)).total_seconds() // 3600) if r.waiting_since else '-'} h</td>"
+        f"<td style='text-align:right'>{flt(r.shortage_total):,.2f}</td><td style='text-align:right'>{flt(r.overage_total):,.2f}</td>"
+        f"<td>{r.variance_severity}</td></tr>" for r in rows)
+    html = (f"<p><b>{len(rows)}</b> open variance case(s); net held in Cash Variance Pending: <b>NGN {held:,.2f}</b>.</p>"
+            + (f"<table border='1' cellpadding='4' style='border-collapse:collapse'><tr><th>Case</th><th>Plant</th>"
+               f"<th>Cashier</th><th>Whose turn</th><th>Waiting</th><th>Short NGN</th><th>Over NGN</th><th>Level</th></tr>"
+               f"{trs}</table>" if rows else "<p>No open cases.</p>"))
+    to = [{"email": u, "name": frappe.db.get_value("User", u, "full_name") or u} for u in heads]
+    brevo.send_transactional_email(to, f"Variance cases this morning: {len(rows)} open, NGN {held:,.0f} held", html,
+                                   tags=["variance-digest"], ref_doctype=DT, ref_name=rows[0].name if rows else None)
+    return len(rows)
 
 
 # ---------------------------------------------------------------- install

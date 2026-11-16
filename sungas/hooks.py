@@ -358,6 +358,8 @@ scheduler_events = {
             "sungas.scheduled_jobs.shift_age_escalation.run",
             # Patch 0024 -- 7 AM manager morning briefing (bell + email).
             "sungas.scheduled_jobs.morning_briefing.run",
+            # Patch 0056 -- 08:00 WAT: open variance cases digest to the Heads and COO.
+            "sungas.variance_case.morning_digest",
         ],
         # Patch 0032 -- Commercial Desk: hourly 48 h nudge, Monday digest.
         "15 * * * *": ["sungas.commercial_desk.escalate_overdue"],
