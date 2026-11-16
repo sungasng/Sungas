@@ -5,3 +5,4 @@ sungas.patches.v2.enable_system_notifications
 sungas.patches.v2.cgcr_restore_current_group
 sungas.patches.v2.cs21_back_to_plant_manager
 sungas.patches.v2.phase1_clear_inflight_closes
+sungas.patches.v2.delete_closing_approval_workflow

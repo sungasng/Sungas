@@ -99,7 +99,6 @@ after_migrate = [
     "sungas.variance_case.install",
     # Patch 0044: alert approvers of closes already waiting.
     "sungas.overrides.closing_approval_alerts.ensure_perms",
-    "sungas.overrides.closing_approval_alerts.backfill",
     # Patch 0022: IFRS category defaults + backfill of blank items.
     "sungas.utils.ifrs_category.backfill",
     # Patch 0023: IOVC write-offs must post to an Expense account (8600), not 1609.
@@ -245,9 +244,6 @@ doc_events = {
             # Patch 0043 -- draft Cash Lodgement for the Plant Manager.
             'sungas.shift_controls.create_lodgement',
         ],
-        'on_update': [
-            'sungas.overrides.variance_sla.track_state_entry',
-        ],
     },
     "POS Invoice": {
         'before_insert': 'sungas.overrides.pos_invoice_seal.block_sale_on_sealed_shift',
@@ -370,12 +366,6 @@ scheduler_events = {
         "0 23 * * 2": ["sungas.commercial_desk.target_nudge"],
         # Patch 0035 -- engagement plan deadlines (configurable in Sungas Engagement Settings).
         "0 * * * *": ["sungas.engagement.tick"],
-        # Wave D-3: Variance approval SLA breach. Runs 08:30 UTC = 09:30 WAT,
-        # 90 min after the open-shift cron. Single indexed query/day,
-        # idempotent via variance_sla_escalation_level.
-        "30 8 * * *": [
-            "sungas.scheduled_jobs.variance_sla_breach.run",
-        ],
         # Wave B-11: Monthly Escalation Digest. Runs 09:00 UTC on the 1st of
         # every month — emails HOD Ops + HOD Finance a summary of the prior
         # month's D-2/D-3 escalations + current backlog snapshot.
@@ -911,7 +901,6 @@ fixtures = [
                 "name",
                 "in",
                 [
-                    "POS Closing Shift Variance",
                     "Sungas Purchase Receipt Approval",
                     "Sungas Inter-Outlet Variance Approval",
                     "LPG Bulk Price Upload Approval",

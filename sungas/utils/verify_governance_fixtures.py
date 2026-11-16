@@ -89,7 +89,6 @@ REQUIRED_SERVER_SCRIPTS = (
 )
 
 REQUIRED_WORKFLOWS = (
-    "POS Closing Shift Variance",
     "Sungas Purchase Receipt Approval",
     "Sungas Inter-Outlet Variance Approval",
     # Patch 0027
