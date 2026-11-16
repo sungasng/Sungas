@@ -5,8 +5,10 @@ A Dispatched trip closes itself once it is fully reconciled:
   * every drop's receipt Stock Entry is submitted (or the drop was marked
     Rejected / Rescheduled), and
   * no Draft receipt is still hanging off the dispatch.
-Shortfalls are already owned by the IOVC opened on the last receipt, so
-nothing is force-closed here. If Patch 0016 requires trip-cost settlement,
+Patch 0058: a trip with an open shortage case (IOVC / TLVC) on any of its
+stock entries waits for that case and closes itself the moment the case is
+approved; while it waits it is tagged 'Waiting on case' and is not chased as a
+stale trip (the case has its own time limits). If Patch 0016 requires trip-cost settlement,
 Finance gets a task first. Trips still open 24h after dispatch are flagged
 to the Head of Operations (ToDo + bell + email), never closed.
 """
@@ -22,6 +24,8 @@ HOO_ROLES = ("LPG Head of Operations",)
 FINANCE_ROLES = ("LPG Head of Finance", "Accounts Manager")
 TAG_STALE = "[Trip Still Open]"
 TAG_SETTLE = "[Trip Ready - Settle Costs]"
+CASE_LINKS = (("Inter-Outlet Variance Case", ("dispatch_entry", "receipt_entry")),
+              ("Transit Loss Variance Case", ("outlet_receipt_se",)))
 
 
 def _docstatus(se):
@@ -47,6 +51,30 @@ def reconcile_status(doc) -> dict:
     if disp and frappe.db.count("Stock Entry", {"outgoing_stock_entry": disp, "docstatus": 0}):
         pending.append("a Draft receipt is still open on the dispatch")
     return {"ready": not pending, "pending": pending}
+
+
+def _trip_entries(doc) -> list[str]:
+    ses = [doc.get("dispatch_stock_entry")] + [d.get("receipt_stock_entry") for d in doc.get("drops") or []]
+    return [se for se in ses if se]
+
+
+def open_cases(doc) -> list[str]:
+    ses = _trip_entries(doc)
+    found = set()
+    for dt, fields in CASE_LINKS if ses else ():
+        for f in fields:
+            found.update(frappe.get_all(dt, filters={f: ["in", ses], "docstatus": 0}, pluck="name"))
+    return sorted(found)
+
+
+def _mark_waiting(doc, cases):
+    text = ", ".join(cases)
+    if (doc.get("waiting_on_case") or "") == text:
+        return
+    frappe.db.set_value(DLS, doc.name, "waiting_on_case", text, update_modified=False)
+    if text:
+        doc.add_comment("Info", f"<b>[Trip Auto-Close]</b> Every drop is received. The trip closes itself once case(s) "
+                                f"{text} are approved.")
 
 
 def _settlement_pending(doc) -> bool:
@@ -105,6 +133,10 @@ def try_auto_close(ls: str) -> dict:
     st = reconcile_status(doc)
     if not st["ready"]:
         return {"closed": False, "pending": st["pending"]}
+    cases = open_cases(doc)
+    _mark_waiting(doc, cases)
+    if cases:
+        return {"closed": False, "waiting_case": True, "pending": [f"case {c} still open" for c in cases]}
     if _settlement_pending(doc):
         _task(FINANCE_ROLES, doc, TAG_SETTLE,
               f"Trip {doc.name} is fully delivered - settle trip costs so it can close",
@@ -114,7 +146,7 @@ def try_auto_close(ls: str) -> dict:
     doc.state = "Closed"
     doc.auto_closed_at = now_datetime()
     doc.save(ignore_permissions=True)
-    doc.add_comment("Info", "<b>[Trip Auto-Close]</b> Every drop received and reconciled -- trip closed automatically.")
+    doc.add_comment("Info", "<b>[Trip Auto-Close]</b> Every drop received and every case resolved -- trip closed automatically.")
     _close_tasks(doc)
     return {"closed": True, "pending": []}
 
@@ -150,6 +182,18 @@ def on_stock_entry_submit(doc, method=None):
         _enqueue(ls)
 
 
+def on_case_closed(doc, method=None):
+    """IOVC / TLVC approved or cancelled: re-check the trip(s) it belongs to."""
+    ses = {doc.get(f) for _, fields in CASE_LINKS for f in fields if doc.get(f)}
+    if not ses:
+        return
+    trips = set(frappe.get_all(DLS, filters={"dispatch_stock_entry": ["in", list(ses)]}, pluck="name"))
+    trips.update(frappe.get_all("Schedule Drop", filters={"receipt_stock_entry": ["in", list(ses)], "parenttype": DLS},
+                                pluck="parent"))
+    for ls in trips:
+        _enqueue(ls)
+
+
 def on_dls_update(doc, method=None):
     if doc.get("state") == "Dispatched":
         _enqueue(doc.name)
@@ -161,7 +205,7 @@ def sweep():
     for row in frappe.get_all(DLS, filters={"state": "Dispatched"},
                               fields=["name", "dispatched_at", "modified"]):
         res = _safe_try(row.name) or {}
-        if res.get("closed"):
+        if res.get("closed") or res.get("waiting_case"):
             frappe.db.commit()
             continue
         rolled = get_datetime(row.dispatched_at or row.modified)
@@ -179,3 +223,19 @@ def sweep():
             frappe.db.commit()
         except Exception:
             frappe.log_error(frappe.get_traceback(), f"sungas.trip_auto_close sweep {row.name}")
+
+
+def install():
+    """after_migrate: 'Waiting on case' tag on trips (filterable in the list)."""
+    from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+
+    try:
+        create_custom_fields({DLS: [{
+            "fieldname": "waiting_on_case", "fieldtype": "Data", "label": "Waiting on case", "read_only": 1,
+            "no_copy": 1, "in_list_view": 1, "in_standard_filter": 1, "insert_after": "auto_closed_at",
+            "depends_on": "eval:doc.waiting_on_case",
+            "description": "Every drop is received; the trip closes itself once these case(s) are approved (Patch 0058)."}]},
+            update=True)
+        frappe.db.commit()
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "sungas.trip_auto_close.install")

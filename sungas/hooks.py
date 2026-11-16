@@ -99,6 +99,8 @@ after_migrate = [
     "sungas.variance_case.install",
     # Patch 0057: stock tolerance, bulk flag, one plant setup per POS plant.
     "sungas.stock_check.install",
+    # Patch 0058: 'Waiting on case' tag on trips.
+    "sungas.overrides.trip_auto_close.install",
     # Patch 0044: alert approvers of closes already waiting.
     "sungas.overrides.closing_approval_alerts.ensure_perms",
     # Patch 0022: IFRS category defaults + backfill of blank items.
@@ -305,6 +307,13 @@ doc_events = {
         # Patch 0024 -- cases are opened by the outlet-receipt automation only.
         'before_insert': 'sungas.overrides.transit_loss_guard.require_system_opened',
         'on_update': 'sungas.overrides.transit_loss_hof_notify.notify_hof_on_writeoff_pending',
+        # Patch 0058 -- an approved / cancelled case lets its trip close itself.
+        'on_submit': 'sungas.overrides.trip_auto_close.on_case_closed',
+        'on_cancel': 'sungas.overrides.trip_auto_close.on_case_closed',
+    },
+    "Inter-Outlet Variance Case": {
+        'on_submit': 'sungas.overrides.trip_auto_close.on_case_closed',
+        'on_cancel': 'sungas.overrides.trip_auto_close.on_case_closed',
     },
     # Patch 0020 -- role landing workspace + sidebar module isolation.
     "User": {
@@ -350,6 +359,8 @@ scheduler_events = {
     "hourly": [
         # Patch 0052 -- variance case past its time limit -> reminder + next person up.
         "sungas.variance_case.nudge",
+        # Patch 0058 -- open variance cases digest at the hour set on Sungas Close Policy (default 08:00 site time).
+        "sungas.variance_case.digest_tick",
         # Patch 0057 -- missing plant readings (09:00 day-open / 22:00 day-close) -> Plant Manager.
         "sungas.stock_check.hourly",
         "sungas.scheduled_jobs.git_ageing.run",
@@ -366,10 +377,6 @@ scheduler_events = {
         "sungas.lpg_fill.month_end_reclass",
     ],
     "cron": {
-        # Patch 0056/0057 -- 08:00 site time (WAT): open variance cases digest to the Heads and COO.
-        "0 8 * * *": [
-            "sungas.variance_case.morning_digest",
-        ],
         "0 7 * * *": [
             "sungas.scheduled_jobs.shift_age_escalation.run",
             # Patch 0024 -- 7 AM manager morning briefing (bell + email).

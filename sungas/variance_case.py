@@ -346,6 +346,21 @@ def nudge() -> int:
     return n
 
 
+DIGEST_KEY = "sungas_variance_digest_last_sent"
+
+
+def digest_tick():
+    """Patch 0058 (hourly): send the digest once a day, at/after the hour set on Sungas Close Policy."""
+    now = now_datetime()
+    hour = int((frappe.db.get_single_value("Sungas Close Policy", "digest_hour") or "08:00")[:2])
+    today = str(now.date())
+    if now.hour < hour or frappe.db.get_default(DIGEST_KEY) == today:
+        return
+    frappe.db.set_default(DIGEST_KEY, today)
+    frappe.db.commit()
+    morning_digest()
+
+
 def morning_digest():
     """Patch 0056 (08:00 WAT): open cases, whose turn, how long, amounts held -> Heads and COO (email + bell)."""
     from sungas.utils import brevo
@@ -389,6 +404,9 @@ def install():
             fields.append({"fieldname": fn, "fieldtype": "Float", "label": status, "default": str(default),
                            "insert_after": prev})
             prev = fn
+        fields.append({"fieldname": "digest_hour", "fieldtype": "Select", "label": "Open-case digest time (site time)",
+                       "options": "\n".join(f"{h:02d}:00" for h in range(24)), "default": "08:00", "insert_after": prev,
+                       "description": "The morning digest of open variance cases goes to the Heads and COO at this hour."})
         create_custom_fields({"Sungas Close Policy": fields}, update=True)
         for status, (fn, default) in SLA_FIELDS.items():
             if not frappe.db.get_single_value("Sungas Close Policy", fn):
