@@ -111,6 +111,11 @@ def check_outcomes(case):
         side, target = OUTCOMES[r.outcome]
         if target == "mop" and not r.mode_of_payment:
             frappe.throw(_("Row {0}: choose the payment type ({1}).").format(r.idx, r.outcome))
+        # Patch 0055: only this till's payment types; not used for the other outcomes.
+        if target != "mop":
+            r.mode_of_payment = None
+        elif r.mode_of_payment not in till_modes(case):
+            frappe.throw(_("Row {0}: {1} is not a payment type of this till.").format(r.idx, r.mode_of_payment))
         if r.outcome in NEEDS_NOTE and not (r.note or "").strip():
             frappe.throw(_("Row {0}: give the reason for '{1}'.").format(r.idx, r.outcome))
         sides[side] += flt(r.amount)
@@ -118,6 +123,19 @@ def check_outcomes(case):
         if abs(sides[side] - total) > 0.01:
             frappe.throw(_("The {0} outcomes add up to NGN {1:,.2f} but the {0} is NGN {2:,.2f}.").format(
                 _("shortage") if side == "short" else _("overage"), sides[side], total), title=_("Outcomes do not add up"))
+
+
+def till_modes(case) -> list:
+    return frappe.get_all("POS Closing Shift Detail",
+                          filters={"parent": case.shift, "parenttype": "POS Closing Shift"}, pluck="mode_of_payment")
+
+
+@frappe.whitelist()
+def case_payment_types(doctype, txt, searchfield, start, page_len, filters):
+    """Patch 0055: the outcome's payment type list shows only this till's payment types."""
+    case = frappe.get_doc(DT, (filters or {}).get("case"))
+    case.check_permission("read")
+    return [[m] for m in till_modes(case) if (txt or "").lower() in m.lower()]
 
 
 @frappe.whitelist(methods=["POST"])
@@ -164,8 +182,8 @@ def approve(name: str, notes: str = "") -> dict:
             return {"status": case.case_status}
         case.update(stamp)
     else:
-        case.update(hod_finance_signed_by=user, hod_finance_signed_on=now_datetime(),
-                    hod_finance_notes=notes or case.hod_finance_notes)
+        case.update(dict(hod_finance_signed_by=user, hod_finance_signed_on=now_datetime(),
+                         hod_finance_notes=notes or case.hod_finance_notes))
     finalize(case)
     return {"status": case.case_status, "clearing_je": case.clearing_je}
 
@@ -225,7 +243,7 @@ def finalize(case):
     je.submit()
     closing.db_set("variance_je", je.name, update_modified=False)
     case.flags.sungas_internal = case.flags.sungas_final = case.flags.ignore_permissions = True
-    case.update(clearing_je=je.name, case_status=CLOSED, waiting_since=None)
+    case.update(dict(clearing_je=je.name, case_status=CLOSED, waiting_since=None))
     case.submit()
     notify(case)
 

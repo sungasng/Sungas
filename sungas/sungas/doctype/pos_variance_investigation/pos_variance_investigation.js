@@ -37,10 +37,17 @@ function call(frm, method, args) {
 }
 
 frappe.ui.form.on("POS Variance Investigation", {
+	setup(frm) {
+		// Patch 0055: only this till's payment types (no other plant's accounts).
+		frm.set_query("mode_of_payment", "outcomes", () => ({ query: VC + "case_payment_types", filters: { case: frm.doc.name } }));
+	},
 	refresh(frm) {
 		const d = frm.doc;
 		const me = frappe.session.user;
 		const isCashier = me === d.cashier;
+		// Patch 0055: each Head's note is his own, open only on his turn.
+		frm.set_df_property("hod_ops_notes", "read_only", d.case_status === "Waiting for Head of Operations" && frappe.user.has_role("LPG Head of Operations") ? 0 : 1);
+		frm.set_df_property("hod_finance_notes", "read_only", d.case_status === "Waiting for Head of Finance" && frappe.user.has_role("LPG Head of Finance") ? 0 : 1);
 		["primary_cause", "other_cause_detail", "contributing_factors", "corrective_action", "plant_manager_notes", "outcomes"]
 			.forEach((f) => frm.set_df_property(f, "read_only", isCashier || d.case_status !== "Waiting for Plant Manager" && d.case_status !== "Waiting for Cashier" ? 1 : 0));
 		frm.set_df_property("cashier_statement", "read_only", isCashier && !d.cashier_signed_by ? 0 : 1);

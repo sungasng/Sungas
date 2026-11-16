@@ -70,6 +70,13 @@ def validate(doc):
             pm_changed = False
         elif not (is_plant_manager(doc, user) or HEADS & set(frappe.get_roles(user))):
             frappe.throw(_("Only the Plant Manager of this till can fill the investigation."))
+    # Patch 0055: each Head writes only his own note, and only while the case is waiting for him.
+    for f, role, state in (("hod_ops_notes", "LPG Head of Operations", "Waiting for Head of Operations"),
+                           ("hod_finance_notes", "LPG Head of Finance", "Waiting for Head of Finance")):
+        if changed(f) and not (role in frappe.get_roles(user) and doc.get("case_status") == state):
+            doc.set(f, old.get(f) if old else None)
+            frappe.msgprint(_("Only the {0} writes that note, while the case is waiting for him - your change to it "
+                              "was not kept.").format(role.replace("LPG ", "")), indicator="orange", alert=True)
     # Patch 0052: once sent for approval the finding is frozen -- an approver sends it back to change it.
     if pm_changed and doc.get("case_status") in ("Waiting for Head of Operations", "Waiting for Head of Finance"):
         frappe.throw(_("This case has been sent for approval. Ask the approver to send it back to change the "

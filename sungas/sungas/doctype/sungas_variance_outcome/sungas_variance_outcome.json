@@ -28,7 +28,9 @@
    "label": "Payment Type",
    "options": "Mode of Payment",
    "columns": 2,
-   "description": "Needed for 'Cash recovered' and 'Count error'"
+   "description": "Only for 'Cash recovered' (where the money was put back) and 'Count error' (the payment type that was miscounted)",
+   "depends_on": "eval:['Cash recovered','Count error (short)','Count error (over)'].includes(doc.outcome)",
+   "mandatory_depends_on": "eval:['Cash recovered','Count error (short)','Count error (over)'].includes(doc.outcome)"
   },
   {
    "fieldname": "amount",
@@ -48,7 +50,7 @@
  ],
  "index_web_pages_for_search": 0,
  "links": [],
- "modified": "2026-11-16 12:00:00.000000",
+ "modified": "2026-11-16 15:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "Sungas Variance Outcome",
