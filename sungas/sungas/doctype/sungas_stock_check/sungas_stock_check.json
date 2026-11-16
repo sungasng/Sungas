@@ -1,0 +1,280 @@
+{
+ "actions": [],
+ "creation": "2026-11-17 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Sungas",
+ "name": "Sungas Stock Check",
+ "owner": "Administrator",
+ "modified": "2026-11-17 09:00:00.000000",
+ "modified_by": "Administrator",
+ "istable": 0,
+ "is_submittable": 0,
+ "editable_grid": 0,
+ "fields": [
+  {
+   "fieldname": "plant",
+   "fieldtype": "Link",
+   "label": "Plant",
+   "options": "Sungas Plant Setup",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "check_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "label": "Result",
+   "options": "OK\nVariance",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "case_status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nWaiting for Plant Manager\nWaiting for Head of Operations\nClosed",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "waiting_since",
+   "fieldtype": "Datetime",
+   "label": "Waiting Since",
+   "read_only": 1
+  },
+  {
+   "fieldname": "send_back_reason",
+   "fieldtype": "Small Text",
+   "label": "Last Sent Back",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_a",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "tolerance_kg",
+   "fieldtype": "Float",
+   "label": "Tolerance (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "open_reading",
+   "fieldtype": "Link",
+   "label": "Day-open Reading",
+   "options": "Sungas Plant Reading",
+   "read_only": 1
+  },
+  {
+   "fieldname": "close_reading",
+   "fieldtype": "Link",
+   "label": "Day-close Reading",
+   "options": "Sungas Plant Reading",
+   "read_only": 1
+  },
+  {
+   "fieldname": "s1",
+   "fieldtype": "Section Break",
+   "label": "1. Dispensers vs sales"
+  },
+  {
+   "fieldname": "dispensed_kg",
+   "fieldtype": "Float",
+   "label": "Dispensed (totalizers, kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sold_kg",
+   "fieldtype": "Float",
+   "label": "Sold through dispensers (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dispenser_gap_kg",
+   "fieldtype": "Float",
+   "label": "Gap (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "s2",
+   "fieldtype": "Section Break",
+   "label": "2. Tank balance"
+  },
+  {
+   "fieldname": "open_tank_kg",
+   "fieldtype": "Float",
+   "label": "Opening Tank (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "received_kg",
+   "fieldtype": "Float",
+   "label": "Received (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tank_out_kg",
+   "fieldtype": "Float",
+   "label": "Loaded from Tank - bulk / transfers (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_b",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "book_close_kg",
+   "fieldtype": "Float",
+   "label": "Expected Closing Tank (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "close_tank_kg",
+   "fieldtype": "Float",
+   "label": "Closing Tank (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tank_gap_kg",
+   "fieldtype": "Float",
+   "label": "Gap (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "s3",
+   "fieldtype": "Section Break",
+   "label": "3. Overnight"
+  },
+  {
+   "fieldname": "overnight_gap_kg",
+   "fieldtype": "Float",
+   "label": "Overnight Gap since previous close (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "s4",
+   "fieldtype": "Section Break",
+   "label": "Finding (Plant Manager)"
+  },
+  {
+   "fieldname": "cause",
+   "fieldtype": "Select",
+   "label": "Cause",
+   "options": "\nMeter / reading error\nLeak or loss\nUnrecorded sale or delivery\nUnrecorded receipt\nOther"
+  },
+  {
+   "fieldname": "finding",
+   "fieldtype": "Small Text",
+   "label": "What happened / action taken"
+  },
+  {
+   "fieldname": "pm_signed_by",
+   "fieldtype": "Link",
+   "label": "Plant Manager",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_c",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "hoo_notes",
+   "fieldtype": "Small Text",
+   "label": "Head of Operations Notes"
+  },
+  {
+   "fieldname": "hoo_signed_by",
+   "fieldtype": "Link",
+   "label": "Head of Operations",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "field_order": [
+  "plant",
+  "check_date",
+  "result",
+  "case_status",
+  "waiting_since",
+  "send_back_reason",
+  "col_a",
+  "tolerance_kg",
+  "open_reading",
+  "close_reading",
+  "s1",
+  "dispensed_kg",
+  "sold_kg",
+  "dispenser_gap_kg",
+  "s2",
+  "open_tank_kg",
+  "received_kg",
+  "tank_out_kg",
+  "col_b",
+  "book_close_kg",
+  "close_tank_kg",
+  "tank_gap_kg",
+  "s3",
+  "overnight_gap_kg",
+  "s4",
+  "cause",
+  "finding",
+  "pm_signed_by",
+  "col_c",
+  "hoo_notes",
+  "hoo_signed_by"
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "LPG Head of Operations",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "LPG Head of Finance",
+   "read": 1
+  },
+  {
+   "role": "COO",
+   "read": 1
+  },
+  {
+   "role": "Internal Control",
+   "read": 1
+  },
+  {
+   "role": "LPG Plant Manager",
+   "read": 1,
+   "write": 1
+  }
+ ],
+ "links": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "format:SC-{plant}-{check_date}",
+ "title_field": "plant"
+}

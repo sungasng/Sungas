@@ -1,0 +1,166 @@
+{
+ "actions": [],
+ "creation": "2026-11-17 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Sungas",
+ "name": "Sungas Plant Reading",
+ "owner": "Administrator",
+ "modified": "2026-11-17 09:00:00.000000",
+ "modified_by": "Administrator",
+ "istable": 0,
+ "is_submittable": 1,
+ "editable_grid": 0,
+ "fields": [
+  {
+   "fieldname": "plant",
+   "fieldtype": "Link",
+   "label": "Plant",
+   "options": "Sungas Plant Setup",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "reading_date",
+   "fieldtype": "Date",
+   "label": "Date",
+   "reqd": 1,
+   "in_list_view": 1,
+   "default": "Today",
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "reading_type",
+   "fieldtype": "Select",
+   "label": "Reading",
+   "options": "Day open\nDay close",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "reading_time",
+   "fieldtype": "Datetime",
+   "label": "Taken At",
+   "reqd": 1,
+   "default": "now"
+  },
+  {
+   "fieldname": "taken_by",
+   "fieldtype": "Link",
+   "label": "Taken By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break",
+   "label": ""
+  },
+  {
+   "fieldname": "confirmed_by",
+   "fieldtype": "Link",
+   "label": "Confirmed By (Plant Manager)",
+   "options": "User",
+   "read_only": 1,
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "total_tank_kg",
+   "fieldtype": "Float",
+   "label": "Total Gas in Tanks (kg)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "dispenser_section",
+   "fieldtype": "Section Break",
+   "label": "Dispenser Totalizers"
+  },
+  {
+   "fieldname": "dispensers",
+   "fieldtype": "Table",
+   "label": "Dispensers",
+   "options": "Sungas Dispenser Reading"
+  },
+  {
+   "fieldname": "tank_section",
+   "fieldtype": "Section Break",
+   "label": "Tanks"
+  },
+  {
+   "fieldname": "tanks",
+   "fieldtype": "Table",
+   "label": "Tanks",
+   "options": "Sungas Tank Reading"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Sungas Plant Reading",
+   "read_only": 1,
+   "no_copy": 1
+  }
+ ],
+ "field_order": [
+  "plant",
+  "reading_date",
+  "reading_type",
+  "reading_time",
+  "taken_by",
+  "column_break_1",
+  "confirmed_by",
+  "total_tank_kg",
+  "dispenser_section",
+  "dispensers",
+  "tank_section",
+  "tanks",
+  "amended_from"
+ ],
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "delete": 1
+  },
+  {
+   "role": "LPG Head of Operations",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  },
+  {
+   "role": "LPG Head of Finance",
+   "read": 1
+  },
+  {
+   "role": "COO",
+   "read": 1
+  },
+  {
+   "role": "Internal Control",
+   "read": 1
+  },
+  {
+   "role": "LPG Plant Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1
+  },
+  {
+   "role": "LPG Filler",
+   "read": 1,
+   "write": 1,
+   "create": 1
+  }
+ ],
+ "links": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "autoname": "format:PR-{plant}-{reading_date}-{reading_type}"
+}

@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "creation": "2026-11-17 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Sungas",
+ "name": "Sungas Tank Reading",
+ "owner": "Administrator",
+ "modified": "2026-11-17 09:00:00.000000",
+ "modified_by": "Administrator",
+ "istable": 1,
+ "is_submittable": 0,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "tank_name",
+   "fieldtype": "Data",
+   "label": "Tank",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "instrument",
+   "fieldtype": "Data",
+   "label": "Instrument",
+   "read_only": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "gauge_percent",
+   "fieldtype": "Float",
+   "label": "Gauge %",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.instrument=='Volume gauge'"
+  },
+  {
+   "fieldname": "density_kg_per_l",
+   "fieldtype": "Float",
+   "label": "Density (kg/L)",
+   "in_list_view": 1,
+   "precision": "4",
+   "depends_on": "eval:doc.instrument=='Volume gauge'"
+  },
+  {
+   "fieldname": "temperature_c",
+   "fieldtype": "Float",
+   "label": "Temperature (C)",
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "load_cell_kg",
+   "fieldtype": "Float",
+   "label": "Load Cell (kg)",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.instrument=='Load cell'"
+  },
+  {
+   "fieldname": "kg",
+   "fieldtype": "Float",
+   "label": "Gas in Tank (kg)",
+   "read_only": 1,
+   "in_list_view": 1
+  }
+ ],
+ "field_order": [
+  "tank_name",
+  "instrument",
+  "gauge_percent",
+  "density_kg_per_l",
+  "temperature_c",
+  "load_cell_kg",
+  "kg"
+ ],
+ "permissions": [],
+ "links": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

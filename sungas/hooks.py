@@ -97,6 +97,8 @@ after_migrate = [
     "sungas.shift_controls.install",
     # Patch 0052: variance case time limits on the Close Policy page.
     "sungas.variance_case.install",
+    # Patch 0057: stock tolerance, bulk flag, one plant setup per POS plant.
+    "sungas.stock_check.install",
     # Patch 0044: alert approvers of closes already waiting.
     "sungas.overrides.closing_approval_alerts.ensure_perms",
     # Patch 0022: IFRS category defaults + backfill of blank items.
@@ -230,6 +232,12 @@ doc_events = {
         'validate': 'sungas.overrides.haulage_costing.validate_trip_haulage',
         'on_update': 'sungas.overrides.trip_auto_close.on_dls_update',
     },
+    # Patch 0057 -- plant readings compute tank kg; the Plant Manager confirms; day-close runs the stock check.
+    "Sungas Plant Reading": {
+        "validate": "sungas.stock_check.reading_validate",
+        "before_submit": "sungas.stock_check.reading_before_submit",
+        "on_submit": "sungas.stock_check.reading_on_submit",
+    },
     "POS Closing Shift": {
         'validate': [
             'sungas.overrides.pos_closing_shift.compute_variance_severity',
@@ -319,6 +327,8 @@ doc_events = {
 
 scheduler_events = {
     "daily": [
+        # Patch 0057 -- re-run yesterday's stock checks (late readings, back-dated entries).
+        "sungas.stock_check.daily",
         # Patch 0023 -- open TLVC / IOVC older than 13 days -> HoO + HoF.
         "sungas.scheduled_jobs.variance_case_ageing.run",
         "sungas.scheduled_jobs.event_digest.send_event_digest",
@@ -340,6 +350,8 @@ scheduler_events = {
     "hourly": [
         # Patch 0052 -- variance case past its time limit -> reminder + next person up.
         "sungas.variance_case.nudge",
+        # Patch 0057 -- missing plant readings (09:00 day-open / 22:00 day-close) -> Plant Manager.
+        "sungas.stock_check.hourly",
         "sungas.scheduled_jobs.git_ageing.run",
         # Patch 0019 -- close reconciled trips, flag trips open > 24h to HoO.
         "sungas.overrides.trip_auto_close.sweep",
@@ -354,12 +366,14 @@ scheduler_events = {
         "sungas.lpg_fill.month_end_reclass",
     ],
     "cron": {
+        # Patch 0056/0057 -- 08:00 site time (WAT): open variance cases digest to the Heads and COO.
+        "0 8 * * *": [
+            "sungas.variance_case.morning_digest",
+        ],
         "0 7 * * *": [
             "sungas.scheduled_jobs.shift_age_escalation.run",
             # Patch 0024 -- 7 AM manager morning briefing (bell + email).
             "sungas.scheduled_jobs.morning_briefing.run",
-            # Patch 0056 -- 08:00 WAT: open variance cases digest to the Heads and COO.
-            "sungas.variance_case.morning_digest",
         ],
         # Patch 0032 -- Commercial Desk: hourly 48 h nudge, Monday digest.
         "15 * * * *": ["sungas.commercial_desk.escalate_overdue"],

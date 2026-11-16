@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "creation": "2026-11-17 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Sungas",
+ "name": "Sungas Dispenser Reading",
+ "owner": "Administrator",
+ "modified": "2026-11-17 09:00:00.000000",
+ "modified_by": "Administrator",
+ "istable": 1,
+ "is_submittable": 0,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "dispenser_no",
+   "fieldtype": "Int",
+   "label": "Dispenser",
+   "reqd": 1,
+   "in_list_view": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "totalizer_kg",
+   "fieldtype": "Float",
+   "label": "Totalizer (kg)",
+   "reqd": 1,
+   "in_list_view": 1
+  }
+ ],
+ "field_order": [
+  "dispenser_no",
+  "totalizer_kg"
+ ],
+ "permissions": [],
+ "links": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

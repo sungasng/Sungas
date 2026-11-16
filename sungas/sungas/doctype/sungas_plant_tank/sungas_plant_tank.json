@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "creation": "2026-11-17 09:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "module": "Sungas",
+ "name": "Sungas Plant Tank",
+ "owner": "Administrator",
+ "modified": "2026-11-17 09:00:00.000000",
+ "modified_by": "Administrator",
+ "istable": 1,
+ "is_submittable": 0,
+ "editable_grid": 1,
+ "fields": [
+  {
+   "fieldname": "tank_name",
+   "fieldtype": "Data",
+   "label": "Tank",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "instrument",
+   "fieldtype": "Select",
+   "label": "Instrument",
+   "options": "Load cell\nVolume gauge",
+   "reqd": 1,
+   "in_list_view": 1,
+   "default": "Load cell"
+  },
+  {
+   "fieldname": "capacity_litres",
+   "fieldtype": "Float",
+   "label": "Water Capacity (litres)",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.instrument=='Volume gauge'"
+  },
+  {
+   "fieldname": "density_source",
+   "fieldtype": "Data",
+   "label": "Density From",
+   "in_list_view": 1,
+   "depends_on": "eval:doc.instrument=='Volume gauge'"
+  }
+ ],
+ "field_order": [
+  "tank_name",
+  "instrument",
+  "capacity_litres",
+  "density_source"
+ ],
+ "permissions": [],
+ "links": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}
