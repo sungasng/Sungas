@@ -243,6 +243,10 @@ def install():
                 {"fieldname": "stock_tolerance_pct", "fieldtype": "Float", "label": "or % of kg dispensed (whichever is larger)",
                  "default": "0.1", "insert_after": "stock_tolerance_kg"},
             ],
+            # Patch 0059 -- ticked once on the order; copies to the Delivery Note / Sales Invoice made from it.
+            "Sales Order": [{"fieldname": "sungas_bulk_from_tank", "fieldtype": "Check", "label": "Loaded straight from the tank (bulk)",
+                             "insert_after": "set_warehouse",
+                             "description": "Copies to the Delivery Note / Sales Invoice made from this order."}],
             "Delivery Note": [{"fieldname": "sungas_bulk_from_tank", "fieldtype": "Check", "label": "Loaded straight from the tank (bulk)",
                                "insert_after": "set_warehouse"}],
             "Sales Invoice": [{"fieldname": "sungas_bulk_from_tank", "fieldtype": "Check", "label": "Loaded straight from the tank (bulk)",
