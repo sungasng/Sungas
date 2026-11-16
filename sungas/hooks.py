@@ -95,6 +95,8 @@ after_migrate = [
     "sungas.lpg_fill.install",
     # Patch 0043: blind count / recount fields on POS Closing Shift.
     "sungas.shift_controls.install",
+    # Patch 0052: variance case time limits on the Close Policy page.
+    "sungas.variance_case.install",
     # Patch 0044: alert approvers of closes already waiting.
     "sungas.overrides.closing_approval_alerts.ensure_perms",
     "sungas.overrides.closing_approval_alerts.backfill",
@@ -234,12 +236,9 @@ doc_events = {
             'sungas.overrides.pos_closing_shift.compute_variance_severity',
             # Patch 0043 -- a recount on a big difference must name the witnessing Plant Manager.
             'sungas.shift_controls.validate_count',
-            # Patch 0045 -- an approver may not sign two boxes of the same case; HoO / HoF boxes stamped.
-            'sungas.overrides.pvi_rules.check_closing_approver',
         ],
         'before_submit': [
             'sungas.overrides.pos_closing_shift.validate_variance',
-            'sungas.overrides.pos_variance_investigation_integration.require_investigation_for_hard_variance',
         ],
         'on_submit': [
             'sungas.overrides.pos_closing_shift.post_variance_journal',
@@ -248,12 +247,6 @@ doc_events = {
         ],
         'on_update': [
             'sungas.overrides.variance_sla.track_state_entry',
-            'sungas.overrides.pos_closing_shift.post_provisional_journal',
-            'sungas.overrides.pos_closing_shift.cancel_provisional_journal',
-            'sungas.overrides.coo_notification.notify_coo_on_critical_approval',
-            'sungas.overrides.pos_variance_investigation_integration.auto_create_variance_investigation',
-            # Patch 0044 -- bell + WhatsApp the next approver; tell the cashier the outcome.
-            'sungas.overrides.closing_approval_alerts.on_update',
         ],
     },
     "POS Invoice": {
@@ -343,15 +336,14 @@ scheduler_events = {
         # Patch 0043 -- cash not lodged by next working day -> PM; +1 -> Heads + IC; bank match > 3 days -> Finance.
         "sungas.shift_controls.sweep",
         # Patch 0045 -- cashier statement reminders (24 h) / PM may record unavailable (48 h).
-        "sungas.overrides.pvi_rules.sweep",
     ],
     # Wave P-2: GIT Ageing. Hourly. Opens ToDo on Draft Material Receipt
     # SEs that have been sitting in GIT past Sungas Procurement Policy
     # git_stale_hours (default 72). Idempotent via existing-Open-ToDo
     # check so re-runs are safe.
     "hourly": [
-        # Patch 0050 -- cashier silent 4 hours on her investigation -> Plant Manager.
-        "sungas.overrides.pvi_rules.nudge",
+        # Patch 0052 -- variance case past its time limit -> reminder + next person up.
+        "sungas.variance_case.nudge",
         "sungas.scheduled_jobs.git_ageing.run",
         # Patch 0019 -- close reconciled trips, flag trips open > 24h to HoO.
         "sungas.overrides.trip_auto_close.sweep",

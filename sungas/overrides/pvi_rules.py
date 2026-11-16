@@ -62,29 +62,25 @@ def validate(doc):
         if user != doc.cashier:
             frappe.throw(_("Only the cashier of this shift ({0}) can write her statement. If she is unavailable "
                            "for {1} hours, the Plant Manager records that instead.").format(doc.cashier, UNAVAILABLE_HOURS))
-    if any(changed(f) for f in PM_FIELDS):
-        if not (is_plant_manager(doc, user) or HEADS & set(frappe.get_roles(user))):
+    outs = lambda d: [(r.outcome, r.mode_of_payment, float(r.amount or 0), r.note) for r in (d.get("outcomes") or [])]
+    pm_changed = any(changed(f) for f in PM_FIELDS) or (outs(old) if old else []) != outs(doc)
+    if pm_changed:
+        if user == doc.cashier:
+            doc.set("outcomes", old.get("outcomes") if old else [])
+            pm_changed = False
+        elif not (is_plant_manager(doc, user) or HEADS & set(frappe.get_roles(user))):
             frappe.throw(_("Only the Plant Manager of this till can fill the investigation."))
+    # Patch 0052: once sent for approval the finding is frozen -- an approver sends it back to change it.
+    if pm_changed and doc.get("case_status") in ("Waiting for Head of Operations", "Waiting for Head of Finance"):
+        frappe.throw(_("This case has been sent for approval. Ask the approver to send it back to change the "
+                       "finding or outcome."), title=_("Waiting for approval"))
 
 
 def before_submit(doc):
-    user = frappe.session.user
-    if not (doc.cashier_signed_by or doc.cashier_unavailable):
-        frappe.throw(_("The cashier has not signed her statement yet. If she has been unavailable for {0} hours, "
-                       "use 'Record cashier unavailable'.").format(UNAVAILABLE_HOURS), title=_("Cashier statement missing"))
-    if user == doc.cashier:
-        frappe.throw(_("The Plant Manager submits the investigation, not the cashier."))
-    # Patch 0048: cause and corrective action are the Plant Manager's -- required at submit, not when the cashier saves.
-    if not doc.primary_cause or not (doc.corrective_action or "").strip():
-        frappe.throw(_("Fill the Primary Cause and the Corrective Action before submitting."))
-    if doc.primary_cause == "Other" and not (doc.get("other_cause_detail") or "").strip():
-        frappe.throw(_("Describe the cause (Primary Cause is 'Other')."))
-    if user != "Administrator" and not (is_plant_manager(doc, user) or "LPG Head of Operations" in frappe.get_roles(user)):
-        frappe.throw(_("Only the Plant Manager of this till submits the investigation."))
-    if user in signers(doc):
-        frappe.throw(_("You already signed this investigation in another box."))
-    doc.plant_manager_signed_by = user
-    doc.plant_manager_signed_on = now_datetime()
+    # Patch 0052: a case is closed by its final approval (variance_case.finalize), never by the Submit button.
+    if not doc.flags.sungas_final:
+        frappe.throw(_("A variance case closes when its last approver approves it. Use the buttons at the top of the "
+                       "case."), title=_("Use the case buttons"))
 
 
 @frappe.whitelist(methods=["POST"])
@@ -99,7 +95,10 @@ def sign_statement(name: str) -> dict:
     doc.flags.sungas_internal = True
     doc.cashier_signed_by, doc.cashier_signed_on = doc.cashier, now_datetime()
     doc.save(ignore_permissions=True)
-    _tell_pm(doc, _("{0} signed her statement on {1} - investigate and submit").format(doc.cashier, doc.name))
+    # Patch 0052: the case moves to the Plant Manager (who is told by variance_case.notify).
+    from sungas.variance_case import advance_after_cashier
+
+    advance_after_cashier(doc)
     return {"ok": True}
 
 
@@ -119,6 +118,9 @@ def record_unavailable(name: str, witness: str, reason: str) -> dict:
     doc.flags.sungas_internal = True
     doc.cashier_unavailable, doc.unavailable_witness, doc.unavailable_reason = 1, witness.strip(), reason.strip()
     doc.save(ignore_permissions=True)
+    from sungas.variance_case import advance_after_cashier
+
+    advance_after_cashier(doc)
     return {"ok": True}
 
 

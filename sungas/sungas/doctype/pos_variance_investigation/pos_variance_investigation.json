@@ -15,12 +15,23 @@
   "period_end_date",
   "variance_severity",
   "variance_amount",
+  "case_section",
+  "case_status",
+  "waiting_since",
+  "send_back_reason",
+  "column_break_case",
+  "shortage_total",
+  "overage_total",
+  "holding_je",
+  "clearing_je",
   "cause_section",
   "primary_cause",
   "other_cause_detail",
   "column_break_cause",
   "contributing_factors",
   "corrective_action",
+  "outcome_section",
+  "outcomes",
   "evidence_section",
   "cashier_statement",
   "evidence_help",
@@ -106,6 +117,77 @@
    "read_only": 1
   },
   {
+   "fieldname": "case_section",
+   "fieldtype": "Section Break",
+   "label": "Case"
+  },
+  {
+   "fieldname": "case_status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nWaiting for Cashier\nWaiting for Plant Manager\nWaiting for Head of Operations\nWaiting for Head of Finance\nClosed",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "search_index": 1,
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "waiting_since",
+   "fieldtype": "Datetime",
+   "label": "Waiting Since",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "send_back_reason",
+   "fieldtype": "Small Text",
+   "label": "Last Sent Back",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "column_break_case",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "shortage_total",
+   "fieldtype": "Currency",
+   "label": "Shortage (all payment types)",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "overage_total",
+   "fieldtype": "Currency",
+   "label": "Overage (all payment types)",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "holding_je",
+   "fieldtype": "Link",
+   "label": "Holding Entry",
+   "options": "Journal Entry",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
+   "fieldname": "clearing_je",
+   "fieldtype": "Link",
+   "label": "Clearing Entry",
+   "options": "Journal Entry",
+   "read_only": 1,
+   "allow_on_submit": 1,
+   "no_copy": 1
+  },
+  {
    "fieldname": "cause_section",
    "fieldtype": "Section Break",
    "label": "Cause Taxonomy"
@@ -140,6 +222,18 @@
    "fieldtype": "Small Text",
    "label": "Corrective Action Required",
    "reqd": 0
+  },
+  {
+   "fieldname": "outcome_section",
+   "fieldtype": "Section Break",
+   "label": "Outcome (Plant Manager)",
+   "description": "What happened to the money. Shortage outcomes must add up to the shortage, overage outcomes to the overage."
+  },
+  {
+   "fieldname": "outcomes",
+   "fieldtype": "Table",
+   "label": "Outcomes",
+   "options": "Sungas Variance Outcome"
   },
   {
    "fieldname": "evidence_section",
@@ -282,7 +376,7 @@
  ],
  "is_submittable": 1,
  "links": [],
- "modified": "2026-11-15 12:30:00.000000",
+ "modified": "2026-11-16 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Sungas",
  "name": "POS Variance Investigation",
@@ -321,7 +415,7 @@
    "read": 1,
    "report": 1,
    "role": "LPG Plant Manager",
-   "submit": 1,
+   "submit": 0,
    "write": 1
   },
   {
@@ -331,7 +425,7 @@
    "read": 1,
    "report": 1,
    "role": "LPG Head of Operations",
-   "submit": 1,
+   "submit": 0,
    "write": 1
   },
   {

@@ -1,0 +1,60 @@
+{
+ "actions": [],
+ "creation": "2026-11-16 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "istable": 1,
+ "field_order": [
+  "outcome",
+  "mode_of_payment",
+  "amount",
+  "note"
+ ],
+ "fields": [
+  {
+   "fieldname": "outcome",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Outcome",
+   "reqd": 1,
+   "columns": 3,
+   "options": "\nCash recovered\nCharge the cashier\nCount error (short)\nWrite off\nKeep as overage\nCount error (over)"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Payment Type",
+   "options": "Mode of Payment",
+   "columns": 2,
+   "description": "Needed for 'Cash recovered' and 'Count error'"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "reqd": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "note",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Reason / Note",
+   "columns": 3
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-11-16 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Sungas",
+ "name": "Sungas Variance Outcome",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -186,7 +186,7 @@ def _build_workflow_doc() -> dict:
         "doctype": "Workflow",
         "workflow_name": WORKFLOW_NAME,
         "document_type": DOCTYPE,
-        "is_active": 1,
+        "is_active": 0,  # Patch 0052: approvals moved to the variance case.
         "send_email_alert": 0,
         "workflow_state_field": "workflow_state",
         "states": states,

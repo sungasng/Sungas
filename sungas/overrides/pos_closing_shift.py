@@ -243,40 +243,7 @@ def validate_variance(doc, method=None):
             title=_("Variance Remarks Required")
         )
 
-    # Block-/Critical-threshold approver check
-    if severity in ("block", "critical"):
-        # Path 1: workflow has reached Approved -> allow.
-        if doc.get("workflow_state") == "Approved":
-            return
-        # Path 2: legacy single-approver path (for backwards compatibility
-        # and admin override) -- variance_approved_by populated AND user
-        # holds an approver role.
-        approver_roles = policy.get_approver_roles()
-        current_user_roles = set(frappe.get_roles(frappe.session.user))
-        if current_user_roles.intersection(approver_roles):
-            return
-        approver = doc.get("variance_approved_by")
-        if not approver:
-            tier_label = "critical" if severity == "critical" else "block"
-            frappe.throw(
-                _("Variance of NGN {0:,.2f} ({1:.2f}%) exceeds the {2} threshold and requires "
-                  "approval via the sequential workflow (Plant Manager -> HOD Operations"
-                  "{3}). Save the draft and have the approvers act on it from "
-                  "/app/pos-closing-shift/{4} before re-submitting.").format(
-                    abs_var, pct, tier_label,
-                    " -> HOD Finance" + (" -> COO" if policy.get("require_coo_on_critical") else "")
-                    if severity == "critical" else "",
-                    doc.name or "<new>"
-                ),
-                title=_("Variance Approval Required")
-            )
-        approver_user_roles = set(frappe.get_roles(approver))
-        if not approver_user_roles.intersection(approver_roles):
-            frappe.throw(
-                _("User {0} does not hold any of the approver roles ({1}). "
-                  "Variance cannot be approved.").format(approver, ", ".join(approver_roles)),
-                title=_("Invalid Approver")
-            )
+    # Patch 0052: block / critical closes are not held back -- the difference goes to a variance case on submit.
 
 
 def _resolve_cash_account(doc):
@@ -430,6 +397,12 @@ def post_variance_journal(doc, method=None):
         return
     if doc.get("variance_je"):
         return  # already posted (re-submit guard)
+    # Patch 0052: block / critical -> hold the difference and open the variance case.
+    if (doc.get("variance_severity") or "") in ("block", "critical") and not doc.get("variance_provisional_je"):
+        from sungas.variance_case import open_case
+
+        open_case(doc)
+        return
     policy = frappe.get_single("Sungas Close Policy")
     total_var, _ = _compute_variance(doc)
     diffs = _mode_differences(doc)
