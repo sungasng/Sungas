@@ -91,10 +91,18 @@ def advance_after_cashier(case):
         _set_status(case, W_PM)
 
 
+CASE_ROLES = ("LPG Plant Manager", "LPG Head of Operations", "LPG Head of Finance")
+
+
+def _admin_override(roles) -> bool:
+    """Patch 0060: System Manager may act at any step only if he holds no case role himself."""
+    return "System Manager" in roles and not set(CASE_ROLES) & set(roles)
+
+
 def _is_pm(case, user):
     from sungas.overrides.pvi_rules import is_plant_manager
 
-    return is_plant_manager(case, user) or "System Manager" in frappe.get_roles(user)
+    return is_plant_manager(case, user) or _admin_override(frappe.get_roles(user))
 
 
 def check_outcomes(case):
@@ -160,8 +168,8 @@ def _approver_check(case, user):
     need = {W_HOO: "LPG Head of Operations", W_HOF: "LPG Head of Finance"}.get(case.case_status)
     if not need:
         frappe.throw(_("This case is not waiting for an approval ({0}).").format(case.case_status))
-    if need not in roles and "System Manager" not in roles:
-        frappe.throw(_("{0} approves this step.").format(need.replace("LPG ", "")))
+    if need not in roles and not _admin_override(roles):
+        frappe.throw(_("Only the {0} approves this step.").format(need.replace("LPG ", "")))
     from sungas.overrides.pvi_rules import signers
 
     if user == case.cashier or user in signers(case):

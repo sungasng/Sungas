@@ -60,39 +60,40 @@ def enforce_cashier_variance_lockout(doc, method=None) -> None:
         # Frappe's built-in required-field validation elsewhere).
         return
 
-    # One indexed query. `docstatus` filter deliberately omitted so
-    # even Draft workflow-state shifts count as unresolved.
+    # Patch 0060: closes no longer wait for an approval (0052/0053), so the old
+    # "closing shift not Approved" test locked every such cashier for good.
+    # She is now held only until she has signed her statement on the open case.
     unresolved = frappe.db.get_all(
-        "POS Closing Shift",
+        "POS Variance Investigation",
         filters={
-            "user": cashier_user,
+            "cashier": cashier_user,
+            "docstatus": 0,
             "variance_severity": ["in", HARD_SEVERITIES],
-            "workflow_state": ["!=", "Approved"],
+            "cashier_signed_by": ["is", "not set"],
+            "cashier_unavailable": 0,
         },
-        fields=["name", "workflow_state", "variance_severity",
-                "variance_amount", "period_end_date"],
-        order_by="period_end_date desc",
+        fields=["name", "shift", "variance_severity", "variance_amount"],
+        order_by="creation desc",
         limit=1,
     )
 
     if not unresolved:
         return
 
-    prior = unresolved[0]
+    case = unresolved[0]
     frappe.throw(
         _(
-            "Cannot open a new POS shift while your previous shift has an "
-            "unresolved {severity} variance.<br><br>"
-            "Shift <a href='/app/pos-closing-shift/{name}'>{name}</a> "
-            "(NGN {amount:,.2f}) is currently in "
-            "<b>{state}</b> and must be Approved before you can open a "
-            "new shift. Please escalate to your Plant Manager or the "
-            "Head of Operations."
+            "Your last shift close ({shift}) has a {severity} cash difference "
+            "(NGN {amount:,.2f}) and you have not yet written your statement.<br><br>"
+            "Open variance case <a href='/app/pos-variance-investigation/{name}'>{name}</a>, "
+            "write what happened, press <b>Save</b>, then <b>Sign my statement</b>. "
+            "You can open your till straight after. If you need help, tell your "
+            "Plant Manager or the Head of Operations."
         ).format(
-            severity=prior.variance_severity,
-            name=prior.name,
-            amount=float(prior.variance_amount or 0),
-            state=prior.workflow_state or "Draft",
+            shift=case.shift,
+            severity=case.variance_severity,
+            name=case.name,
+            amount=abs(float(case.variance_amount or 0)),
         ),
-        title=_("Cashier Locked -- Unresolved Variance"),
+        title=_("Sign your statement to open the till"),
     )

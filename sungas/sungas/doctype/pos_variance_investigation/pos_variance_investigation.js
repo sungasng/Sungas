@@ -81,7 +81,9 @@ frappe.ui.form.on("POS Variance Investigation", {
 			}).addClass("btn-primary");
 			return;
 		}
-		const pm = frappe.user.has_role("LPG Plant Manager") || frappe.user.has_role("System Manager");
+		// Patch 0060: System Manager acts at any step only if he holds no case role himself.
+		const admin = frappe.user.has_role("System Manager") && !["LPG Plant Manager", "LPG Head of Operations", "LPG Head of Finance"].some((r) => frappe.user.has_role(r));
+		const pm = frappe.user.has_role("LPG Plant Manager") || admin;
 		if (pm && !d.cashier_signed_by && !d.cashier_unavailable) {
 			frm.add_custom_button(__("Record cashier unavailable"), () =>
 				frappe.prompt([
@@ -99,10 +101,11 @@ frappe.ui.form.on("POS Variance Investigation", {
 			}).addClass("btn-primary");
 		}
 		const turn = { "Waiting for Head of Operations": "LPG Head of Operations", "Waiting for Head of Finance": "LPG Head of Finance" }[d.case_status];
-		if (turn && (frappe.user.has_role(turn) || frappe.user.has_role("System Manager"))) {
+		if (turn && (frappe.user.has_role(turn) || admin)) {
+			const head = turn.replace("LPG ", "");
 			frm.add_custom_button(__("Approve"), () =>
-				frappe.prompt([{ fieldname: "notes", fieldtype: "Small Text", label: __("Your notes (optional)") }],
-					(v) => call(frm, "approve", { notes: v.notes || "" }), __("Approve {0}", [d.name]))).addClass("btn-primary");
+				frappe.prompt([{ fieldname: "notes", fieldtype: "Small Text", label: __("Your notes as {0} (optional)", [head]) }],
+					(v) => call(frm, "approve", { notes: v.notes || "" }), __("Approve {0} as {1}", [d.name, head]))).addClass("btn-primary");
 			frm.add_custom_button(__("Send back to Plant Manager"), () =>
 				frappe.prompt([{ fieldname: "reason", fieldtype: "Small Text", label: __("What must be corrected"), reqd: 1 }],
 					(v) => call(frm, "send_back", { reason: v.reason }), __("Send back")));
