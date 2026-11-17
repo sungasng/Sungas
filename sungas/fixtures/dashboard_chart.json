@@ -35,13 +35,13 @@
   "docstatus": 0,
   "doctype": "Dashboard Chart",
   "document_type": "Transit Loss Variance Case",
-  "filters_json": "[[\"docstatus\", \"=\", 1], [\"hauler_type\", \"=\", \"In-house\"], [\"creation\", \">=\", \"Today - 90 days\"]]",
+  "filters_json": "[[\"Transit Loss Variance Case\", \"docstatus\", \"=\", 1], [\"Transit Loss Variance Case\", \"hauler_type\", \"=\", \"In-house\"]]",
   "group_by_based_on": "in_house_driver",
   "group_by_type": "Sum",
   "is_public": 1,
   "is_standard": 0,
   "last_synced_on": "2026-09-06 16:04:49.878662",
-  "modified": "2026-11-11 07:15:47.569643",
+  "modified": "2026-11-18 12:00:00.000000",
   "module": "Sungas",
   "name": "Transit Loss by In-House Driver (90d)",
   "number_of_groups": 10,
@@ -52,7 +52,8 @@
   "timespan": "Last Year",
   "type": "Bar",
   "use_report_chart": 0,
-  "y_axis": []
+  "y_axis": [],
+  "dynamic_filters_json": "[[\"Transit Loss Variance Case\", \"creation\", \">=\", \"frappe.datetime.add_days(frappe.datetime.nowdate(), -90)\"]]"
  },
  {
   "based_on": "creation",
@@ -62,12 +63,12 @@
   "docstatus": 0,
   "doctype": "Dashboard Chart",
   "document_type": "Transit Loss Variance Case",
-  "filters_json": "[[\"docstatus\", \"=\", 1]]",
+  "filters_json": "[[\"Transit Loss Variance Case\", \"docstatus\", \"=\", 1]]",
   "group_by_type": "Count",
   "is_public": 1,
   "is_standard": 0,
   "last_synced_on": "2026-09-06 16:04:49.887900",
-  "modified": "2026-11-11 07:15:47.584184",
+  "modified": "2026-11-18 12:00:00.000000",
   "module": "Sungas",
   "name": "Transit Loss Trend (12mo)",
   "number_of_groups": 0,
@@ -79,7 +80,8 @@
   "type": "Line",
   "use_report_chart": 0,
   "value_based_on": "shortfall_value",
-  "y_axis": []
+  "y_axis": [],
+  "dynamic_filters_json": null
  },
  {
   "aggregate_function_based_on": "shortfall_value",
@@ -89,13 +91,13 @@
   "docstatus": 0,
   "doctype": "Dashboard Chart",
   "document_type": "Transit Loss Variance Case",
-  "filters_json": "[[\"docstatus\", \"=\", 1], [\"creation\", \">=\", \"Today - 90 days\"]]",
+  "filters_json": "[[\"Transit Loss Variance Case\", \"docstatus\", \"=\", 1]]",
   "group_by_based_on": "destination_warehouse",
   "group_by_type": "Sum",
   "is_public": 1,
   "is_standard": 0,
   "last_synced_on": "2026-09-06 16:04:49.867224",
-  "modified": "2026-11-11 07:15:47.596764",
+  "modified": "2026-11-18 12:00:00.000000",
   "module": "Sungas",
   "name": "Transit Loss by Outlet (90d)",
   "number_of_groups": 15,
@@ -106,7 +108,8 @@
   "timespan": "Last Year",
   "type": "Bar",
   "use_report_chart": 0,
-  "y_axis": []
+  "y_axis": [],
+  "dynamic_filters_json": "[[\"Transit Loss Variance Case\", \"creation\", \">=\", \"frappe.datetime.add_days(frappe.datetime.nowdate(), -90)\"]]"
  },
  {
   "aggregate_function_based_on": "shortfall_value",
@@ -116,13 +119,13 @@
   "docstatus": 0,
   "doctype": "Dashboard Chart",
   "document_type": "Transit Loss Variance Case",
-  "filters_json": "[[\"docstatus\", \"=\", 1], [\"creation\", \">=\", \"Today - 90 days\"]]",
+  "filters_json": "[[\"Transit Loss Variance Case\", \"docstatus\", \"=\", 1]]",
   "group_by_based_on": "hauler",
   "group_by_type": "Sum",
   "is_public": 1,
   "is_standard": 0,
   "last_synced_on": "2026-09-06 16:04:49.864055",
-  "modified": "2026-11-11 07:15:47.609074",
+  "modified": "2026-11-18 12:00:00.000000",
   "module": "Sungas",
   "name": "Transit Loss by Hauler (90d)",
   "number_of_groups": 10,
@@ -133,7 +136,8 @@
   "timespan": "Last Year",
   "type": "Bar",
   "use_report_chart": 0,
-  "y_axis": []
+  "y_axis": [],
+  "dynamic_filters_json": "[[\"Transit Loss Variance Case\", \"creation\", \">=\", \"frappe.datetime.add_days(frappe.datetime.nowdate(), -90)\"]]"
  },
  {
   "aggregate_function_based_on": "actual_qty",

@@ -239,26 +239,43 @@ def sweep() -> dict:
     return out
 
 
-OVERSIGHT = {"LPG Plant Manager", "LPG Head of Operations", "LPG Head of Finance", "System Manager",
-             "Internal Control", "Accounts User", "COO"}
+# Patch 0061: a Plant Manager sees only his own plants' cases (PMs also hold Accounts User,
+# which used to open every plant's cases to them).
+FULL_VIEW = {"LPG Head of Operations", "LPG Head of Finance", "System Manager", "Internal Control", "COO",
+             "Chief Operating Officer", "LPG Chief Operating Officer", "Accounts Manager"}
 
 
-def _cashier_only(user) -> bool:
-    return not OVERSIGHT & set(frappe.get_roles(user))
+def _scope(user):
+    """None = every case; else the POS Profiles whose cases this user may see (besides own / watched)."""
+    roles = set(frappe.get_roles(user))
+    if user == "Administrator" or FULL_VIEW & roles:
+        return None
+    if "LPG Plant Manager" not in roles:
+        return None if "Accounts User" in roles else []
+    from sungas.lpg_fill import user_plants
+
+    return frappe.get_all("POS Profile", filters={"warehouse": ["in", list(user_plants(user)) or [""]]}, pluck="name")
 
 
 def pvi_query(user=None):
     user = user or frappe.session.user
-    if user == "Administrator" or not _cashier_only(user):
+    profiles = _scope(user)
+    if profiles is None:
         return ""
-    return f"`tabPOS Variance Investigation`.cashier = {frappe.db.escape(user)}"
+    t = "`tabPOS Variance Investigation`"
+    conds = [f"{t}.cashier = {frappe.db.escape(user)}", f"{t}.watchers like {frappe.db.escape('%' + user + '%')}"]
+    if profiles:
+        conds.append(f"{t}.pos_profile in ({', '.join(frappe.db.escape(p) for p in profiles)})")
+    return "(" + " or ".join(conds) + ")"
 
 
 def pvi_has_permission(doc, ptype=None, user=None):
     user = user or frappe.session.user
-    if user == "Administrator" or not _cashier_only(user):
+    profiles = _scope(user)
+    if profiles is None:
         return True
-    return doc.cashier == user
+    watching = user in (doc.get("watchers") or "").split("\n")
+    return doc.cashier == user or doc.pos_profile in profiles or (watching and ptype in (None, "read", "print"))
 
 
 @frappe.whitelist(methods=["POST"])

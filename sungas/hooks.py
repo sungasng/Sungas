@@ -312,6 +312,8 @@ doc_events = {
         'on_cancel': 'sungas.overrides.trip_auto_close.on_case_closed',
     },
     "Inter-Outlet Variance Case": {
+        # Patch 0061 -- Driver / Hauler Liable take the driver / hauler from the trip.
+        'validate': 'sungas.overrides.iovc_party.fill_from_trip',
         'on_submit': 'sungas.overrides.trip_auto_close.on_case_closed',
         'on_cancel': 'sungas.overrides.trip_auto_close.on_case_closed',
     },
