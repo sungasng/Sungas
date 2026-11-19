@@ -2185,7 +2185,7 @@
  },
  {
   "amend": 1,
-  "cancel": 1,
+  "cancel": 0,
   "create": 1,
   "delete": 0,
   "docstatus": 0,
@@ -2194,7 +2194,7 @@
   "export": 1,
   "if_owner": 0,
   "import": 0,
-  "modified": "2026-05-18 03:13:55.661362",
+  "modified": "2026-11-18 12:00:00.000000",
   "name": "6n4h1ausk2",
   "parent": "POS Invoice",
   "parentfield": "permissions",

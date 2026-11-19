@@ -6,7 +6,7 @@
  "module": "Sungas",
  "name": "Sungas Plant Setup",
  "owner": "Administrator",
- "modified": "2026-11-17 09:00:00.000000",
+ "modified": "2026-11-18 12:00:00.000000",
  "modified_by": "Administrator",
  "istable": 0,
  "is_submittable": 0,
@@ -57,6 +57,46 @@
    "label": "Tanks",
    "options": "Sungas Plant Tank",
    "reqd": 1
+  },
+  {
+   "fieldname": "reorder_section",
+   "fieldtype": "Section Break",
+   "label": "Low Tank Alert (Patch 0062)"
+  },
+  {
+   "fieldname": "reorder_level_kg",
+   "fieldtype": "Float",
+   "label": "Reorder level (kg, typed)",
+   "description": "Leave 0 to use the automatic level below. A typed level always wins."
+  },
+  {
+   "fieldname": "days_of_cover",
+   "fieldtype": "Float",
+   "label": "Days of sales to keep",
+   "default": "3"
+  },
+  {
+   "fieldname": "reorder_cb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "avg_daily_kg",
+   "fieldtype": "Float",
+   "label": "Average daily usage (kg, last 14 checks)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "auto_reorder_kg",
+   "fieldtype": "Float",
+   "label": "Automatic reorder level (kg)",
+   "read_only": 1,
+   "description": "Days of sales to keep x average daily usage, refreshed at each day close."
+  },
+  {
+   "fieldname": "last_low_alert",
+   "fieldtype": "Date",
+   "label": "Last low-tank alert",
+   "read_only": 1
   }
  ],
  "field_order": [
@@ -66,7 +106,14 @@
   "reading_supervisor",
   "cover_employee",
   "tanks_section",
-  "tanks"
+  "tanks",
+  "reorder_section",
+  "reorder_level_kg",
+  "days_of_cover",
+  "reorder_cb",
+  "avg_daily_kg",
+  "auto_reorder_kg",
+  "last_low_alert"
  ],
  "permissions": [
   {

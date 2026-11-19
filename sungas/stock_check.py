@@ -49,6 +49,7 @@ def reading_before_submit(doc, method=None):
 def reading_on_submit(doc, method=None):
     if doc.reading_type == "Day close":
         run_check(doc.plant, doc.reading_date)
+        low_tank_check(doc)
     else:
         prev = frappe.db.exists(SC, {"plant": doc.plant, "check_date": add_days(doc.reading_date, -1)})
         if prev:
@@ -129,6 +130,42 @@ def run_check(plant, day):
     if opened:
         _tell(doc)
     return doc.name
+
+
+# ---------------------------------------------------------------- low tank (Patch 0062)
+def reorder_level(plant) -> tuple[float, float]:
+    """(level in force, average daily usage). Usage = dispensed + loaded from the tank, last 14 checks."""
+    ps = frappe.get_doc(PS, plant)
+    days = frappe.get_all(SC, filters={"plant": plant}, fields=["dispensed_kg", "tank_out_kg"],
+                          order_by="check_date desc", limit=14)
+    avg = sum(flt(r.dispensed_kg) + flt(r.tank_out_kg) for r in days) / len(days) if days else 0.0
+    auto = flt(ps.get("days_of_cover") or 3) * avg
+    frappe.db.set_value(PS, plant, {"avg_daily_kg": avg, "auto_reorder_kg": auto}, update_modified=False)
+    return (flt(ps.get("reorder_level_kg")) or auto), avg
+
+
+def low_tank_check(reading):
+    level, avg = reorder_level(reading.plant)
+    tank = flt(reading.total_tank_kg)
+    if not level or tank >= level or frappe.db.get_value(PS, reading.plant, "last_low_alert") == getdate(reading.reading_date):
+        return
+    frappe.db.set_value(PS, reading.plant, "last_low_alert", reading.reading_date, update_modified=False)
+    from sungas.utils import whatsapp
+
+    left = f", about {tank / avg:.1f} days of sales left" if avg else ""
+    line = (f"Low tank at {reading.plant.replace(' - SCL', '')}: {tank:,.0f} kg at close, below the reorder level "
+            f"of {level:,.0f} kg{left}. Please arrange a supply truck.")
+    link = get_url_to_form(PR, reading.name)
+    prof = frappe._dict(pos_profile=frappe.db.get_value("POS Profile", {"warehouse": frappe.db.get_value(PS, reading.plant, "warehouse")}, "name"))
+    from sungas.overrides.closing_approval_alerts import approvers
+
+    users = {u for st in ("Pending Plant Manager", "Pending HOD Operations") for u in approvers(prof, st)}
+    users -= {"Administrator", "lmd-bot@sungas.org"}
+    for u in sorted(users):
+        frappe.get_doc({"doctype": "Notification Log", "for_user": u, "type": "Alert", "subject": line,
+                        "document_type": PR, "document_name": reading.name}).insert(ignore_permissions=True)
+        whatsapp.send([u], "sungas_approval_needed", {"approver_name": whatsapp.first_name(u), "doc_label": "Low tank",
+                       "summary": line[:150], "state": "Reorder", "link": link}, ref=f"LOWTANK:{reading.name}:{u}")
 
 
 # ---------------------------------------------------------------- the case
