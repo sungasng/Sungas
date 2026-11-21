@@ -42,6 +42,8 @@ doctype_js = {
     "Customer": "public/js/customer.js",
     # Patch 0041: Plant Manager extends / refunds unfilled gas receipts
     "POS Invoice": "public/js/pos_invoice.js",
+    # Patch 0065: own plant as source, no past dates
+    "Daily Loading Schedule": "public/js/daily_loading_schedule.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -235,7 +237,11 @@ doc_events = {
         'on_submit': 'sungas.overrides.trip_auto_close.on_stock_entry_submit',
     },
     "Daily Loading Schedule": {
-        'validate': 'sungas.overrides.haulage_costing.validate_trip_haulage',
+        'validate': [
+            'sungas.overrides.haulage_costing.validate_trip_haulage',
+            # Patch 0065 -- own plant only, no past dates
+            'sungas.overrides.dls_guard.validate',
+        ],
         'on_update': 'sungas.overrides.trip_auto_close.on_dls_update',
     },
     # Patch 0057 -- plant readings compute tank kg; the Plant Manager confirms; day-close runs the stock check.
