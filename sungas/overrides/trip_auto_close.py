@@ -169,6 +169,11 @@ def run_one(ls: str):
 
 
 def on_stock_entry_submit(doc, method=None):
+    # Patch 0066: a submitted receipt marks its drop Received (it stayed 'Dispatched').
+    if doc.get("outgoing_stock_entry"):
+        frappe.db.sql("""update `tabSchedule Drop` set state = 'Received'
+                         where receipt_stock_entry = %s and parenttype = %s and state in ('Pending', 'Dispatched')""",
+                      (doc.name, DLS))
     found = set()
     if doc.get("loading_schedule"):
         found.add(doc.loading_schedule)
