@@ -165,6 +165,10 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
+    # Patch 0064 -- an MR approved after submit goes on the source's Loading Schedule too.
+    "Material Request": {
+        "on_update_after_submit": "sungas.overrides.mr_attach.attach_after_update",
+    },
     "Customer": {
         'validate': [
             'sungas.controllers.customer.validate_customer',
