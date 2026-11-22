@@ -499,6 +499,29 @@ This guardrail prevents accidental cross-outlet stock entries even while the ful
 
 ---
 
+### 9.6 Stock Available Now — no overselling across channels (patches 0067 / 0068, posa-0048)
+
+A till receipt moves no stock until the till closes (the receipts are then posted as one Sales Invoice). So during the day:
+
+> **Available now = recorded stock − till sales not yet closed** (returns are not counted back until the close).
+
+Every channel now uses this one figure:
+
+| Where | What it checks | What the user sees when short |
+|---|---|---|
+| **Till (POS Awesome)** — item tile and quantity limit | Available now (refreshes after each receipt) | Quantity is capped at what is available |
+| **Till receipt save** (server) | Available now; two tills selling the last kg at once wait for each other | *"Not enough LPG Refill: 100 available now (1,000 recorded less 900 sold today and not yet closed). Reduce the quantity."* |
+| **Delivery Note, Sales Invoice that moves stock, Stock Entry** (incl. LMD deliveries and transfers) | Available now at the source plant | *"LPG-REFILL at Ikeja - SCL: 400 needed, 300 available now (1,000 recorded less 700 sold at the till and not yet closed)"* |
+| **Till close** | Recorded stock must cover the shift's sales | Close stops with *"Till close stopped: stock short"*; Plant Manager + Finance get a bell. Fix the stock (receive the truck / correct the count), then close again. |
+
+**Not checked (by design):** returns; plants where *Allow Negative Stock* is on; a receipt made **offline** and sent more than 10 minutes later (the sale has happened — the till close check and the daily stock check catch any gap).
+
+**Where to look**
+
+- Report **Stock Available Now** (Plant, Item, Recorded, Sold at Till Not Yet Closed, Available Now) — My Plant and Ops Command shortcuts. Plant Managers see only their own plants.
+- Card **LPG Available Now** (kg, LPG-REFILL) on My Plant and Ops Command.
+- The Ops Command cards *Network Tank Volume*, *GIT Inter-Outlet*, *GIT Supplier to Outlet* and the *Tank Volume by Outlet* chart now read the real LPG item (`LPG-REFILL`); before 0067 they read `BULK-LPG`, which does not exist, and showed 0.
+
 ## 10. Outlet Scoping (Who Sees What)
 
 ### 10.1 Cashiers
@@ -615,6 +638,18 @@ override_whitelisted_methods = {
 }
 ```
 Then `bench restart` and try again.
+
+### 12.5 "Not enough stock" on a delivery, invoice or transfer, but the stock report shows plenty
+
+**Cause:** The till has sold that stock today and has not closed yet. Recorded stock still includes it.
+
+**Fix:** Open **Stock Available Now** for the plant. Reduce the quantity, or post the delivery after the truck is received / the till closes.
+
+### 12.6 "Till close stopped: stock short"
+
+**Cause:** The shift's sales are more than the recorded stock — usually a supply truck not yet received in the system, or a back-dated count that lowered stock.
+
+**Fix:** The Plant Manager receives the outstanding Stock Entry / Purchase Receipt (or Finance corrects the count). The cashier then closes again. Nothing is lost: the receipts stay as they are until the close goes through.
 
 ---
 

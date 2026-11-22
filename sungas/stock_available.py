@@ -7,14 +7,15 @@ from collections import defaultdict
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, get_datetime, now_datetime, time_diff_in_seconds
 
 GIT = ("Goods In Transit - SCL", "Goods in Transit from Suppliers - SCL")
 FINANCE = ("LPG Head of Finance", "Accounts Manager")
+OFFLINE_GRACE_SECONDS = 600
 
 
 def open_till_qty(pairs=None, warehouses=None):
-    """{(item, warehouse): stock qty on submitted till receipts not yet closed into a Sales Invoice}."""
+    """{(item, warehouse): stock qty on submitted till sales (not returns) not yet closed into a Sales Invoice}."""
     cond, args = "", {}
     if pairs:
         cond = "and x.item_code in %(items)s and x.warehouse in %(whs)s"
@@ -24,11 +25,11 @@ def open_till_qty(pairs=None, warehouses=None):
     rows = frappe.db.sql(f"""select x.item_code, x.warehouse, sum(x.qty) as qty from (
             select it.item_code, it.warehouse, it.stock_qty as qty from `tabPOS Invoice` p
               join `tabPOS Invoice Item` it on it.parent = p.name
-             where p.docstatus = 1 and ifnull(p.consolidated_invoice, '') = ''
+             where p.docstatus = 1 and p.is_return = 0 and ifnull(p.consolidated_invoice, '') = ''
             union all
             select pk.item_code, pk.warehouse, pk.qty * ifnull(pk.conversion_factor, 1) from `tabPOS Invoice` p
               join `tabPacked Item` pk on pk.parent = p.name and pk.parenttype = 'POS Invoice'
-             where p.docstatus = 1 and ifnull(p.consolidated_invoice, '') = '') x
+             where p.docstatus = 1 and p.is_return = 0 and ifnull(p.consolidated_invoice, '') = '') x
         where 1 = 1 {cond} group by x.item_code, x.warehouse""", args, as_dict=True)
     return {(r.item_code, r.warehouse): flt(r.qty) for r in rows}
 
@@ -89,6 +90,42 @@ def guard(doc, method=None):
     if short:
         frappe.throw("<br>".join(short) + "<br><br>" + _("Reduce the quantity, or wait until the till closes and the stock is received."),
                      title=_("Not enough stock"))
+
+
+def till_guard(doc):
+    """Patch 0068 -- POS Invoice submit: recorded stock less receipts not yet closed must cover this receipt."""
+    if frappe.db.get_single_value("Stock Settings", "allow_negative_stock") or _late_offline(doc):
+        return
+    need = {k: v for k, v in _outgoing(doc).items() if v > 0}
+    stock = _stock_items({k[0] for k in need})
+    need = {k: v for k, v in need.items() if k[0] in stock}
+    if not need:
+        return
+    for item, wh in need:
+        # Two tills selling the last kg at once: the second waits for the first, then sees its receipt.
+        frappe.db.sql("select name from `tabBin` where item_code = %s and warehouse = %s for update", (item, wh))
+    till = open_till_qty(pairs=list(need))
+    short = []
+    for (item, wh), qty in need.items():
+        recorded, held = _bin(item, wh), till.get((item, wh), 0)
+        if qty > recorded - held + 1e-6:
+            name = frappe.db.get_value("Item", item, "item_name") or item
+            short.append(_("Not enough {0}: {1} available now ({2} recorded less {3} sold today and not yet closed). Reduce the quantity.").format(
+                name, _qty(recorded - held), _qty(recorded), _qty(held)))
+    if short:
+        frappe.throw("<br>".join(short), title=_("Not enough stock"))
+
+
+def _late_offline(doc):
+    """A receipt made offline and sent later: the sale has happened; the till close check and stock check catch any gap."""
+    if not doc.get("set_posting_time") or not doc.get("posting_date"):
+        return False
+    made = get_datetime(f"{doc.posting_date} {doc.get('posting_time') or '00:00:00'}")
+    return time_diff_in_seconds(now_datetime(), made) > OFFLINE_GRACE_SECONDS
+
+
+def _qty(v):
+    return f"{flt(v):,.2f}".rstrip("0").rstrip(".")
 
 
 def close_precheck(doc, method=None):

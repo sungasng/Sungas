@@ -1,6 +1,5 @@
 import frappe
 from frappe import _
-from frappe.query_builder.functions import IfNull, Sum
 from erpnext.accounts.doctype.pos_invoice.pos_invoice import POSInvoice
 from frappe.utils import flt
 
@@ -20,18 +19,11 @@ class POSInvoiceOverride(POSInvoice):
 			)
 
 	def validate_stock_availablility(self):
+		# Patch 0068: on submit, the receipt may not take more than recorded stock less receipts not yet closed.
 		if self.is_return:
 			return
-
-		if self.docstatus == 0 and not frappe.db.get_value(
-			"POS Profile", self.pos_profile, "validate_stock_on_save"
-		):
+		if self.docstatus == 0 and not frappe.db.get_value("POS Profile", self.pos_profile, "validate_stock_on_save"):
 			return
-
-		allow_negative_stock = frappe.db.get_single_value(
-			"Stock Settings", "allow_negative_stock"
-		)
-
 		for d in self.get("items"):
 			if d.serial_no:
 				self.validate_pos_reserved_serial_nos(d)
@@ -39,33 +31,9 @@ class POSInvoiceOverride(POSInvoice):
 				self.validate_invalid_serial_nos(d)
 			elif d.batch_no:
 				self.validate_pos_reserved_batch_qty(d)
-			else:
-				if allow_negative_stock:
-					return
+		from sungas.stock_available import till_guard
 
-				available_stock, is_stock_item = get_stock_availability(
-					d.item_code, d.warehouse
-				)
-
-				item_code, warehouse, qty = (
-					frappe.bold(d.item_code),
-					frappe.bold(d.warehouse),
-					frappe.bold(d.qty),
-				)
-				# if is_stock_item and flt(available_stock) <= 0:
-				# 	frappe.throw(
-				# 		"Row #{}: Item Code: {} is not available under warehouse {}."
-				# 		.format(
-				# 			d.idx, item_code, warehouse
-				# 		),
-				# 		title="Item Unavailable",
-				# 	)
-				# elif is_stock_item and flt(available_stock) < flt(d.stock_qty):
-				# 	frappe.throw(
-				# 		"Row #{}: Stock quantity not enough for Item Code: {} under warehouse {}. Available quantity {}."
-				# 		.format(d.idx, item_code, warehouse, available_stock),
-				# 		title="Item Unavailable",
-				# 	)
+		till_guard(self)
 
 
 def get_bin_qty(item_code, warehouse):
@@ -115,21 +83,7 @@ def get_stock_availability(item_code, warehouse):
 
 
 def get_pos_reserved_qty(item_code, warehouse):
-	p_inv = frappe.qb.DocType("POS Invoice")
-	p_item = frappe.qb.DocType("POS Invoice Item")
+	# Patch 0068: one definition (stock units, returns excluded) shared with every channel.
+	from sungas.stock_available import open_till_qty
 
-	reserved_qty = (
-		frappe.qb.from_(p_inv)
-		.from_(p_item)
-		.select(Sum(p_item.qty).as_("qty"))
-		.where(
-			(p_inv.name == p_item.parent)
-			& (IfNull(p_inv.consolidated_invoice, "") == "")
-			& (p_inv.is_return == 0)
-			& (p_item.docstatus == 1)
-			& (p_item.item_code == item_code)
-			& (p_item.warehouse == warehouse)
-		)
-	).run(as_dict=True)
-
-	return reserved_qty[0].qty or 0 if reserved_qty else 0
+	return open_till_qty(pairs=[(item_code, warehouse)]).get((item_code, warehouse), 0)

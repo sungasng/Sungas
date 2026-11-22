@@ -1,6 +1,6 @@
 # Sungas ERPNext — CONSOLIDATED ROADMAP (FULL SCOPE)
 
-> **Last updated:** June 2026
+> **Last updated:** November 2026
 > **Status:** Complete catalogue across all phases. Supersedes prior v1 roadmap that focused only on Wave C/D. This document is the master backlog.
 
 ---
@@ -17,6 +17,19 @@
 | 🟡 | P2 — important but not blocking |
 | 🟢 | P3 — nice-to-have / future |
 | 📦 | Backlog — scope captured, not scheduled |
+
+---
+
+## 0. Latest changes (November 2026)
+
+| Item | Status |
+|---|---|
+| Stock Available Now — every channel (till, receipt save, Delivery Note, stock-moving Sales Invoice, Stock Entry, till close) checks recorded stock less till sales not yet closed (0067, 0068, posa-0048) | ✅ Built — awaiting deploy |
+| Ops tank / GIT cards and Tank Volume chart pointed at `LPG-REFILL` (were `BULK-LPG`, showed 0) (0067) | ✅ Built — awaiting deploy |
+| Accounts `2611 - Cash Variance Pending` (numbered) and `7206 - Cash Rounding Income` (created); till rounding switch to 7206 awaits Finance | ✅ Live / ⏸ Finance |
+| 🟠 **Load test before go-live and before peak season** — staging copy of the live site; S1 normal day, S2 yuletide peak (last peak × 3), S3 close burst (all tills in 15 min + evening jobs), S4 8-hour soak, S5 offline till; other channels (bulk SI/DN, LMD, transfers, back-dated counts, reports) run alongside. Pass: receipt save p95 < 2 s, p99 < 5 s, errors < 0.5 %, no lost receipts, no failed till close, no channel waiting > 5 s. Output: sizing (Frappe Cloud plan, workers), settings, go / no-go. Effort 3–4 days. Needs SCL's last peak figures and crash history. | 📦 Backlog — P1 |
+| 🟠 Peak safeguards — till close in waves by region, evening jobs after 21:00, stock re-calculation limited to off-peak hours | 📦 Backlog — P1 |
+| ⏸ Weekly Bank Match, Daily Operations Report, cost-centre reset, Department dimension | ⏸ Awaiting BA decision (option A / B) |
 
 ---
 
