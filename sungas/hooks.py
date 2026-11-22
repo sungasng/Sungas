@@ -216,7 +216,13 @@ doc_events = {
         'before_submit': [
             'sungas.overrides.returns_approval_gate.require_manager_for_return',
             'sungas.overrides.fraud_freeze_gate.block_bank_payments_when_outlet_frozen',
+            # Patch 0067 -- unclosed till receipts count against stock.
+            'sungas.stock_available.guard',
         ],
+    },
+    # Patch 0067 -- unclosed till receipts count against stock.
+    "Delivery Note": {
+        'before_submit': 'sungas.stock_available.guard',
     },
     "Journal Entry": {
         'on_submit': [
@@ -233,6 +239,8 @@ doc_events = {
     # Patch 0016 -- IAS 2 standard haulage on GIT -> outlet receipt legs.
     "Stock Entry": {
         'before_validate': 'sungas.overrides.haulage_costing.apply_standard_haulage',
+        # Patch 0067 -- unclosed till receipts count against stock.
+        'before_submit': 'sungas.stock_available.guard',
         # Patch 0019 -- a submitted receipt may complete its trip.
         'on_submit': 'sungas.overrides.trip_auto_close.on_stock_entry_submit',
     },
@@ -258,6 +266,8 @@ doc_events = {
         ],
         'before_submit': [
             'sungas.overrides.pos_closing_shift.validate_variance',
+            # Patch 0067 -- clear message + PM / Finance alert when stock cannot cover the day's sales.
+            'sungas.stock_available.close_precheck',
         ],
         'on_submit': [
             'sungas.overrides.pos_closing_shift.post_variance_journal',
@@ -846,6 +856,7 @@ fixtures = [
                     "Sungas Ops · GIT Inter-Outlet",
                     "Sungas Ops · GIT Supplier to Outlet",
                     "Sungas Ops · Network Tank Volume",
+                    "Sungas Ops · LPG Available Now",
                     "Sungas Ops · Open TLVC",
                     "Sungas Ops · Pending HoO Approvals",
                     "Sungas Ops · Post-Hoc Pending",

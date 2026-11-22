@@ -115,7 +115,9 @@ LAYOUT = {
         "cards": COMMON + ["Sungas · Receipts Awaiting Confirmation", "Sungas · Open POS Shifts",
                            "Sungas · Open Variance Cases", "Sungas · Open Transit Loss Cases",
                            # 0035: My Accounts
-                           "Sungas · My Accounts", "Sungas · My Open Engagement Plans"],
+                           "Sungas · My Accounts", "Sungas · My Open Engagement Plans",
+                           # 0067: recorded stock less unclosed till receipts
+                           "Sungas Ops · LPG Available Now"],
         "charts": ["Sungas Ops · Tank Volume by Outlet"],
         "shortcuts": [MY_TASKS, POS_APP,
                       _sc("My Accounts Scorecard", "Commercial Accounts Performance", kind="Report", color="Blue"),
@@ -125,6 +127,7 @@ LAYOUT = {
                       _sc("Variance Cases", "Inter-Outlet Variance Case", color="Red"),
                       _sc("Transit Loss Cases", "Transit Loss Variance Case", color="Red"),
                       _sc("Shift Closings", "POS Closing Shift"),
+                      _sc("Stock Available Now", "Stock Available Now", kind="Report", color="Green"),
                       # 0041: unfilled gas receipts + fill variance
                       _sc("Filler Screen", None, kind="URL", color="Green", url="/fill"),
                       _sc("Cash Lodgements", "Sungas Cash Lodgement", color="Orange"),
@@ -134,7 +137,7 @@ LAYOUT = {
     "Sungas Ops Command": {
         "cards": COMMON + ["Sungas Ops · Pending HoO Approvals", "Sungas Ops · Draft Loading Schedules",
                            "Sungas Ops · Trucks Pending Assignment", "Sungas · Trips In Transit",
-                           "Sungas Ops · Network Tank Volume", "Sungas Ops · GIT Inter-Outlet",
+                           "Sungas Ops · Network Tank Volume", "Sungas Ops · LPG Available Now", "Sungas Ops · GIT Inter-Outlet",
                            "Sungas Ops · GIT Supplier to Outlet", "Transit Loss — Open Cases (90d)"],
         "charts": ["Sungas Ops · Tank Volume by Outlet", "Transit Loss by Hauler (90d)"],
         "shortcuts": [MY_TASKS,
@@ -143,6 +146,7 @@ LAYOUT = {
                       _sc("Variance Cases", "Inter-Outlet Variance Case", color="Red"),
                       _sc("Transit Loss Cases", "Transit Loss Variance Case", color="Red"),
                       _sc("Purchase Receipts", "Purchase Receipt"),
+                      _sc("Stock Available Now", "Stock Available Now", kind="Report", color="Green"),
                       _sc("Purchase Orders", "Purchase Order")],
     },
     "Sungas Finance": {
