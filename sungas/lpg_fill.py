@@ -85,6 +85,12 @@ def on_submit(doc, method=None):
             frappe.db.set_value("POS Invoice", orig, "sungas_fill_status", REFUNDED, update_modified=False)
             _log(orig, _("Refunded on {0} - gas will not be filled.").format(doc.name))
         return
+    if lpg_kg(doc) > 0 and str(doc.get("pos_profile") or "").startswith("LMD - "):
+        # Patch 0069: an LMD receipt is made at delivery -- the cylinder was filled and QA/QC passed before dispatch.
+        doc.db_set({"sungas_fill_status": FILLED, "sungas_filled_kg": lpg_kg(doc), "sungas_filled_at": now_datetime(),
+                    "sungas_fill_note": _("Filled at the plant before LMD dispatch (QA/QC recorded in LMD).")},
+                   update_modified=False)
+        return
     if lpg_kg(doc) > 0:
         doc.db_set({"sungas_fill_status": AWAITING, "sungas_fill_due": add_days(doc.posting_date, FILL_DAYS)},
                    update_modified=False)

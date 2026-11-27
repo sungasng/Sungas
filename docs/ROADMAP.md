@@ -22,9 +22,21 @@
 
 ## 0. Latest changes (November 2026)
 
+**Deploy status (27 Nov 2026, checked on GitHub + the live site):** 0066, 0067, 0068 are on GitHub `sungasng/Sungas` `version-15` and posa-0048 on `sungasng/POS-Awesome-V15` `sungas-prod`; the live site already has the 0067 'Stock Available Now' report. **0069 is not yet on GitHub or the live site.** To deploy: apply 0069, push, then Frappe Cloud → bench → **Update** (Sungas + POS Awesome).
+Live ERP data already set up by API (no deploy needed): accounts 7106, 1442, 1443; Modes of Payment Squad / ALAT; POS Profile LMD - Ikeja; SVC-DELIVERY on 7106 + 7.5% VAT.
+
+| Patch | What | Status |
+|---|---|---|
+| 0066 | Inter-outlet receipt marks its trip drop 'Received'; Employee select perm fixture | ✅ On GitHub |
+| 0067 | Stock Available Now on every channel + report + card; Ops tank cards on LPG-REFILL | ✅ On GitHub + live |
+| 0068 | Server stock check on till receipts restored | ✅ On GitHub |
+| posa-0048 | Till tiles / qty limit use stock available now | ✅ On GitHub (POS Awesome) |
+| 0069 | LMD till: no stock refusal (stock case), receipts Filled | ⏳ Awaiting push + deploy; needed before the first LMD Ikeja trip |
+
 | Item | Status |
 |---|---|
 | Stock Available Now — every channel (till, receipt save, Delivery Note, stock-moving Sales Invoice, Stock Entry, till close) checks recorded stock less till sales not yet closed (0067, 0068, posa-0048) | ✅ Built — awaiting deploy |
+| LMD till (0069) — 'LMD - <plant>' tills: a delivered, paid LMD receipt is never refused for stock (a stock case bells the Plant Manager + Finance instead) and is marked Filled, not Awaiting Fill (gas filled + QA/QC before dispatch). Live ERP setup done 27 Nov: accounts 1442 GTBank Squad Holding / 1443 Wema ALAT Holding, Modes of Payment 'Squad' / 'ALAT', POS Profile 'LMD - Ikeja' | ✅ Built — awaiting deploy |
 | Ops tank / GIT cards and Tank Volume chart pointed at `LPG-REFILL` (were `BULK-LPG`, showed 0) (0067) | ✅ Built — awaiting deploy |
 | Accounts `2611 - Cash Variance Pending` (numbered) and `7206 - Cash Rounding Income` (created); till rounding switch to 7206 awaits Finance | ✅ Live / ⏸ Finance |
 | 🟠 **Load test before go-live and before peak season** — staging copy of the live site; S1 normal day, S2 yuletide peak (last peak × 3), S3 close burst (all tills in 15 min + evening jobs), S4 8-hour soak, S5 offline till; other channels (bulk SI/DN, LMD, transfers, back-dated counts, reports) run alongside. Pass: receipt save p95 < 2 s, p99 < 5 s, errors < 0.5 %, no lost receipts, no failed till close, no channel waiting > 5 s. Output: sizing (Frappe Cloud plan, workers), settings, go / no-go. Effort 3–4 days. Needs SCL's last peak figures and crash history. | 📦 Backlog — P1 |

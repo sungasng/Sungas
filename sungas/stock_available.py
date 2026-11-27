@@ -113,7 +113,28 @@ def till_guard(doc):
             short.append(_("Not enough {0}: {1} available now ({2} recorded less {3} sold today and not yet closed). Reduce the quantity.").format(
                 name, _qty(recorded - held), _qty(recorded), _qty(held)))
     if short:
+        if is_lmd_till(doc.get("pos_profile")):
+            # Patch 0069 (R1): a delivered, paid LMD receipt is never refused -- open a stock case instead.
+            frappe.enqueue("sungas.stock_available.alert_lmd_short", queue="short", enqueue_after_commit=True,
+                           invoice=doc.get("name"), pos_profile=doc.get("pos_profile"), lines=short)
+            return
         frappe.throw("<br>".join(short), title=_("Not enough stock"))
+
+
+def is_lmd_till(pos_profile) -> bool:
+    """Patch 0069 -- the Last-Mile Delivery tills are POS Profiles named 'LMD - <plant>'."""
+    return str(pos_profile or "").startswith("LMD - ")
+
+
+def alert_lmd_short(invoice, pos_profile, lines):
+    from sungas.overrides.closing_approval_alerts import _users, approvers
+    from sungas.utils.bell import ring
+
+    users = set(approvers(frappe._dict(pos_profile=pos_profile), "Pending Plant Manager")) | set(_users(FINANCE))
+    plant = (pos_profile or "").replace("LMD - ", "")
+    ring(sorted(users), f"Stock case at {plant}: LMD delivery receipt above stock available now",
+         "<br>".join(lines) + "<br>" + _("The gas is delivered and paid, so the receipt was kept. Check the stock."),
+         "POS Invoice", invoice)
 
 
 def _late_offline(doc):

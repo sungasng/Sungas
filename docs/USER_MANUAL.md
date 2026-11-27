@@ -651,6 +651,14 @@ Then `bench restart` and try again.
 
 **Fix:** The Plant Manager receives the outstanding Stock Entry / Purchase Receipt (or Finance corrects the count). The cashier then closes again. Nothing is lost: the receipts stay as they are until the close goes through.
 
+### 12.7 LMD till receipts (POS Profile "LMD - Ikeja") — patch 0069
+
+**What it is:** Last-Mile Delivery posts here. Each rider trip is a POS Opening Shift (user `lmd-bot@sungas.org`), each delivery a POS Invoice (PO No = LMD order code; rider and trip in Remarks), each trip close one POS Closing Shift → one consolidated Sales Invoice. Squad pays into **1442 - GTBank Squad Holding**, ALAT into **1443 - Wema ALAT Holding**.
+
+**Differences from a shop till:** an LMD receipt is never refused for stock — the gas is already delivered and paid. If it is above stock available now, the Plant Manager and Finance get a bell "Stock case at Ikeja" and should receive the outstanding stock. LMD receipts show **Filled** (not Awaiting Fill): the cylinder was filled and QA/QC passed before dispatch, so they do not appear on the filler screen.
+
+**Do not** cancel or edit LMD receipts by hand; LMD shows each one on **Admin → LMD till in ERPNext** and retries failed ones.
+
 ---
 
 ## 13. Known Gaps vs. Full Spec (Build Roadmap)
